@@ -1,0 +1,1 @@
+"""Aware assignment messaging server."""
