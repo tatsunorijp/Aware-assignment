@@ -19,6 +19,7 @@ to find the maintained source for each responsibility:
 | [CHANGELOG.md](CHANGELOG.md) | What changed, compatibility and required client/operator actions. |
 | [../spec/protocol.md](../spec/protocol.md) | Canonical HTTP/WS fields, validation, ordering, errors and client retry policy. |
 | [../spec/acceptance-tests.md](../spec/acceptance-tests.md) | Observable backend and shared client acceptance criteria. |
+| [../spec/product.md](../spec/product.md), [../DESIGN.md](../DESIGN.md), [../spec/persistence.md](../spec/persistence.md) | Product scope, client flows and local-storage responsibilities; not alternative wire contracts. |
 | [../fixtures/protocol/README.md](../fixtures/protocol/README.md) | Shared JSON fixture purposes and client decoding expectations. |
 | [docs/REVIEW.md](docs/REVIEW.md) | Review evidence, regression coverage and known MVP limits. |
 | [pyproject.toml](pyproject.toml), [requirements.lock](requirements.lock) | Supported Python/dependencies, tested dependency constraints and verification configuration. |
@@ -28,10 +29,9 @@ tree. If a reference is moved, update its inbound links and these instructions i
 the same change. Do not duplicate the entire protocol here or maintain a second
 wire specification inside `server/`.
 
-The root planning draft is temporary context, not a permanent dependency of this
-workflow. When the user provides new requirements there, transfer the relevant
-server/client rules into the maintained protocol, guides and acceptance criteria.
-Never require that draft to exist for routine maintenance. If code and a maintained
+The former root draft is a migration index, not a requirements source or dependency
+of this workflow. Use the maintained documentation map and update the owner file
+when requirements change. If code and a maintained
 contract disagree, report and reconcile the discrepancy against the user's intended
 behavior; do not silently edit the specification merely to make a test pass.
 

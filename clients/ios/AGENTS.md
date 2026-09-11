@@ -39,9 +39,10 @@
 
 ## Read before implementation
 
-1. Read [the planning draft](../../ASSIGNMENT_SPEC_DRAFT.md), especially sections
-   1–15, 18, 20–22, for product behavior, local-first rules, iOS architecture,
-   testing, generation and deferred scope.
+1. Read [product scope](../../spec/product.md), [application design](../../DESIGN.md),
+   [shared persistence](../../spec/persistence.md) and [iOS requirements](../../spec/ios.md).
+   Read [future work](../../FUTURE.md) for excluded features and
+   [generator requirements](../../generator/README.md) when working on generation.
 2. Read the maintained [wire protocol](../../spec/protocol.md) and
    [mobile client integration guide](../../server/docs/CLIENT_GUIDE.md). They define
    the concrete backend contract; do not infer it from UI examples or old snippets.
@@ -57,13 +58,10 @@
    iOS README/design notes before editing. Recheck these rather than treating the
    baseline below as permanently current.
 
-The draft is temporary, but currently contains requirements not yet migrated to
-the empty `spec/ios.md`, `spec/product.md` and `spec/persistence.md` placeholders.
-Read those files when they gain content. During an authorized migration, preserve
-the requirements in maintained specifications and update these references before
-removing the draft. Do not treat an empty file as a complete specification.
-The maintained protocol resolves wire-format choices left open in the draft;
-report other material conflicts or server/documentation mismatches under the
+The maintained documents above are the requirements sources; the former draft is
+only a migration index and is not required for implementation. Keep links current
+when information moves. The maintained protocol owns exact wire behavior;
+report material conflicts or server/documentation mismatches under the
 [server compatibility boundary](#server-compatibility-boundary). Do not resolve
 them by changing the backend or the shared contract during iOS work.
 
@@ -166,7 +164,9 @@ state in enum payloads and separate properties. Small UI toggles may remain bool
   conversation IDs by sorting the two participant IDs and joining them with `:`.
 - Use one shared SwiftData container with fixed users, conversations and messages
   entities, never a table/store per chat. Separate each entity's model, repository
-  protocol and SwiftData implementation, as described in draft sections 11 and 15.1.
+  protocol and SwiftData implementation, as described in
+  [persistence](../../spec/persistence.md) and
+  [iOS persistence files](../../spec/ios.md#ios-persistence-files).
 - Repositories expose logical models and propagate read/write failures. Keep
   SwiftData records and `ModelContext` inside persistence, with consistent actor
   isolation. Views/ViewModels must not access them directly, including via `@Query`.
@@ -270,12 +270,12 @@ state in enum payloads and separate properties. Small UI toggles may remain bool
   networking and controlled time for retries; unit tests must not need a real server.
   Test real SwiftData implementations with isolated in-memory stores, or temporary
   on-disk stores for reopen/durability scenarios, never the user's application store.
-- Cover the draft's client cases and shared acceptance criteria: independent
+- Cover the maintained client and shared acceptance criteria: independent
   screen/connection states; identity reuse; local-first writes; FIFO and recovery;
   ACK-after-save; duplicate ACK/delivery; error correlation and no sent downgrade;
   missing/null fields, unknown codes and fallback text using the shared fixtures.
 - A server smoke test is not proof of native-client correctness. Once both clients
-  exist, verify the real iOS/Android offline exchange from draft section 20.
+  exist, verify the [native offline scenario](../../spec/acceptance-tests.md#native-offline-scenario).
 - Investigate integration failures without changing the server or disguising the
   failure in client fakes/assertions. Report backend-related blockers and distinguish
   passing client unit tests from unverified or failing real-server integration.

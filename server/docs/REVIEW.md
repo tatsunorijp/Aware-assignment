@@ -1,9 +1,11 @@
 # Server implementation review
 
-Scope: the existing in-memory messaging implementation and the new structured
-error requirements in [ASSIGNMENT_SPEC_DRAFT.md](../../ASSIGNMENT_SPEC_DRAFT.md).
+Scope: the existing in-memory messaging implementation and structured error
+requirements now maintained in [spec/protocol.md](../../spec/protocol.md#errors).
 The review covers source, regression tests, shared fixtures, HTTP documentation
 and a real-network smoke test. It does not certify unimplemented native clients.
+Documentation redistribution updates this reference, not the original runtime
+verification evidence; it does not imply the server tests were rerun.
 
 ## Findings and corrections
 

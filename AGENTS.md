@@ -2,6 +2,9 @@
 
 - Communicate with the user in Portuguese unless requested otherwise. Write all
   repository code, comments, documentation, fixtures and commit messages in English.
+- Use the [README documentation map](README.md#documentation-map) to find each
+  topic's maintained source. Update the owner document and affected references;
+  the former assignment draft is a migration index, not a requirements source.
 - Before working on `server/`, or on shared protocol/fixture changes that affect
   the server, read and follow [server/AGENTS.md](server/AGENTS.md). Read it explicitly
   even when the task starts from the repository root.

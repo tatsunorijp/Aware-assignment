@@ -8,6 +8,16 @@ they are assigned to a release. Keep released history; use the
 
 ## Unreleased
 
+### Specification organization
+
+- Distributed the former assignment draft into maintained product, design,
+  persistence, platform, acceptance, generator and future-work documents. Updated
+  server references and client/agent reading paths to those destinations.
+- Client impact: documentation only. No server implementation, HTTP/WS behavior,
+  wire/package version, dependencies or fixture payloads changed. Use the
+  [documentation map](../README.md#documentation-map) for requirements; no runtime
+  migration is required and this entry does not claim new test execution.
+
 ### Maintenance guidance
 
 - Added scoped [server agent instructions](AGENTS.md) and repository-root routing.

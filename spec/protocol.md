@@ -1,10 +1,10 @@
 # Messaging protocol, version 1
 
 This is the concrete wire contract for the server and both generated mobile clients.
-It implements [ASSIGNMENT_SPEC_DRAFT.md](../ASSIGNMENT_SPEC_DRAFT.md),
-especially sections 2, 6–10, 12, 13 and 17. The response envelopes, error codes,
-normalization rules and reconnect details below resolve choices left open by that
-specification. All clients must use these same rules.
+It supports the [product scope](product.md) and [application design](../DESIGN.md).
+The response envelopes, error codes, normalization and reconnect rules below are
+the shared source of truth. All clients must use these same rules. Documentation
+redistribution does not change version-1 behavior or the implemented server.
 
 ## Transport and shared values
 
@@ -33,6 +33,36 @@ specification. All clients must use these same rules.
   whitespace and Unicode are preserved. Names need not be unique.
 - `serverReceivedAt` is the only optional message field. When sending, omit it or
   set it to `null`; the server assigns it when accepting the message.
+
+## Shared models
+
+The server and both clients use equivalent logical wire models, not necessarily
+shared source code. Preserve field names, equivalent types, required/optional
+status, validation, date format and event semantics. Platform serialization must
+not leak storage records or UI state into strict requests.
+
+`User` contains required string `userId` and `name`, subject to the UUID and
+non-blank name rules above. `MessageDTO` contains:
+
+| Field | JSON type | Meaning |
+| --- | --- | --- |
+| `messageId` | string | Client-created message UUID and idempotency key. |
+| `conversationId` | string | Deterministic direct-conversation identifier. |
+| `text` | string | Non-blank message text, preserving whitespace and Unicode. |
+| `senderId` | string | Sender UUID matching the identified connection. |
+| `receiverId` | string | Other participant's UUID. |
+| `clientCreatedAt` | string | Client creation instant encoded as ISO 8601 UTC. |
+| `clientSequence` | integer | Sender-local, positive signed Int64 sequence. |
+| `serverReceivedAt` | string or null, optional | Server acceptance instant; omit/null on send, assigned by the server. |
+
+Only `serverReceivedAt` is optional. Swift can represent logical dates as `Date`
+and sequences as `Int64`; Android uses equivalent instant values and `Long`.
+Wire dates are strings, never a platform-specific default date encoding.
+
+The shared `ServerError` is defined [below](#shared-servererror-object).
+`LocalMessage`, direction and outgoing state are client-only representations
+defined in [persistence.md](persistence.md#local-message-representation), not extra
+wire fields or required server entities.
 
 ## HTTP endpoints
 
@@ -221,7 +251,8 @@ remain on the devices. This is an intentional MVP limitation.
 
 ### Shared ServerError object
 
-HTTP and WebSocket use the same logical error model from draft sections 12–13.
+HTTP and WebSocket use this same logical error model. It is a custom assignment
+format; implementing HTTP Problem Details is not required for the MVP.
 
 | Field | Type | Required | Meaning |
 | --- | --- | --- | --- |
@@ -300,7 +331,7 @@ or maintenance-control endpoint.
 
 ### Codes and retry eligibility
 
-The six initial codes required by the draft are:
+The six initial required codes are:
 
 | Code | Meaning | `isRetryable` |
 | --- | --- | --- |
@@ -343,7 +374,7 @@ storage errors are distinct local failures; they are not fabricated ServerError
 objects or proof of success. For HTTP, inspect the status first; non-success with
 an invalid body requires a client fallback and must not be treated as success.
 
-Server release 0.2.0 aligns the previously provisional contract with the draft.
+Server release 0.2.0 replaced the provisional format with this shared error contract.
 The assignment's wire `protocolVersion` remains 1; update consumers together:
 
 | Previous provisional representation | Current contract |

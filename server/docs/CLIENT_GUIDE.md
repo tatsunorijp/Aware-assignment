@@ -4,6 +4,9 @@ Read [spec/protocol.md](../../spec/protocol.md) for exact fields, JSON examples,
 validation rules, ACK semantics, ordering and error codes. That file is the shared
 wire contract for Swift/iOS and Kotlin/Android. Read [server/README.md](../README.md)
 for setup and operations. This guide describes how a client uses that contract.
+Shared screen flows live in [DESIGN.md](../../DESIGN.md), local storage contracts in
+[spec/persistence.md](../../spec/persistence.md), and platform details in
+[spec/ios.md](../../spec/ios.md) and [spec/android.md](../../spec/android.md).
 
 ## Follow server changes
 
@@ -176,7 +179,7 @@ state belong to the client database; do not add them to strict protocol DTOs.
 - Duplicate names do not merge users or route messages to the wrong UUID.
 - Server restart reconstructs the registry as clients identify and leaves local
   history intact, while acknowledging the loss of volatile server-side messages.
-- The bidirectional offline scenario in [the planning draft](../../ASSIGNMENT_SPEC_DRAFT.md) section 20 works between
+- The [native offline scenario](../../spec/acceptance-tests.md#native-offline-scenario) works between
   the actual generated iOS and Android applications.
 - Shared [error fixtures](../../fixtures/protocol/README.md) decode correctly with
   complete, omitted, null and unknown fields/codes. Tests use codes and structure,

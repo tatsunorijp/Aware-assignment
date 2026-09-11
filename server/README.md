@@ -1,12 +1,17 @@
 # Aware messaging server
 
 A local Python/FastAPI server implementing the messaging MVP from
-[ASSIGNMENT_SPEC_DRAFT.md](../ASSIGNMENT_SPEC_DRAFT.md). It connects the future iOS and Android
+[spec/product.md](../spec/product.md). It connects the future iOS and Android
 clients through the same HTTP and WebSocket protocol. All state lives in memory.
 
-Release 0.2.0 uses the shared `ServerError` response defined in draft sections 12–13.
+Release 0.2.0 uses the shared `ServerError` response defined in the maintained protocol.
 See the [protocol](../spec/protocol.md) for its fields and migration from the initial
 provisional format, and the [review notes](docs/REVIEW.md) for the implementation audit.
+
+The server is a local exercise service, not production infrastructure.
+Authentication, durable storage, cloud/external services, DDoS protection and push
+notifications are not required for the MVP. Run on a trusted local network only;
+the full deferred backlog is in [FUTURE.md](../FUTURE.md).
 
 ## Maintaining the server
 
@@ -149,6 +154,12 @@ The hub registers users by UUID and keeps disconnected users discoverable. It
 accepts validated direct messages, assigns a UTC receive time, records an
 idempotency receipt and queues the sender ACK. If the recipient is connected, it
 also queues delivery. Otherwise the pending message waits for identification.
+
+Its logical in-memory state areas are equivalent to `usersById`,
+`connectedClientsByUserId`, `pendingMessagesByReceiverId` and `processedMessageIds`.
+These names describe responsibilities, not required literal Python member names.
+The server does not provide complete conversation history; delivered history is
+persisted on the devices, as specified in [client persistence](../spec/persistence.md).
 
 Only `message_persisted` from the recipient removes a pending message. Reconnect
 replays unacknowledged messages, followed by `sync_completed`. Duplicate sends
