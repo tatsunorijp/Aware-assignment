@@ -5,6 +5,24 @@ validation rules, ACK semantics, ordering and error codes. That file is the shar
 wire contract for Swift/iOS and Kotlin/Android. Read [server/README.md](../README.md)
 for setup and operations. This guide describes how a client uses that contract.
 
+## Follow server changes
+
+Before adopting a server update, read [CHANGELOG.md](../CHANGELOG.md) for its client
+impact and any migration actions. This guide and the shared protocol describe the
+current expected behavior; the changelog records what changed. Server release
+versions and wire protocolVersion are separate values.
+
+Changes to events, DTOs, validation, error codes, ACKs, ordering or retry behavior
+must update the relevant sections here and the shared protocol/fixtures in the
+same server change set. The entry must address both iOS and Android. Purely internal
+changes explicitly state when clients need no changes, avoiding an implied migration.
+
+For a consumer-visible update, validate decoding with the shared fixtures, review
+affected persistence/outbox/error handling, and run the relevant native tests when
+the clients exist. The Python smoke test verifies the server protocol but does not
+replace native interoperability tests. Backend maintainers follow
+[server/AGENTS.md](../AGENTS.md) for the complete update and verification workflow.
+
 ## Configure the server address
 
 | Client environment | HTTP base URL | WebSocket URL |

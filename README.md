@@ -10,6 +10,8 @@ Kotlin/Android clients.
 - [Shared error fixtures](fixtures/protocol/README.md)
 - [Acceptance criteria](spec/acceptance-tests.md)
 - [Server implementation review](server/docs/REVIEW.md)
+- [Server maintenance instructions](server/AGENTS.md)
+- [Server changes and client impact](server/CHANGELOG.md)
 
 The local in-memory server is implemented in `server/`. Client generation and the
 native mobile applications are not implemented yet.

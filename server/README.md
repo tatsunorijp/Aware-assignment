@@ -8,6 +8,23 @@ Release 0.2.0 uses the shared `ServerError` response defined in draft sections 1
 See the [protocol](../spec/protocol.md) for its fields and migration from the initial
 provisional format, and the [review notes](docs/REVIEW.md) for the implementation audit.
 
+## Maintaining the server
+
+Read [AGENTS.md](AGENTS.md) before modifying the backend. It records the maintained
+references, architecture/protocol invariants, documentation-impact rules and
+verification workflow. Repository-root instructions also direct server work there.
+
+A server change includes its documentation and client compatibility impact in the
+same change set. Review this README and [CLIENT_GUIDE](docs/CLIENT_GUIDE.md), update
+affected behavior/setup sections, and keep the shared protocol, fixtures, tests and
+acceptance criteria aligned. Record implementation/configuration/dependency changes
+in [CHANGELOG.md](CHANGELOG.md), including required iOS/Android or operator actions;
+explicitly say when no client change is necessary.
+
+AGENTS, README, CLIENT_GUIDE, CHANGELOG and REVIEW are maintained server documents.
+Keep their links valid when files move. Use the protocol as the shared wire source
+of truth; temporary planning documents are not required for routine maintenance.
+
 ## Required tools
 
 | Tool | Purpose | Installation |
@@ -116,6 +133,8 @@ not indicate failed server tests.
 
 | File | Responsibility |
 | --- | --- |
+| `AGENTS.md` | Persistent instructions for backend changes, documentation and verification. |
+| `CHANGELOG.md` | Changes, compatibility impact and client/operator migration actions. |
 | `app/main.py` | Application lifecycle, HTTP routes and WebSocket reader/writer tasks. |
 | `app/protocol.py` | Strict input models, UUID/date normalization, event parsing and errors. |
 | `app/errors.py` | Shared ServerError DTO, stable code/retry catalog and request-ID error logging. |
