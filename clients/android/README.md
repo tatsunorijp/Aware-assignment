@@ -68,11 +68,20 @@ that dependency resolution or compatibility was verified in this documentation t
 | Gradle daemon JVM | Java 25 requested by [gradle-daemon-jvm.properties](AwareChat-Android/gradle/gradle-daemon-jvm.properties). |
 | Java source/target compatibility | Java 11 in app compile options; this is not the Gradle daemon JVM requirement. |
 
-Open `clients/android/AwareChat-Android/` in Android Studio. Configure SDK access
-and the compatible Gradle JVM, then sync the existing project. Wrapper/toolchain
-and dependency downloads may need network access and tool-required approval.
-Do not commit machine-specific SDK paths or change the selected versions merely
-to complete a documentation task.
+Open `clients/android/AwareChat-Android/` in Android Studio. This Gradle root is
+the preferred entry point. The tracked IDE configuration also supports opening
+`clients/android/` by linking its nested `AwareChat-Android/` build. Do not run
+`gradle init` in the outer directory: it would create a competing build instead
+of using the existing one. Configure SDK access and the compatible Gradle JVM,
+then sync the project. Wrapper/toolchain and dependency downloads may need network
+access and tool-required approval. Do not commit machine-specific SDK paths or
+change the selected versions merely to complete a documentation task.
+
+The shared Android Studio run configuration `AwareChat-Android-UnitTests` executes
+only the local JVM unit-test task `:app:testDebugUnitTest`. It does not assemble,
+install or run instrumentation tests on a device. Select this configuration and
+use Run to execute the unit-test suite from Android Studio. The configuration is
+available from either supported Android Studio entry point above.
 
 From the project directory, use these build/test entry points after setup:
 
@@ -82,6 +91,12 @@ cd clients/android/AwareChat-Android
 ./gradlew :app:testDebugUnitTest
 ./gradlew :app:lintDebug
 ./gradlew :app:connectedDebugAndroidTest
+```
+
+The command-line equivalent of the shared unit-test configuration is:
+
+```sh
+./gradlew :app:testDebugUnitTest
 ```
 
 If the shell cannot locate Java, use Android Studio's bundled runtime without
@@ -99,9 +114,10 @@ of messaging, persistence or UI correctness. Run the `app` configuration from
 Android Studio to inspect the current greeting, not the intended messaging screens.
 
 On 2026-09-11, `:app:assembleDebug` and `:app:testDebugUnitTest` passed offline
-with Android Studio's bundled JBR. `:app:lintDebug` passed with zero errors and
-eight version-availability warnings for the existing Gradle/Kotlin/AndroidX setup.
-No connected device test or visual emulator inspection was performed for this
+with Android Studio's bundled JBR, including a fresh run after adding the shared
+unit-test configuration. `:app:lintDebug` passed with zero errors and eight
+version-availability warnings for the existing Gradle/Kotlin/AndroidX setup. No
+connected device test or visual emulator inspection was performed for this
 component-only foundation.
 
 ## Stack and responsibility layout

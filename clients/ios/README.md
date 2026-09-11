@@ -39,11 +39,13 @@ The existing project is
 with application target `AwareChat-iOS` and source root
 `clients/ios/AwareChat-iOS/AwareChat-iOS/`. It currently contains a SwiftUI starter,
 reusable text, button, loading, error and message-container components, extensions,
-and seven named color assets/tokens. Complete messaging screens, networking,
-persistence and native test targets are not implemented. Preserve its name,
-project, signing and build settings unless a task explicitly requires a change.
+seven named color assets/tokens, and the `AwareChat-iOS-UnitTests` unit-test target.
+The unit-test target is intentionally empty until testable production behavior is
+implemented. Complete messaging screens, networking and persistence are not
+implemented. Preserve the existing names, project, signing and build settings
+unless a task explicitly requires a change.
 
-The entry point is `MyApp.swift`. Current project settings declare iOS 27.0,
+The entry point is `MyApp.swift`. Current project settings declare iOS 26.5,
 Swift language mode 5.0, MainActor default isolation and approachable concurrency.
 These are project settings, not the installed Swift compiler version. The versioned
 client directory is `clients/ios/`; do not create a second `clients/iOS/` tree.
@@ -55,24 +57,46 @@ than replacing it. Tests belong in a separate test target, not the app source se
 
 ## Tools and building
 
-Use Xcode with the iOS 27 SDK to match the current deployment target. Xcode 27 beta was used for the initial color-catalog build; inspect the current
-installed tools rather than assuming that environment is permanent. Do not lower
-the deployment target just to use an older SDK. Open [AwareChat-iOS.xcodeproj](AwareChat-iOS/AwareChat-iOS.xcodeproj),
-select the `AwareChat-iOS` scheme and an available compatible iOS Simulator.
-There are no third-party package dependencies to install for the color catalog.
+Use Xcode 26.5 with the iOS 26.5 SDK. This is the project's supported development
+toolchain and deployment target; the separately installed Xcode 27 beta is for
+optional testing only and must not upgrade the committed project format or SDK
+requirements. Open [AwareChat-iOS.xcodeproj](AwareChat-iOS/AwareChat-iOS.xcodeproj),
+select the `AwareChat-iOS` scheme and an available iOS 26.5 Simulator. There are
+no third-party package dependencies to install for the color catalog.
+Use the shared `AwareChat-iOS-UnitTests` scheme when running unit tests; its Test
+action contains only the `AwareChat-iOS-UnitTests` target and does not include UI
+test targets.
 
-From the repository root, with the compatible Xcode selected (or `DEVELOPER_DIR`
-pointing to its `Contents/Developer` directory):
+From the repository root, explicitly select the primary Xcode for the command so
+the separately installed Xcode 27 beta is not selected accidentally:
 
 ```sh
-xcodebuild -project clients/ios/AwareChat-iOS/AwareChat-iOS.xcodeproj \
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+  xcodebuild -project clients/ios/AwareChat-iOS/AwareChat-iOS.xcodeproj \
   -scheme AwareChat-iOS -configuration Debug \
   -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
 ```
 
 This compiles the project and assets; it does not run UI checks or native tests.
-There is no test target to run yet. Simulator availability depends on the installed
-runtimes. Physical-device signing and server setup are separate from this task.
+To build the app and unit-test bundle without executing tests:
+
+```sh
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+  xcodebuild -project clients/ios/AwareChat-iOS/AwareChat-iOS.xcodeproj \
+  -scheme AwareChat-iOS-UnitTests -configuration Debug \
+  -destination 'generic/platform=iOS Simulator' \
+  CODE_SIGNING_ALLOWED=NO build-for-testing
+```
+
+To execute unit tests, replace the generic destination with an installed Simulator
+destination and use the `test` action. The target currently has no test cases, so
+successful execution only validates the test entry point until tests are added.
+Simulator availability depends on the installed runtimes. Physical-device signing
+and server setup are separate from this task.
+
+On 2026-09-11, the app and shared unit-test scheme passed with Xcode 26.5. The
+unit-test scheme passed `build-for-testing` with a generic iOS Simulator destination
+and the `test` action on an iOS 26.5 Simulator. No test cases existed at that point.
 
 ## Required stack and organization
 
@@ -90,8 +114,9 @@ The iOS client must use:
 - Unit tests for ViewModels, repositories, persistence, and the protocol.
 
 Logical organization (future responsibilities, not an existing directory snapshot).
-Production folders below belong under `AwareChat-iOS/AwareChat-iOS/`; `Tests/`
-belongs beside that source root under `AwareChat-iOS/`, in separate test targets:
+Production folders below belong under `AwareChat-iOS/AwareChat-iOS/`;
+`AwareChat-iOS-UnitTests/` belongs beside that source root and is owned by the
+separate `AwareChat-iOS-UnitTests` target:
 
 
 ```text
@@ -125,7 +150,7 @@ iOS/
 ├── DesignSystem/
 │   ├── Components/
 │   └── Tokens/
-└── Tests/
+└── AwareChat-iOS-UnitTests/
     ├── Identification/
     ├── UserList/
     ├── Chat/

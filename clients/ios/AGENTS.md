@@ -28,6 +28,9 @@ instead of inventing content or claiming unavailable references were inspected.
 - Extend the existing project and source root documented in README. Preserve its
   name, bundle/signing configuration, deployment target and build settings unless
   the requested task needs a change. Recheck schemes/toolchains before commands.
+- Use the supported development Xcode documented in README for committed builds
+  and tests. A newer Xcode installed for compatibility testing does not authorize
+  upgrading project metadata, deployment targets, SDK requirements or schemes.
 - Do not copy another app's concrete types, tokens, assets, permissions or test
   targets. Inspect and preserve this project's conventions and user-owned files.
 - Stay within the requested MVP work. Instructions and specifications do not
