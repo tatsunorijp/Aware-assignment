@@ -23,6 +23,11 @@ presentation's underlying content. The owning flow remains responsible for
 choosing a safe presentation context and for the retry operation itself. Its
 preview demonstrates both Retry and dismissal behavior.
 
+On Android, `ErrorScreen` receives the display message plus explicit `onRetry` and
+`onCancel` callbacks. The presentation owner implements Cancel by removing the
+error presentation and revealing the underlying content. This is the Compose-native
+equivalent of environment dismissal and is demonstrated by its preview.
+
 ## Essential failures and actions
 
 - **Initial registration:** a failure to save identity, connect, identify, decode

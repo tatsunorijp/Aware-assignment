@@ -82,9 +82,9 @@ and report any issue without silently changing approved values.
 iOS stores these colors under `Assets.xcassets/Colors/` and exposes them through
 `Tokens.Colors`; see the [iOS asset/token mapping](../../clients/ios/README.md#color-assets-and-swift-tokens).
 Android must express the same palette through its native design tokens, not import
-an Xcode catalog; its template theme does not yet implement this palette. See the
-[Android guide](../../clients/android/README.md#shared-visual-references) for current
-status and platform mapping.
+an Xcode catalog. Its implemented `ColorTokens` and light Material theme provide
+the native mapping. See the
+[Android guide](../../clients/android/README.md#design-tokens) for current details.
 
 ## Asset ownership and maintenance
 

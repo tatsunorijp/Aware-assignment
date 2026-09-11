@@ -59,9 +59,10 @@ are not hardcoded data or a global message-ordering rule.
 
 On iOS, `MessageContainer` receives `Origin`, message text, `Date`, and
 `ACKMessageState`. It uses the localized `Date.messageTime` display extension;
-that extension does not change protocol timestamp encoding. The corresponding
-Android component must apply the same visual and semantic behavior through native
-types and tokens.
+that extension does not change protocol timestamp encoding. Android implements the
+equivalent `MessageContainer` with `MessageOrigin`, message text, `Instant`, and
+`AckMessageState`; `Instant.toMessageTime()` provides the localized display value.
+Both implementations use native types/tokens without changing wire timestamp rules.
 
 ## Behavior and recovery
 

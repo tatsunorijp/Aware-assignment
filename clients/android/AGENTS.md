@@ -123,6 +123,27 @@ the completed client. Preserve accessibility, scalable text, keyboard/insets and
 non-color-only status cues. Report unspecified visual/contrast issues without
 silently changing approved values.
 
+Reuse the implemented `LargeButton`, `LoadingScreen`, `ErrorScreen`,
+`MessageContainer`, and semantic text Composables for their documented roles.
+Consume `ColorTokens`, `SpacingTokens`, `SizeTokens`, `CornerRadiusTokens`, and
+`IconTokens`; extend the appropriate object rather than creating parallel values.
+Keep `AwareChatAndroidTheme` light-only until dark mode enters scope.
+
+Use Android-native contracts rather than imitating SwiftUI mechanics:
+
+- Callers control component width and placement through `Modifier`.
+- Put static user-facing and accessibility copy in Android string resources;
+  runtime server/user content remains data supplied to the Composable.
+- Presentation owners provide `onRetry` and `onCancel`; Composables do not own
+  navigation or search for an implicit dismiss environment.
+- Message display time uses `Instant.toMessageTime()`; wire parsing and persistence
+  conversion stay in their documented layers.
+- `MessageOrigin.SENT` aligns right and `MessageOrigin.RECEIVED` aligns left.
+  `AckMessageState.SENDING` has no ACK icon, `SENT` has the server-acceptance
+  checkmark, and `FAILED` has the accessible X using `ColorTokens.customRed`.
+  Received messages never show an ACK icon. Derive these values from persisted
+  service state; do not move ACK logic into the Composable.
+
 ## Server compatibility boundary
 
 - Adapt Android to the existing backend during generation, implementation,

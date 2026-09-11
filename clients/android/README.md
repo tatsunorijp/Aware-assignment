@@ -13,6 +13,8 @@ separately from future work.
 - [Stack and responsibility layout](#stack-and-responsibility-layout)
 - [Shared visual references](#shared-visual-references)
 - [Extensions and design system](#extensions-and-design-system)
+- [Design tokens](#design-tokens)
+- [Reusable UI components](#reusable-ui-components)
 - [Android persistence files](#android-persistence-files)
 - [Android error organization](#android-error-organization)
 - [State, lifecycle and model equivalence](#state-lifecycle-and-model-equivalence)
@@ -33,17 +35,17 @@ require copying Swift source, Xcode assets or iOS folder names.
 ## Status and tooling decisions
 
 An existing [AwareChat-Android](AwareChat-Android) Gradle project contains an `app`
-module, a Compose greeting in `MainActivity.kt`, template theme files, a local
-example unit test and an example instrumentation test. Its namespace/application
-ID is `com.example.awarechat_android`; preserve it and the project name unless a
-requested task requires a change. Recheck actual configuration before implementation.
+module, a Compose greeting in `MainActivity.kt`, the package structure documented
+below, shared tokens/components, a time-formatting extension, a local example unit
+test and an example instrumentation test. Its namespace/application ID is
+`com.example.awarechat_android`; preserve it and the project name unless a requested
+task requires a change. Recheck actual configuration before implementation.
 
-Messaging screens, Room persistence, WebSocket messaging and assignment-specific
-tests are not implemented. The existing `ui/theme/` has template colors and
-system/dynamic dark-theme behavior; it does **not** yet satisfy the approved palette
-or light-only MVP. Conforming it is future implementation work, not a change made
-by this documentation consolidation. Reuse/adapt existing theme responsibilities
-when that work is requested, rather than creating a competing theme system.
+The reusable Android design-system foundation is implemented, including the
+approved palette and light-only `AwareChatAndroidTheme`. Complete messaging screens,
+ViewModels, Room persistence, WebSocket messaging and assignment-specific tests are
+not implemented. The app entry point intentionally remains the template greeting;
+components are independently available through Compose previews.
 
 Room is required for identity, conversations and messages but is not yet declared
 as a dependency. Select either OkHttp WebSocket or Ktor when implementing transport
@@ -72,14 +74,22 @@ and dependency downloads may need network access and tool-required approval.
 Do not commit machine-specific SDK paths or change the selected versions merely
 to complete a documentation task.
 
-From the project directory, use these build/test entry points after setup; they
-have **not been run as part of this documentation consolidation**:
+From the project directory, use these build/test entry points after setup:
 
 ```sh
 cd clients/android/AwareChat-Android
 ./gradlew :app:assembleDebug
 ./gradlew :app:testDebugUnitTest
+./gradlew :app:lintDebug
 ./gradlew :app:connectedDebugAndroidTest
+```
+
+If the shell cannot locate Java, use Android Studio's bundled runtime without
+changing the project configuration:
+
+```sh
+JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
+  ./gradlew :app:assembleDebug :app:testDebugUnitTest
 ```
 
 The connected test task needs an available compatible emulator or device. On
@@ -87,6 +97,12 @@ Windows use `gradlew.bat`. Verify actual Gradle tasks and dependencies when doin
 implementation/validation; the existing example tests are scaffolding, not proof
 of messaging, persistence or UI correctness. Run the `app` configuration from
 Android Studio to inspect the current greeting, not the intended messaging screens.
+
+On 2026-09-11, `:app:assembleDebug` and `:app:testDebugUnitTest` passed offline
+with Android Studio's bundled JBR. `:app:lintDebug` passed with zero errors and
+eight version-availability warnings for the existing Gradle/Kotlin/AndroidX setup.
+No connected device test or visual emulator inspection was performed for this
+component-only foundation.
 
 ## Stack and responsibility layout
 
@@ -106,9 +122,10 @@ Native stack (required responsibilities; transport selection remains open):
 - JUnit.
 - Constructor-based dependency injection, as described in [dependency composition](../../spec/persistence.md#dependency-injection).
 
-Logical package organization (future responsibilities, not existing source files).
-Production packages fit beneath the current `app/src/main/java/com/example/awarechat_android/`
-source root; tests use `app/src/test/` or `app/src/androidTest/`, never a production package:
+The package skeleton now exists beneath
+`app/src/main/java/com/example/awarechat_android/`. Empty future packages contain
+`.gitkeep` so the structure survives version control. Tests use `app/src/test/` or
+`app/src/androidTest/`, never a production package:
 
 ```text
 Android/
@@ -132,6 +149,8 @@ Android/
 ├── designsystem/
 │   ├── components/
 │   └── tokens/
+├── ui/
+│   └── theme/
 └── tests/
     ├── identification/
     ├── userlist/
@@ -141,7 +160,9 @@ Android/
     └── protocol/
 ```
 
-The organization does not need to be a literal copy of iOS, but both clients must have equivalent responsibilities and behavior.
+The `tests/` branch above maps to packages under the native test source sets rather
+than production code. The organization uses Android package naming while preserving
+the same responsibility boundaries as iOS.
 
 ## Shared visual references
 
@@ -181,6 +202,46 @@ when reusing or extending groups; local constants are not an alternative to an
 existing suitable token group. Support light appearance, accessibility and non-color status
 cues. Components consume tokens instead of redefining equivalent values. Tokens
 must not contain feature state, navigation, networking or persistence logic.
+
+`Instant.toMessageTime()` in `core/extensions/InstantExtensions.kt` is the single
+current message-time display convention. It uses the device locale and time zone
+with a short time format. It does not parse, encode or redefine UTC protocol dates;
+callers supply the persisted outgoing creation time or incoming receipt time.
+
+### Design tokens
+
+The Compose-native tokens are implemented as focused Kotlin objects:
+
+| File / object | Implemented values |
+| --- | --- |
+| `ColorTokens` | `primary`, `secondary`, `background`, `textPrimary`, `textSecondary`, `divider`, and `customRed`, using the exact shared opaque sRGB palette. |
+| `SpacingTokens` | `xSmall` 4 dp, `small` 8 dp, `medium` 16 dp, `large` 32 dp, `xLarge` 64 dp, and `xxLarge` 128 dp. |
+| `SizeTokens` | General sizes from 4 through 512 dp and `largeButtonHeight` at 44 dp. |
+| `CornerRadiusTokens` | `medium` at 32 dp. |
+| `IconTokens` | Drawable-resource identifiers for the server-acceptance checkmark and failed-message X. |
+
+`ui/theme/Theme.kt` consumes `ColorTokens` as the single Material 3 light color
+scheme. Dynamic and dark schemes are intentionally disabled for the current MVP.
+The two message-status vector drawables live in `res/drawable`; their runtime tint
+comes from the semantic color tokens. Static component and accessibility copy is
+stored in `res/values/strings.xml` for native resource handling.
+
+### Reusable UI components
+
+All implemented components live in `designsystem/components/` and include an
+independent Compose `@Preview`:
+
+| Component | Android contract |
+| --- | --- |
+| `LargeButton` | Receives text, `LargeButtonStyle`, click callback and caller-owned `Modifier`. It uses medium-weight body text and `SizeTokens.largeButtonHeight`; width remains external. |
+| `LoadingScreen` | Opaque full-screen background with centered indeterminate progress and typographic `Loading…` body text. |
+| `ErrorScreen` | Receives message, `onRetry` and `onCancel`. Compose has no SwiftUI environment dismiss equivalent, so the presentation owner supplies the explicit Cancel callback. |
+| `MessageContainer` | Receives `MessageOrigin`, text, `Instant` and `AckMessageState`. Sent messages align right with no icon while sending, a checkmark when accepted, or an accessible red X after failure. Received messages align left and never show an ACK icon. |
+| Text components | `LargeTitleText`, `TitleText`, `HeadlineText`, `SubheadlineText`, `BodyText`, `FootnoteText`, and `Caption2Text` map the iOS semantic roles onto Material typography. |
+
+These Composables only render supplied state and invoke callbacks. Networking,
+ACK transitions, navigation and operation ownership remain outside them, in services
+and ViewModels. Future screens must reuse them rather than create feature-local copies.
 
 ## Android persistence files
 

@@ -12,7 +12,9 @@ indicator and "Loading..." in the platform body font beneath it. Do not leave un
 tappable or accessible to screen readers. A native animated indicator may express
 the same indeterminate progress on each platform; do not render the PNG as the UI.
 
-On iOS this reusable view is named `LoadingScreen` and has a dedicated preview.
+On both clients this reusable view is named `LoadingScreen` and has a dedicated
+SwiftUI or Compose preview. The Android implementation uses an indeterminate
+Material progress indicator while preserving the same semantics and palette.
 
 The component only renders supplied state. The feature ViewModel or flow owner
 starts/cancels work and transitions to ready or error. Present accessible progress
