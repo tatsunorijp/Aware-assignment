@@ -81,7 +81,9 @@ The server will run locally in a single process and store its data only in memor
   message states, sequences and dependency composition.
 - [protocol.md](protocol.md): canonical wire models, endpoints, events, validation,
   ACKs, idempotency, structured errors, ordering and retry policy.
-- [ios.md](ios.md) and [android.md](android.md): platform implementation requirements.
+- [iOS README](../clients/ios/README.md) and [Android README](../clients/android/README.md):
+  unified platform details, setup, architecture and implementation requirements.
+  Their scoped AGENTS files own coding rules and reference shared context.
 - [acceptance-tests.md](acceptance-tests.md): observable checks and the native
   bidirectional offline demonstration.
 

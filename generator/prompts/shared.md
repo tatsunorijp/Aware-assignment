@@ -9,7 +9,9 @@ Before generating either client, read [product](../../spec/product.md),
 [protocol](../../spec/protocol.md), [acceptance criteria](../../spec/acceptance-tests.md),
 [fixture guidance](../../fixtures/protocol/README.md),
 [client integration](../../server/docs/CLIENT_GUIDE.md),
-[future scope](../../FUTURE.md) and the selected platform prompt/specification.
+[future scope](../../FUTURE.md) and the selected platform prompt, README and AGENTS
+file. The README owns platform details; AGENTS owns coding rules, including
+component reuse, extending existing token groups and scoped local constants.
 Read the [shared visual catalog](../../spec/design/README.md), each affected
 screen/component document and inspect its actual PNG. Protect these files as
 maintained inputs; report missing references rather than inventing a prototype.
@@ -33,8 +35,8 @@ maintained inputs; report missing references rather than inventing a prototype.
 - Preserve equivalent client behavior and generate the required authorized tests;
   use shared fixtures, controlled time and isolated stores.
 - Follow [output ownership and verification](../README.md#output-ownership-and-reproducibility).
-  Do not delete protected guidance or the user-created iOS project.
-- For iOS work, do not alter the server or shared contract to accommodate generated
+  Do not delete protected guidance, platform READMEs or user-created client projects.
+- For either client, do not alter the server or shared contract to accommodate generated
   code. Report backend defects and blocked flows for a separate developer decision.
 - Keep artifacts in English, update affected client documentation, and distinguish
   generated output, passing checks and remaining requirements in the handoff.

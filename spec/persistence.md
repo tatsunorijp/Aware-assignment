@@ -66,7 +66,7 @@ In both clients, the persistence folder must contain the files responsible for l
 - **Conversations:** persisted conversation model and local conversation operations.
 - **Messages:** persisted message model and local message operations, including the queue and state updates.
 
-Each entity must have separate files for its model, access contract, and persistence implementation. Android must also have a DAO for each entity to declare Room operations. Platform-specific file examples are in [ios.md](ios.md#ios-persistence-files) and [android.md](android.md#android-persistence-files).
+Each entity must have separate files for its model, access contract, and persistence implementation. Android must also have a DAO for each entity to declare Room operations. Platform-specific file examples are in [iOS README](../clients/ios/README.md#ios-persistence-files) and [Android README](../clients/android/README.md#android-persistence-files).
 
 Fetch, save, and update functions for the same entity may belong to the same local repository implementation. A separate file for each function is not required. Separation must follow responsibilities, avoiding a single file containing all application persistence logic.
 

@@ -1,30 +1,16 @@
-# iOS generation instructions
+# iOS generation entry point
 
-Read [shared instructions](shared.md), [the iOS specification](../../spec/ios.md)
-and [the iOS agent](../../clients/ios/AGENTS.md) before an authorized generation task.
+Before an authorized generation task, read [shared instructions](shared.md),
+[the iOS README](../../clients/ios/README.md) and
+[the iOS agent](../../clients/ios/AGENTS.md), then load the relevant shared
+context they reference.
 
-- Extend the existing AwareChat-iOS project at its documented source root; preserve
-  the app name and user-owned configuration unless a requested change requires otherwise.
-- Use SwiftUI/MVVM with main-actor-isolated `@Observable` ViewModels, explicit
-  independent screen/connection states and initializer injection.
-- Follow the [shared visual catalog](../../spec/design/README.md), behavior files
-  and actual PNGs in light mode only. Reusable full-screen loading/error components
-  render ViewModel state; their views do not own registration or retry networking.
-- Preserve `Core/Extensions/` for focused, deterministic reusable extensions and
-  `DesignSystem/Tokens/` for semantic visual constants. Inspect existing files
-  before adding helpers, components or tokens; do not duplicate equivalent values.
-- Preserve `Assets.xcassets/Colors/` and the
-  [asset/token mapping](../../spec/ios.md#color-assets-and-swift-tokens). Keep the
-  folder non-namespaced and the six colors opaque sRGB with no dark variants.
-  Consume them through `Tokens.Colors`, not duplicate literals or SwiftUI's built-in
-  primary/secondary styles. Compile the catalog and generated resource references.
-- Generate separated SwiftData entity models, repository protocols/implementations
-  and shared container composition. Keep contexts out of Views/ViewModels.
-- Use NavigationStack and URLSessionWebSocketTask with app-scoped messaging,
-  typed ServerError propagation, persistence-first sends/ACKs and shared recovery rules.
-- Follow the iOS agent's test checkpoint and final assignment test requirements.
-- The backend is read-only during client generation. Adapt the client to its
-  current contract; report suspected defects, do not fix the server or rewrite
-  shared expectations through the generator.
-- Respect declared output ownership, verify the actual project/toolchain, update
-  iOS documentation and report unverified native integration honestly.
+The README is the single platform guide; AGENTS owns implementation rules,
+component/token reuse, state/ownership boundaries, backend compatibility and the
+test checkpoint. Follow those rules without maintaining competing copies here.
+Extend the existing project using the README's structure and actual configuration.
+
+Preserve [declared output ownership](../README.md#output-ownership-and-reproducibility),
+update affected maintained inputs, and report generation/build/test results and
+unverified integration honestly. Reading this prompt does not authorize generating
+code, deleting the existing project or changing the server.

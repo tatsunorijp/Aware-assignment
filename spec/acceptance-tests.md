@@ -2,8 +2,9 @@
 
 These criteria cover the [product](product.md), [design](../DESIGN.md),
 [persistence](persistence.md), [protocol](protocol.md), native clients and generator.
-The server is implemented; iOS has a starter project, while native messaging and
-generation are not implemented yet. Criteria are requirements, not a record of
+The server is implemented; both clients have starter projects, while native
+messaging and generation are not implemented yet. Android's template tests do not
+cover assignment behavior. Criteria are requirements, not a record of
 tests passing. Record the commands, environment and results of each actual run.
 
 ## Server and protocol regressions
@@ -204,7 +205,7 @@ for one record per message ID. No screen may stay in full-screen loading solely
 because its socket is offline.
 
 Also verify iOS-to-iOS and Android-to-Android messaging where available. Report
-unavailable platform/device checks as unverified. During iOS integration, a
+unavailable platform/device checks as unverified. During either client's integration, a
 suspected server defect must be reported to the developer; do not change the
 backend or weaken the expected result to make the client pass.
 
@@ -214,7 +215,9 @@ The [generator requirements](../generator/README.md) define the clean regenerati
 workflow. Once implemented, generate both clients from maintained inputs, build
 both projects, run the required suites and repeat the native offline scenario.
 Generated persistence organization, dependency injection, DTOs and error handling
-must match the platform and shared specifications.
+must match the platform READMEs, scoped implementation instructions and shared
+specifications. Both platform README/AGENTS pairs are required generation inputs;
+verify component reuse and token-group/local-constant decisions against the agents.
 
 Do not mark this verified by running the currently empty shell placeholders.
 A manual patch to generated output does not establish a reproducible fix.

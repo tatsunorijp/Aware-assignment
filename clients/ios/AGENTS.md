@@ -1,357 +1,184 @@
-# AwareChat iOS agent instructions
+# iOS implementation instructions
 
-## Scope and working agreement
+Follow the [repository instructions](../../AGENTS.md). This file covers iOS code,
+assets and iOS-related documentation/generator work. The [README](README.md) is the
+single iOS guide for people and generation inputs; keep project facts, structure,
+setup, platform requirements and examples there rather than duplicating them here.
+Write repository artifacts, UI copy and commit messages in English.
 
-- Follow the [repository instructions](../../AGENTS.md). These instructions cover
-  `clients/ios/` and iOS-related specification and generator work.
-- All code, identifiers, comments, documentation, fixtures, logs, source UI text and commit
-  messages must be in English.
-- Preserve the existing app and unrelated changes. Do not rename the app, replace
-  its Xcode project, change signing or deployment targets, or delete client output
-  merely to match an example structure. Commit or push only when requested.
+## Read the relevant context
 
-## Server compatibility boundary
+Read the README and inspect affected source, assets and tests before editing.
+Use these maintained sources according to the task; do not infer requirements from
+a filename, sample screen or the historical assignment draft.
 
-- During iOS code generation, implementation, debugging and validation, adapt the
-  client to the existing server and its published contract. A client task does not
-  authorize backend changes, even when a server fix seems small or necessary.
-- Treat `server/` as read-only in this workflow, including implementation, tests,
-  configuration, dependencies and documentation. Do not redefine the shared wire
-  contract, alter fixture expectations or weaken acceptance criteria to accommodate
-  iOS code or make a failing integration pass. Read-only server inspection and
-  relevant local integration checks are allowed; backend fixes require a separate
-  task explicitly authorized by the developer.
-- If server behavior appears incorrect, incomplete or inconsistent with its
-  documentation, investigate enough to distinguish evidence from a hypothesis.
-  Notify the developer with the endpoint/event and server revision when known,
-  reproduction steps, expected versus observed behavior, relevant sanitized
-  response/log or source references, and the impact on the iOS flow and validation.
-  State clearly what remains unverified. The developer decides when and how to fix it.
-- Adapt iOS decoding, requests and operation handling where the existing contract
-  permits it. Do not silently redefine expected behavior, assume a future backend
-  fix, or introduce a bug-specific workaround that changes required semantics
-  without developer approval. Normal defensive error handling remains required.
-- If a required flow cannot work correctly against the current server, report that
-  flow as blocked or unverified and preserve the specified data/ACK/error guarantees.
-  Continue independent iOS work where possible; do not claim the blocked integration
-  is complete. Record any relevant limitation in iOS-owned documentation without
-  modifying backend documentation or assigning a server-fix schedule.
-
-## Read before implementation
-
-1. Read [product scope](../../spec/product.md), [application design](../../DESIGN.md),
-   [shared persistence](../../spec/persistence.md) and [iOS requirements](../../spec/ios.md).
-   For UI work, read the [shared visual catalog](../../spec/design/README.md),
-   each affected screen/component document and inspect its actual embedded PNG.
-   These references apply equally to iOS and Android; report missing assets or
-   contradictions instead of inventing a design or changing backend behavior.
-   Read [future work](../../FUTURE.md) for excluded features and
-   [generator requirements](../../generator/README.md) when working on generation.
-2. Read the maintained [wire protocol](../../spec/protocol.md) and
-   [mobile client integration guide](../../server/docs/CLIENT_GUIDE.md). They define
-   the concrete backend contract; do not infer it from UI examples or old snippets.
-3. Read the [acceptance criteria](../../spec/acceptance-tests.md) and
-   [shared fixture guide](../../fixtures/protocol/README.md). Inspect the relevant
-   fixtures before implementing or changing decoding and error handling.
-4. Read the [server changelog](../../server/CHANGELOG.md) when integrating or
-   adopting backend changes, and the [server README](../../server/README.md) when
-   running the backend. These are read-only references during iOS work. Follow
-   [server instructions](../../server/AGENTS.md) for a separately authorized backend
-   task; reading those instructions does not authorize changes from a client task.
-5. Inspect the current Xcode project, affected source and tests, and any maintained
-   [iOS README](README.md)/design notes before editing. Recheck these rather than treating the
-   baseline below as permanently current.
-
-The maintained documents above are the requirements sources; the former draft is
-only a migration index and is not required for implementation. Keep links current
-when information moves. The maintained protocol owns exact wire behavior;
-report material conflicts or server/documentation mismatches under the
-[server compatibility boundary](#server-compatibility-boundary). Do not resolve
-them by changing the backend or the shared contract during iOS work.
-
-## Existing project and intended organization
-
-- The versioned directory is `clients/ios/`, not a second `clients/iOS/` directory.
-- Project: [AwareChat-iOS.xcodeproj](AwareChat-iOS/AwareChat-iOS.xcodeproj).
-  Application target: `AwareChat-iOS`. Source root: `AwareChat-iOS/AwareChat-iOS/`
-  relative to this file. The current entry point is `MyApp.swift`.
-- Initial baseline: a SwiftUI starter screen, not an implemented messaging client.
-  There are no unit/UI test targets yet. The project declares iOS 27.0 deployment,
-  Swift language mode 5.0, MainActor default isolation and approachable concurrency.
-  These are observed build settings, not a request to change tools or language mode.
-- Inspect the installed Xcode/SDK and actual schemes before providing build
-  commands. Do not assume that the minimum OS supporting Observation is this
-  project's deployment target, or that Swift language mode is the compiler version.
-- Add files incrementally inside the existing source root when implementation is
-  requested. The intended responsibilities are:
-
-| Future location under the source root | Responsibility |
+| Task context | Required references |
 | --- | --- |
-| `App/` | App composition, `AppDependencies`, root flow and navigation ownership. |
-| `Assets.xcassets/Colors/` | Named, opaque sRGB assets backing the six `Tokens.Colors` values; no folder namespace or dark overrides. |
-| `Core/Extensions/` | Focused reusable Swift/framework extensions without feature business logic or dependency ownership. |
-| `Core/Models/` | Logical client/domain models independent of database details. |
-| `Core/Protocol/` | Wire DTOs, events and shared `ServerError`. |
-| `Core/Networking/` | HTTP/WebSocket contracts, adapters and local network failures. |
-| `Core/Persistence/Database/` | Shared SwiftData container, schema and configuration. |
-| `Core/Persistence/Users/`, `Conversations/`, `Messages/` | Entity-specific models, repository protocols and implementations. |
-| `Core/Services/` | App-scoped messaging, synchronization and outbox behavior. |
-| `Features/Identification/`, `UserList/`, `Chat/` | Feature views, ViewModels and presentation state. |
-| `DesignSystem/Components/` | Genuinely reusable UI components. |
-| `DesignSystem/Tokens/` | Semantic colors, icons, spacing, sizes, corner radii and other recurring visual constants. |
+| Product scope, flows and state behavior | [Product](../../spec/product.md), [application design](../../DESIGN.md) and [future scope](../../FUTURE.md). |
+| UI, components or visual tokens | [Shared design catalog](../../spec/design/README.md), affected screen/component documents and their actual PNGs; [iOS asset mapping](README.md#color-assets-and-swift-tokens). |
+| Storage, models or synchronization | [Shared persistence](../../spec/persistence.md) and [iOS persistence layout](README.md#ios-persistence-files). |
+| Networking, DTOs, errors or backend integration | [Protocol](../../spec/protocol.md), [client guide](../../server/docs/CLIENT_GUIDE.md), relevant [error fixtures](../../fixtures/protocol/README.md). Read [server changes](../../server/CHANGELOG.md) when adopting an update and [server setup](../../server/README.md) when running it. |
+| Verification or generation | Relevant [acceptance criteria](../../spec/acceptance-tests.md), [generator requirements](../../generator/README.md) and [iOS prompt](../../generator/prompts/ios.md). |
 
-These are future locations, not existing implementations or a scaffolding task.
-When tests are authorized, put them in a separate test target/source directory,
-grouped by feature, networking, protocol and persistence entity; do not compile
-test sources into the application target.
+Report missing assets, conflicting requirements or backend/documentation mismatches
+instead of inventing content or claiming unavailable references were inspected.
+
+## Preserve the project and scope
+
+- Extend the existing project and source root documented in README. Preserve its
+  name, bundle/signing configuration, deployment target and build settings unless
+  the requested task needs a change. Recheck schemes/toolchains before commands.
+- Do not copy another app's concrete types, tokens, assets, permissions or test
+  targets. Inspect and preserve this project's conventions and user-owned files.
+- Stay within the requested MVP work. Instructions and specifications do not
+  authorize generating all features, creating test targets or cleaning client trees.
+- Commit or push only when requested; preserve unrelated working-tree changes.
 
 ## MVVM, Observation and ownership
 
-- Use Swift, SwiftUI, MVVM, Observation with `@Observable`, SwiftData,
-  `NavigationStack` and `URLSessionWebSocketTask`. Prefer native frameworks; do not
-  add a dependency or a generic architecture framework without an actual need.
-- Views render state and forward user actions. ViewModels own presentation state,
-  validation and screen-level orchestration. Repositories own storage; services
-  own shared messaging rules. Views must not decode JSON or implement persistence,
-  reconnection, ACK handling or queue flushing.
-- Use `@MainActor`-isolated `@Observable` reference-type ViewModels, normally final
-  classes. Observation provides change tracking, not concurrency isolation.
-  Keep UI state mutations on the main actor and respect the project's isolation
-  settings. Do not suppress concurrency diagnostics with unsafe conformance.
-- Use `@State` when a SwiftUI view owns an observable ViewModel's lifetime. Pass
-  existing instances to child views; use `@Bindable` only where two-way bindings
-  are needed. Do not recreate ViewModels in `body` or use `ObservableObject`,
-  `@Published`, `@StateObject` or `@ObservedObject` for new Observation-based models.
-  See [Apple's Observation guidance](https://developer.apple.com/documentation/swiftui/migrating-from-the-observable-object-protocol-to-the-observable-macro).
-- Expose read-only presentation state where practical, with explicit action
-  methods for transitions. Bind editable input intentionally. Keep task handles
-  and other non-presentation mutable bookkeeping out of observation when appropriate
-  using `@ObservationIgnored`; do not hide state that the UI needs to track.
-- Compose concrete dependencies once in `App/AppDependencies.swift`. Inject
-  networking and persistence protocols through initializers. Give each ViewModel
-  only what it uses; no global service locator or database creation in a ViewModel.
-- Use async/await with explicit task ownership and cancellation. Repeated view
-  appearances must not start duplicate loads, socket receive loops or outbox loops.
-  Cancel feature-scoped work when appropriate, without canceling app-scoped message
-  reception just because the user leaves a chat. Guard against stale async results.
+- Use SwiftUI and MVVM with normally final, `@MainActor`-isolated `@Observable`
+  ViewModels. Observation tracks changes; it does not replace actor isolation.
+  Respect the project's concurrency settings; do not silence diagnostics through
+  unsafe conformance.
+- Views render state and report actions. ViewModels own validation and presentation
+  orchestration. Repositories own storage; app-scoped services own networking,
+  synchronization and outbox rules. Keep JSON, persistence, ACK handling and
+  reconnect loops out of Views.
+- Own a ViewModel with `@State` where SwiftUI owns its lifetime; pass existing
+  instances down and use `@Bindable` only for editable bindings. Do not recreate
+  ViewModels in `body` or introduce legacy `ObservableObject`, `@Published`,
+  `@StateObject` or `@ObservedObject` for new Observation-based models.
+- Expose read-only state where practical and explicit action methods. Keep task
+  handles/non-presentation bookkeeping out of observation with
+  `@ObservationIgnored` when appropriate; never hide state needed by the UI.
+- Compose dependencies once in `App/AppDependencies.swift` and inject protocols
+  through initializers. No global service locator, singleton coordinator, database
+  creation in ViewModels or unnecessary DI/framework dependencies.
+- Use async/await with explicit cancellation/lifetime ownership. Prevent duplicate
+  loads, receive/outbox loops and stale results. Leaving a conversation must not
+  cancel app-scoped messaging.
+- Navigate with `NavigationStack` and lightweight IDs, with destinations owned by
+  the app/flow. Introduce a Router/Coordinator for meaningful flow complexity only;
+  navigation containers must not become business or persistence services.
 
-## Explicit, independent state models
+## Explicit state and data boundaries
 
-Use enums for mutually exclusive phases instead of overlapping booleans such as
-`isLoading`, `hasError` and `isReady`. Name a feature's enum `State` or `ScreenState`
-as appropriate. Carry typed failure/data values when useful; do not lose error
-context merely to keep a payload-free example. Avoid competing copies of the same
-state in enum payloads and separate properties. Small UI toggles may remain booleans.
+- Model mutually exclusive phases with `State`/`ScreenState` enums, typically
+  `loading`, `ready`, `error`, carrying typed data/failures as needed. Avoid
+  overlapping flags or competing copies of the same state. Small UI toggles may
+  remain booleans.
+- Keep `ConnectionState` (`disconnected`, `connecting`, `connected`,
+  `connectionFailure`), discovery-section state and persisted per-message state
+  independent. Derive connection state from the shared service, not a socket per VM.
+- Implement the [documented state semantics](README.md#observation-and-presentation-state):
+  initial registration has an acceptance/completion gate; subsequent reconnects
+  do not hide usable local content. Transport-open and protocol-ready are distinct.
+- Keep SwiftData entities/`ModelContext` inside persistence with consistent actor
+  isolation. Views/ViewModels consume logical models, never direct `@Query` or
+  context access. Use one shared container and entity-specific contracts.
+- Preserve [transaction and durability rules](../../spec/persistence.md):
+  explicit successful saves, atomic related writes, persistent identity/completion,
+  FIFO sequence allocation, incoming deduplication and observable committed changes.
+  An eventual autosave or failed transaction must not appear as successful data.
+- Follow the exact shared ACK/retry/error rules through the app-scoped service.
+  Keep local state, direction and receipt metadata out of wire DTOs. Preserve
+  immutable retries, ACK-after-save and no sent downgrade.
+- Propagate typed networking/storage failures. Services interpret structured codes,
+  eligibility and correlation; ViewModels receive typed/derived presentation state,
+  not JSON or diagnostic sentences. Display valid `userMessage` or a safe fallback,
+  never `developerMessage`. See [iOS errors](README.md#ios-error-organization).
 
-| State dimension | Cases / meaning | UI and behavior |
-| --- | --- | --- |
-| Feature `ScreenState` (or `State`) | `loading`, `ready`, `error` | Full-screen loading for essential local reads or initial registration. Essential failures use the shared error component; successful empty local data is ready. A ready form is not registration completion. |
-| `ConnectionState` | `disconnected`, `connecting`, `connected`, `connectionFailure` | Independent indicator and retry action. Network loss must not replace usable local content with a full-screen error. |
-| Registered-users section | Loading, available list, empty result, error with retry | Only this remote section changes; local conversations remain visible. |
-| Outgoing `MessageState` | `pendingToSend`, `sending`, `sent`, `failed` | Persisted per-message lifecycle, not a screen or connection state. |
+## Components, tokens and local constants
 
-- Derive connection state from the shared connection service, not one socket per
-  ViewModel. Distinguish transport opening from protocol readiness: outbox sends
-  and recipient ACKs require `identity_accepted`. If `connected` means only an
-  open transport, expose identification readiness separately and enforce the gate.
-- Keep initial replay/synchronization progress separate from local loading.
-  `sync_completed` ends the initial replay, not local persistence or all delivery.
-- Initial Confirm hides the form with full-screen loading. Commit identity before
-  `identify`; navigate only after `identity_accepted` for the active attempt and
-  durable registration completion. Essential failures use the shared error screen.
-  Retry preserves identity; Cancel returns to the prefilled form. Guard duplicate
-  attempts/stale results and provide a bounded timeout rather than endless loading.
-- After completed registration and local loading, allow history reading,
-  composition and submission to the local queue while connecting, synchronizing
-  or offline. Connection failure
-  offers a retry action without restarting full-screen local loading.
-- Scope operation errors to the relevant form, message or section. Show server
-  `userMessage` when valid, otherwise a suitable client-defined fallback. Never
-  display `developerMessage` or raw technical errors as UI copy.
+1. Inspect existing feature UI, `DesignSystem/Components/`, extensions and tokens.
+   **Reuse an existing suitable component first.** If a small compatible extension
+   is needed, extend that component instead of creating a competing implementation.
+   Preserve existing consumers; extract genuinely reusable UI, not one-use wrappers.
+2. Reuse an existing semantically matching token and its established API. Do not
+   substitute an unrelated token just because its numeric value happens to match.
+3. If the appropriate token group already exists but the required value does not,
+   **add the value to that group** in `DesignSystem/Tokens/`, following its naming,
+   types and conventions. Do not create a private duplicate instead.
+4. If no appropriate group exists, keep the value close to its owning type/file in
+   a **`private enum Constants`** with static values. Do not create a new global
+   token group merely for one local need. Promote a group only when that broader
+   design-system change is explicitly part of the task.
+5. Apply this rule to UI/visual constants. Protocol deadlines, injected server
+   addresses, user data and feature state are not visual tokens; preserve their
+   documented configuration/ownership rather than putting them in a token group.
 
-## Persistence and messaging invariants
+Keep extensions deterministic and focused: no hidden I/O, feature business rules,
+mutable global state or dependency ownership. Tokens and Constants contain values,
+not navigation, networking or persistence behavior.
 
-- Persist one generated identity UUID before connecting; reuse it on relaunch and
-  identify on every new socket. Distinguish the current identity from other users.
-  A saved identity is not completed registration: persist and read the client-only
-  completion marker defined in [persistence](../../spec/persistence.md#registration-completion).
-  Incomplete registration resumes the form with the same UUID; completed
-  registration permits offline access and is not reset by server restart.
-  Names are display data, not unique keys. Normalize UUIDs to lowercase; construct
-  conversation IDs by sorting the two participant IDs and joining them with `:`.
-- Use one shared SwiftData container with fixed users, conversations and messages
-  entities, never a table/store per chat. Separate each entity's model, repository
-  protocol and SwiftData implementation, as described in
-  [persistence](../../spec/persistence.md) and
-  [iOS persistence files](../../spec/ios.md#ios-persistence-files).
-- Repositories expose logical models and propagate read/write failures. Keep
-  SwiftData records and `ModelContext` inside persistence, with consistent actor
-  isolation. Views/ViewModels must not access them directly, including via `@Query`.
-- Report persistence success only after an explicit successful save; do not rely
-  on eventual autosave before a network send or ACK. Use a transaction/equivalent
-  unit of work for related writes and consistent sequence allocation. Failed saves
-  must not leak partial changes into a later commit or be presented as durable data.
-- Enforce unique message IDs and idempotent conversation creation. Allocate a
-  positive, monotonically increasing Int64 `clientSequence` durably across launches
-  and concurrent sends. Update existing message states without changing content,
-  identity or conversation. Propagate persisted changes to visible history and summaries.
-- An app-scoped messaging service persists outgoing messages as `pendingToSend`
-  before sending; ViewModels observe committed local data for immediate display.
-  Use one FIFO send loop ordered by sequence, initially one unacknowledged send
-  at a time. Mark `sending` while
-  waiting, then persist `sent` and `serverReceivedAt` after `message_accepted`.
-- Recover interrupted `sending` messages to pending on startup/reconnection.
-  Temporary failures/timeouts return unacknowledged sends to `pendingToSend`;
-  permanent rejections mark only the correlated unacknowledged send `failed`.
-  Keep failed messages visible. A delayed error must never downgrade `sent`.
-- Retry with the same original ID, sequence, text, participants and timestamp.
-  Omit or null outgoing `serverReceivedAt`. Follow the shared 10-second sender-ACK
-  timeout and delays of 1, 2, 4, 8, 16, then 30 seconds, capped at 30. Reset after
-  success and wait for identification; no immediate temporary-error retry loops.
-- Persist incoming messages and required related records before `message_persisted`.
-  ACK already-persisted duplicates again without insertion. Never ACK a failed save;
-  after storage recovery, reconnect for replay. Reception must work without an open chat.
-  Persist first successful receipt time as client-only metadata for display and
-  preserve it on duplicates. Outgoing time uses immutable `clientCreatedAt`;
-  `serverReceivedAt` is not recipient-device receipt time.
-- `sent` means server acceptance, not recipient persistence or reading. Server
-  restarts lose volatile data; preserve local history and do not resend all sent
-  messages. Handle session replacement (close 4001) without competing reconnect
-  loops; close 1011 preserves acknowledged sends and recovers only unacknowledged ones.
+Keep named color values in `Assets.xcassets/Colors/`, with no folder namespace,
+opaque sRGB values and no dark overrides. Expose them through `Tokens.Colors`
+using generated resources; SwiftUI's built-in `Color.primary`/`Color.secondary`
+are not the named app assets. Follow the [palette](../../spec/design/README.md#color-palette)
+and README mapping, updating assets, consumers and documentation together.
 
-## Backend contract and typed errors
+Use the shared prototypes and native accessibility/keyboard/safe-area behavior.
+Keep the MVP light-only, preserve Dynamic Type and non-color-only status cues.
+Report unspecified visual choices or contrast issues without silently changing
+approved values or inventing extra UI/backend capabilities.
 
-- Consume the current server contract; changes in the client must not require
-  new backend endpoints, fields or behavior. Report missing capabilities and
-  suspected server defects under the [server compatibility boundary](#server-compatibility-boundary).
-- Keep HTTP and WebSocket addresses configurable in injected dependencies. Use the
-  client guide for Simulator/device addresses and local-network/ATS requirements.
-  Do not copy a developer's LAN IP or introduce unrestricted production exceptions.
-- Use the exact version-1 protocol: strict outgoing fields, tolerant additive
-  response decoding, Int64 sequences, and UTC dates with and without fractional
-  seconds. Keep local state/direction/summary fields out of wire DTOs.
-- Decode `ServerError` in `Core/Protocol/` with `Codable`, `Error` and
-  `LocalizedError`, mapping `errorDescription` to `userMessage`. Preserve required
-  string `code`, non-blank `userMessage`, boolean `isRetryable`, and optional
-  `developerMessage`/`requestId` that may be missing or null. Unknown codes must
-  remain decodable; do not use a closed enum that rejects future server codes.
-- WebSocket errors have a nested `error` and an optional envelope `messageId`.
-  HTTP errors have a failure status and a nested `error`. Networking must explicitly
-  propagate typed failures; making a DTO conform to `Error` does not throw it.
-- Keep local transport, timeout, invalid-response/decoding and persistence failures
-  distinguishable from actual server errors. Check HTTP status before success
-  decoding. An invalid error body is neither success nor a fabricated `ServerError`.
-- Services apply behavior using code, retry eligibility and operation correlation,
-  never error-message text. Normalize rejected UUID spelling for lookup. An error
-  about a recipient ACK must not change an outgoing message; an uncorrelated error
-  must not fail the entire queue. `requestId` is diagnostic, not an idempotency key.
-- `GET /users` reports registration, not presence. Filter self and existing
-  conversation participants by ID. A successful filtered-empty section shows
-  "No other users available right now". An HTTP failure shows section-level retry.
+## Server compatibility boundary
 
-## Navigation and UI conventions
-
-- Use state-driven `NavigationStack` navigation with lightweight routes, preferably
-  IDs rather than whole models. Views report navigation intent; an app/flow owner
-  owns destinations. Add a separate Router/Coordinator for meaningful flow
-  complexity, not for every simple screen. No global coordinator singleton or
-  business/persistence logic in coordinators.
-- Prefer a clean, minimalist interface with clear hierarchy. Support readable
-  accessibility labels, Dynamic Type and light appearance only, even when the
-  device is set to dark. [Dark mode](../../FUTURE.md#dark-mode) is deferred. Message status
-  must not rely on color alone.
-- Follow the [shared screen references](../../spec/design/README.md): `chat-screen`
-  is `Features/UserList`; `messages-screen` is `Features/Chat`. Incoming cards are
-  gray/left-aligned; outgoing cards are blue/right-aligned, with time beneath each.
-  Show the single checkmark only for server-accepted `sent`, not socket writes,
-  recipient persistence or reads. Use the shared loading/error components only
-  within their documented blocking boundaries; discovery errors stay sectional.
-- Check existing extensions, components and tokens before creating new ones.
-  Keep `Core/Extensions/` deterministic and narrowly scoped; extensions must not
-  hide feature logic, I/O, mutable global state or dependency ownership.
-- Extract likely reusable UI to `DesignSystem/Components/`; do not force one-use
-  wrappers or premature abstractions. Reuse semantically appropriate values from
-  `DesignSystem/Tokens/`. Prefer semantic light-mode colors/assets; if no suitable
-  token exists, use a clear local value rather than an unrelated token.
-- The AwareChat iOS project has its own extensions, components and token files.
-  Inspect them and preserve their conventions. Do not import or assume PadelRithm's
-  concrete token names, components, assets, bundle identifier or test targets.
-- Keep named colors in `Assets.xcassets/Colors/` and expose them through
-  `DesignSystem/Tokens/Colors.swift` as `Tokens.Colors`. Follow the
-  [asset/token mapping](../../spec/ios.md#color-assets-and-swift-tokens) and
-  [approved palette](../../spec/design/README.md#color-palette). Keep Provides
-  Namespace disabled, preserve exact sRGB values, and use generated color resources
-  in the tokens rather than SwiftUI's built-in `Color.primary`/`Color.secondary`.
-  Do not add dark variants, duplicate RGB constants in views or rename assets
-  without updating consumers and documentation. Compile assets and token references
-  together when validating a change.
-- Stay within the three-screen text-messaging MVP. Presence, read receipts, groups,
-  attachments, history pagination, conversation deletion, manual retry of failed
-  messages and background-delivery guarantees remain deferred unless requested.
+- During iOS generation, implementation, debugging and validation, adapt the client
+  to the existing backend. Treat `server/` as read-only, including code, tests,
+  configuration, dependencies and documentation. Read-only inspection and relevant
+  authorized local integration checks are allowed.
+- Do not redefine the shared wire contract, alter fixtures, weaken acceptance
+  criteria or assume a future backend fix to accommodate client code. Reading
+  server instructions does not authorize backend changes.
+- Investigate suspected defects enough to separate evidence from hypotheses.
+  Report endpoint/event, revision when known, reproduction, expected/observed
+  behavior, sanitized evidence, client impact and unverified checks. The developer
+  decides when and how to fix the server in a separately authorized task.
+- Continue independent client work without disguising a blocked integration.
+  Record client limitations in README; do not promise a server-fix schedule.
+  Defensive handling within the contract is required, but behavior-changing
+  workarounds need developer approval.
 
 ## Validation and test implementation checkpoint
 
-- Instruction-only changes require checking paths, references, consistency and
-  `git diff --check`; they do not require building, running the app or adding tests.
-- For future implementation, inspect actual project schemes and installed
-  Simulator destinations. Build affected code and run relevant existing tests
-  when available. Report commands, outcomes and blockers; never claim unrun tests
-  passed or invent a test target to make a suggested command appear valid.
-- Validate View-only changes through builds, previews and appropriate Simulator
-  inspection. Never create unit tests for SwiftUI `View` types or offer new unit
-  tests for a change limited to views.
-- For eligible non-UI production changes, ask whether to create/update tests now
-  or defer until the user's review before writing test code. An explicit request
-  to implement/generate tests already satisfies this checkpoint. Existing tests
-  may be run before that decision. Deferral does not remove the assignment's test
-  requirements; report the remaining verification work.
-- When test implementation is authorized, prioritize ViewModels, repositories,
-  messaging services and deterministic helpers/formatters/DTOs. Inject fakes for
-  networking and controlled time for retries; unit tests must not need a real server.
-  Test real SwiftData implementations with isolated in-memory stores, or temporary
-  on-disk stores for reopen/durability scenarios, never the user's application store.
-- Cover the maintained client and shared acceptance criteria: independent
-  screen/connection states; identity reuse; local-first writes; FIFO and recovery;
-  ACK-after-save; duplicate ACK/delivery; error correlation and no sent downgrade;
-  missing/null fields, unknown codes and fallback text using the shared fixtures.
-- A server smoke test is not proof of native-client correctness. Once both clients
-  exist, verify the [native offline scenario](../../spec/acceptance-tests.md#native-offline-scenario).
-- Investigate integration failures without changing the server or disguising the
-  failure in client fakes/assertions. Report backend-related blockers and distinguish
-  passing client unit tests from unverified or failing real-server integration.
-- Honor current tool permissions. Do not import permanent machine/Simulator
-  authorizations from another project. Never erase Simulator data as routine
-  validation, and restore temporary appearance changes when appropriate.
+- Documentation-only changes: check paths, links/anchors, consistency and
+  `git diff --check`. No app build or new test code is required.
+- For code/assets, inspect actual schemes and destinations; build affected code
+  and run relevant existing tests. Compile color assets and resource references
+  together. Report commands/outcomes and unavailable checks, not assumed success.
+- Validate View-only changes with builds, previews and appropriate Simulator
+  inspection. Never create unit tests for SwiftUI View types or offer unit tests
+  for a change limited to Views.
+- Before writing tests for eligible non-UI production changes, ask whether to
+  create/update them now or defer until review. Explicitly requested tests already
+  satisfy the checkpoint; existing tests may be run without that decision. Deferral
+  does not remove final acceptance requirements: report pending verification.
+- Authorized tests target ViewModels, repositories, services and deterministic
+  helpers/DTOs. Use injected fakes, controlled time, isolated in-memory stores and
+  temporary disk stores for reopen tests; never the user's database.
+- Check the shared acceptance criteria, including independent states, identity
+  reuse/completion, durability, FIFO recovery, duplicate delivery/ACK, typed errors,
+  no sent downgrade and compatible decoding. Do not treat server-only smoke tests
+  as native UI, persistence or cross-platform verification.
+- Do not erase Simulator data as routine validation or inherit another project's
+  permanent machine permissions. Restore temporary appearance settings.
 
 ## Documentation and regeneration discipline
 
-- Treat documentation as part of a behavior change, not a later optional task.
-  Update affected iOS-owned specifications, architecture decisions and client
-  setup/usage documentation in the same change set, within the server compatibility
-  boundary. When implementation starts,
-  create or update `clients/ios/README.md` with actual tools, configuration, build,
-  run/test instructions, supported behavior and known limitations; link it here.
-- For backend-facing client changes, consult the shared protocol, integration
-  guide, fixtures and acceptance criteria as compatibility references. Update the
-  iOS implementation and its own documentation to match the existing contract.
-  Report any needed backend/shared-contract correction for a separate developer
-  decision; do not edit server documentation or redefine shared behavior as part
-  of client work. Do not claim an iOS-only feature is supported by the server or Android.
-- Keep this file focused on durable instructions. Update it when architecture,
-  workflow or reference locations change; keep task logs and full protocol payloads
-  in their appropriate documents instead of duplicating them here.
-- The generator is a future deliverable, not an existing executable workflow.
-  When introduced, its prompts/harness must explicitly load these instructions and
-  the relevant specifications, including the server compatibility boundary.
-  `AGENTS.md` alone does not implement a generator or authorize backend changes.
-- Keep AI guidance and manually maintained specifications outside disposable
-  generated output. Never designate all of `clients/ios/` for deletion: it contains
-  this file and a user-created project. Require explicit generated-path ownership
-  before regeneration and preserve all files not declared generated.
-  Protect `spec/design/`, including PNGs and behavior documents; update affected
-  shared visual references and acceptance criteria when UI requirements change.
-- Fix iOS-generated-code defects in the responsible iOS specification, prompt or
-  harness logic so the fix survives regeneration, without changing the server or
-  redefining shared wire behavior. If the cause is a suspected backend defect,
-  report it instead of patching it through the generator workflow. Do not claim
-  reproducibility until generation, builds and authorized tests actually verify it.
+- Update this platform's README with affected structure, setup, architecture,
+  supported behavior, limitations and actual verification instructions in the
+  same change. Keep this agent focused on implementation rules; put shared
+  product/behavior/UI context in its maintained owner and link it.
+- A client implementation task is not authority to change shared behavior or
+  backend docs. Report needed contract/backend corrections separately. When an
+  explicit shared documentation reorganization moves files, update affected
+  references without changing protocol semantics.
+- Generation loads the README, this agent and relevant shared inputs explicitly.
+  Keep prompts as entry points, not another copy of these coding rules.
+- Protect both README and AGENTS, shared design PNGs/specifications, prompts,
+  fixtures and user-created projects. No broad client directory is disposable;
+  declare exact generated ownership before regeneration.
+- Fix generated-code defects in the responsible maintained input/harness so fixes
+  survive regeneration, without changing backend behavior or weakening tests.
+  Do not claim reproducibility until generation, builds and authorized tests verify it.

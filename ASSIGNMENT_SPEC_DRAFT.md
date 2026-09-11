@@ -21,11 +21,11 @@ on the old draft sections.
 | 9 | Protocol ACKs | [sender ACK](spec/protocol.md#sending-and-sender-ack), [recipient ACK](spec/protocol.md#delivery-and-recipient-ack) |
 | 10 | Idempotency | [spec/protocol.md](spec/protocol.md#sending-and-sender-ack), [local deduplication](spec/persistence.md#local-repository-contracts-and-operations) |
 | 11 | Local Persistence | [spec/persistence.md](spec/persistence.md) |
-| 12 | Shared Protocol Models | [wire models](spec/protocol.md#shared-models), [local models](spec/persistence.md#local-message-representation), [iOS error example](spec/ios.md#typed-servererror-example), [Android errors](spec/android.md#error-propagation-and-validation) |
+| 12 | Shared Protocol Models | [wire models](spec/protocol.md#shared-models), [local models](spec/persistence.md#local-message-representation), [iOS error example](clients/ios/README.md#typed-servererror-example), [Android errors](clients/android/README.md#error-propagation-and-validation) |
 | 13 | Protocol Examples and Events | [spec/protocol.md](spec/protocol.md), [client integration guide](server/docs/CLIENT_GUIDE.md) |
-| 14 | Screen States | [DESIGN.md](DESIGN.md#screen-loading-and-state-dimensions), [iOS state](spec/ios.md#observation-and-presentation-state), [Android state](spec/android.md#state-lifecycle-and-model-equivalence) |
-| 15 | iOS Implementation | [spec/ios.md](spec/ios.md) |
-| 16 | Android Implementation | [spec/android.md](spec/android.md) |
+| 14 | Screen States | [DESIGN.md](DESIGN.md#screen-loading-and-state-dimensions), [iOS state](clients/ios/README.md#observation-and-presentation-state), [Android state](clients/android/README.md#state-lifecycle-and-model-equivalence) |
+| 15 | iOS Implementation | [iOS README](clients/ios/README.md) |
+| 16 | Android Implementation | [Android README](clients/android/README.md) |
 | 17 | Server Implementation | [server/README.md](server/README.md), [server role](DESIGN.md#server-role-and-compatibility) |
 | 18 | Client Tests | [client behavior](spec/acceptance-tests.md#client-behavior), [persistence](spec/acceptance-tests.md#client-persistence), [errors](spec/acceptance-tests.md#equivalent-future-client-error-behavior) |
 | 19 | Server Tests | [server regressions](spec/acceptance-tests.md#server-and-protocol-regressions), [error contract](spec/acceptance-tests.md#server-error-contract), [execution](server/README.md#check-and-test) |

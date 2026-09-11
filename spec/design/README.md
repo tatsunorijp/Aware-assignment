@@ -79,9 +79,11 @@ validation; verify actual text sizes and color pairings during screen implementa
 and report any issue without silently changing approved values.
 
 iOS stores these colors under `Assets.xcassets/Colors/` and exposes them through
-`Tokens.Colors`; see the [iOS asset/token mapping](../ios.md#color-assets-and-swift-tokens).
+`Tokens.Colors`; see the [iOS asset/token mapping](../../clients/ios/README.md#color-assets-and-swift-tokens).
 Android must express the same palette through its native design tokens, not import
-an Xcode catalog; no Android color implementation is added by this iOS task.
+an Xcode catalog; its template theme does not yet implement this palette. See the
+[Android guide](../../clients/android/README.md#shared-visual-references) for current
+status and platform mapping.
 
 ## Asset ownership and maintenance
 
@@ -92,7 +94,7 @@ workspace path is required by either client or generator.
 
 Keep this catalog, each image and its behavior document together under version
 control. Update affected cross-links, [shared design](../../DESIGN.md), platform
-specifications, [acceptance criteria](../acceptance-tests.md#shared-visual-and-flow-acceptance)
+READMEs, [acceptance criteria](../acceptance-tests.md#shared-visual-and-flow-acceptance)
 and generation inputs when a prototype or its behavior changes. Do not duplicate
 the same shared images inside both client trees or treat `spec/design/` as
 disposable generated output. Do not overwrite a prototype with an implementation

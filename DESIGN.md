@@ -3,7 +3,7 @@
 This document specifies shared client flows and state ownership for the
 [product](spec/product.md). The [protocol](spec/protocol.md) owns exact wire
 behavior, [persistence](spec/persistence.md) owns local durability, and the
-[iOS](spec/ios.md) and [Android](spec/android.md) specifications own platform details.
+[iOS](clients/ios/README.md) and [Android](clients/android/README.md) READMEs own platform details.
 These are implementation requirements, not claims that the client screens exist.
 
 ## Shared prototypes and appearance
@@ -221,8 +221,9 @@ user ID, pending messages by receiver and processed message IDs. It does not own
 durable conversation history. [server/README.md](server/README.md) documents the
 implemented Python/FastAPI architecture, execution and limits.
 
-During iOS generation and implementation, adapt the client to this existing server.
+During either client's generation and implementation, adapt to this existing server.
 Report suspected backend defects with evidence and impact; the developer decides
 when and how to address them separately. Do not change the server, contract or
 test expectations to accommodate client code. The
-[iOS agent boundary](clients/ios/AGENTS.md#server-compatibility-boundary) governs that workflow.
+[iOS](clients/ios/AGENTS.md#server-compatibility-boundary) and
+[Android](clients/android/AGENTS.md#server-compatibility-boundary) agents govern that workflow.

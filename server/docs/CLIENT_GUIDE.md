@@ -6,7 +6,7 @@ wire contract for Swift/iOS and Kotlin/Android. Read [server/README.md](../READM
 for setup and operations. This guide describes how a client uses that contract.
 Shared screen flows live in [DESIGN.md](../../DESIGN.md), local storage contracts in
 [spec/persistence.md](../../spec/persistence.md), and platform details in
-[spec/ios.md](../../spec/ios.md) and [spec/android.md](../../spec/android.md).
+[iOS README](../../clients/ios/README.md) and [Android README](../../clients/android/README.md).
 
 ## Follow server changes
 

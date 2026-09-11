@@ -13,8 +13,8 @@ generating code, changing the backend or deleting the existing projects.
 
 ## Required inputs
 
-Read [repository instructions](../AGENTS.md), then the appropriate specification
-and prompt layers:
+Read [repository instructions](../AGENTS.md), the selected platform README and
+AGENTS file, then the relevant shared specifications and prompt entry points:
 
 | Input | Responsibility |
 | --- | --- |
@@ -23,8 +23,8 @@ and prompt layers:
 | [persistence](../spec/persistence.md) | Shared models, entity-specific repositories, sequence/state writes and DI. |
 | [protocol](../spec/protocol.md) | Exact existing HTTP/WS model, events, validation, error and retry contract. |
 | [acceptance criteria](../spec/acceptance-tests.md) and [fixtures](../fixtures/protocol/README.md) | Equivalent tests, decoding cases and native integration checks. |
-| [iOS specification](../spec/ios.md) and [iOS instructions](../clients/ios/AGENTS.md) | SwiftUI/MVVM/Observation, SwiftData, task boundaries and test checkpoint. |
-| [Android specification](../spec/android.md) | Android responsibilities, native stack, Room, state and error handling. |
+| [iOS README](../clients/ios/README.md) and [iOS agent](../clients/ios/AGENTS.md) | Unified iOS platform guide and coding rules, including component/token reuse and test checkpoint. |
+| [Android README](../clients/android/README.md) and [Android agent](../clients/android/AGENTS.md) | Unified Android platform guide and coding rules, including component/token reuse and test checkpoint. |
 | [client guide](../server/docs/CLIENT_GUIDE.md) and [server changelog](../server/CHANGELOG.md) | Existing backend integration and migration impact. |
 | [future work](../FUTURE.md) | Features that must not be generated as part of the MVP. |
 | [shared prompt](prompts/shared.md) | Shared generation instructions and invariants. |
@@ -33,6 +33,10 @@ and prompt layers:
 The former draft is a migration index only. Neither the harness nor an agent may
 depend on its old numbered sections. Relevant instructions must be loaded
 explicitly; a filename's presence does not prove that a generator read it.
+Each platform README replaces a separate platform specification. Keep setup,
+structure and platform requirements there, coding rules in its AGENTS file and
+shared contracts in their own documents. Platform prompts route to these sources
+instead of maintaining another copy of architecture or token policies.
 
 ## Required output
 
@@ -54,7 +58,7 @@ Generate native projects that can build with their documented platform tools and
 - Include client setup/usage documentation with actual tools, selected versions,
   configuration, build/run/test commands and limitations.
 
-The final assignment requires generated tests. The iOS workflow checkpoint still
+The final assignment requires generated tests. Each platform's workflow checkpoint
 controls when writing test code is authorized; an explicit generation request
 including tests satisfies it. If tests are deferred, mark the generation result
 incomplete with respect to the final deliverable.
@@ -67,8 +71,8 @@ document is not automatically disposable generated code.
 
 Protect repository instructions, specifications, prompts, shared fixtures and
 server files, including all `spec/design/` images and behavior documents. The
-existing `clients/ios/AwareChat-iOS/` project is user-created;
-`clients/ios/AGENTS.md` is maintained guidance. No broad client tree is currently
+existing `clients/ios/AwareChat-iOS/` and `clients/android/AwareChat-Android/` projects
+are user-created. Both platform README/AGENTS pairs are maintained inputs. No broad client tree is currently
 approved for deletion. Preserve files outside explicitly declared generated paths.
 
 The harness must record sufficient provenance to repeat a generation: input
@@ -77,7 +81,7 @@ output ownership and verification commands/results. This is a reproducible
 workflow requirement, not a promise of byte-for-byte deterministic AI output.
 
 If generated code is wrong, correct the responsible specification, prompt or
-harness and regenerate. For iOS work, this does not authorize fixing the server:
+harness and regenerate. Client work does not authorize fixing the server:
 report suspected backend defects to the developer for a separate decision.
 Do not redefine shared contracts or weaken fixtures to make a client pass.
 
