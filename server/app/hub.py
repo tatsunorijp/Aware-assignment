@@ -10,11 +10,11 @@ import json
 from dataclasses import dataclass, field
 from typing import Any
 
+from app.errors import ErrorCode, ProtocolError
 from app.protocol import (
     Identify,
     Message,
     MessagePersisted,
-    ProtocolError,
     SendMessage,
     User,
     direct_conversation_id,
@@ -59,19 +59,17 @@ class MessagingHub:
         # Retain receipts (not delivered text) for idempotence until process exit.
         self.processed_message_ids: dict[str, ProcessedMessage] = {}
 
+    def list_users(self) -> list[User]:
+        return sorted(self.users_by_id.values(), key=lambda user: user.userId)
+
     def handle(self, session: Session, command: Identify | SendMessage | MessagePersisted) -> None:
         if isinstance(command, Identify):
             self.identify(session, command.user)
             return
-        message_id = (
-            command.message.messageId if isinstance(command, SendMessage) else command.messageId
-        )
         if session.user_id is None:
-            raise ProtocolError("NOT_IDENTIFIED", "Send identify first", message_id, retryable=True)
+            raise ProtocolError(ErrorCode.IDENTIFICATION_REQUIRED, "Send identify first")
         if self.connected_clients_by_user_id.get(session.user_id) is not session:
-            raise ProtocolError(
-                "SESSION_REPLACED", "Use the latest connection", message_id, retryable=True
-            )
+            raise ProtocolError(ErrorCode.SESSION_REPLACED, "Use the latest connection")
         if isinstance(command, SendMessage):
             self.send_message(session, command.message)
         else:
@@ -79,7 +77,7 @@ class MessagingHub:
 
     def identify(self, session: Session, user: User) -> None:
         if session.user_id is not None:
-            raise ProtocolError("ALREADY_IDENTIFIED", "Identify only once per connection")
+            raise ProtocolError(ErrorCode.INVALID_EVENT, "Identify only once per connection")
         old = self.connected_clients_by_user_id.get(user.userId)
         if old is not None:
             old.outbound.put_nowait(CloseConnection(4001, "Replaced by a new connection"))
@@ -100,19 +98,21 @@ class MessagingHub:
         mid = message.messageId
         if message.senderId != session.user_id:
             raise ProtocolError(
-                "SENDER_MISMATCH", "senderId must match the connection identity", mid
+                ErrorCode.INVALID_MESSAGE, "senderId must match the connection identity", mid
             )
         if message.senderId == message.receiverId:
             raise ProtocolError(
-                "INVALID_MESSAGE", "Direct messages require two different users", mid
+                ErrorCode.INVALID_MESSAGE, "Direct messages require two different users", mid
             )
         if message.conversationId != direct_conversation_id(message.senderId, message.receiverId):
             raise ProtocolError(
-                "INVALID_MESSAGE", "conversationId must contain sorted participant IDs", mid
+                ErrorCode.INVALID_MESSAGE, "conversationId must contain sorted participant IDs", mid
             )
         if message.serverReceivedAt is not None:
             raise ProtocolError(
-                "INVALID_MESSAGE", "serverReceivedAt must be omitted or null when sending", mid
+                ErrorCode.INVALID_MESSAGE,
+                "serverReceivedAt must be omitted or null when sending",
+                mid,
             )
 
         digest = fingerprint(message)
@@ -120,7 +120,9 @@ class MessagingHub:
         if receipt is not None:
             if receipt.fingerprint != digest:
                 raise ProtocolError(
-                    "MESSAGE_ID_CONFLICT", "messageId already belongs to a different payload", mid
+                    ErrorCode.MESSAGE_ID_CONFLICT,
+                    "messageId already belongs to a different payload",
+                    mid,
                 )
             session.emit(
                 event("message_accepted", messageId=mid, serverReceivedAt=receipt.received_at)
@@ -141,10 +143,12 @@ class MessagingHub:
     def message_persisted(self, session: Session, message_id: str) -> None:
         receipt = self.processed_message_ids.get(message_id)
         if receipt is None:
-            raise ProtocolError("UNKNOWN_MESSAGE", "No accepted message with this ID", message_id)
+            raise ProtocolError(
+                ErrorCode.UNKNOWN_MESSAGE, "No accepted message with this ID", message_id
+            )
         if receipt.receiver_id != session.user_id:
             raise ProtocolError(
-                "NOT_RECEIVER",
+                ErrorCode.NOT_RECEIVER,
                 "Only the intended receiver may acknowledge this message",
                 message_id,
             )

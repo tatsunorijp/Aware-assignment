@@ -1,0 +1,12 @@
+{
+  "type": "protocol_error",
+  "protocolVersion": 1,
+  "messageId": null,
+  "error": {
+    "code": "IDENTIFICATION_REQUIRED",
+    "userMessage": "Please connect with your saved identity before trying again.",
+    "developerMessage": null,
+    "isRetryable": true,
+    "requestId": null
+  }
+}

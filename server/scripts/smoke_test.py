@@ -3,8 +3,9 @@
 import argparse
 import json
 from datetime import UTC, datetime
+from urllib.error import HTTPError
 from urllib.request import urlopen
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from websockets.sync.client import connect
 
@@ -54,19 +55,43 @@ def persist(socket, message):
 
 def barrier(socket):
     emit(socket, "smoke_test_barrier")
-    assert receive(socket, "protocol_error")["code"] == "UNKNOWN_EVENT"
+    check_error(receive(socket, "protocol_error"), "INVALID_EVENT", False)
+
+
+def check_error(payload, code, retryable, message_id=None):
+    error = payload["error"]
+    assert error["code"] == code, payload
+    assert error["isRetryable"] is retryable, payload
+    assert isinstance(error["userMessage"], str) and error["userMessage"].strip(), payload
+    assert UUID(error["requestId"]).version == 4, payload
+    assert payload.get("messageId") == message_id, payload
+    assert "code" not in payload and "retryable" not in payload, payload
 
 
 def main(base_url):
     base_url = base_url.rstrip("/")
     with urlopen(f"{base_url}/health", timeout=5) as response:
         assert json.load(response) == {"status": "ok", "protocolVersion": 1}
+    try:
+        with urlopen(f"{base_url}/missing-smoke-resource", timeout=5):
+            raise AssertionError("A missing resource must return an HTTP error")
+    except HTTPError as response:
+        assert response.code == 404
+        check_error(json.load(response), "NOT_FOUND", False)
     ws_url = base_url.replace("https://", "wss://", 1).replace("http://", "ws://", 1) + "/ws"
     alice = {"userId": str(uuid4()), "name": "Smoke Alice"}
     bob = {"userId": str(uuid4()), "name": "Smoke Bob"}
     with connect(ws_url, open_timeout=5) as a, connect(ws_url, open_timeout=5) as b:
+        emit(a, "send_message", message=new_message(alice, bob, 1, "Identify first"))
+        check_error(receive(a, "protocol_error"), "IDENTIFICATION_REQUIRED", True)
         identify(a, alice)
         identify(b, bob)
+        rejected = new_message(alice, bob, 1, "")
+        rejected["messageId"] = rejected["messageId"].upper()
+        emit(a, "send_message", message=rejected)
+        check_error(receive(a, "protocol_error"), "INVALID_MESSAGE", False, rejected["messageId"])
+        barrier(a)
+        barrier(b)
         for sender, receiver, payload in [
             (a, b, new_message(alice, bob, 1, "Hello Bob")),
             (b, a, new_message(bob, alice, 1, "Hello Alice")),
@@ -101,7 +126,9 @@ def main(base_url):
     with urlopen(f"{base_url}/users", timeout=5) as response:
         users = json.load(response)["users"]
         assert alice in users and bob in users
-    print("PASS: HTTP, two-way messaging, offline queues, reconnect replay, ACKs and deduplication")
+    print(
+        "PASS: structured HTTP/WS errors, two-way messaging, offline replay, ACKs and deduplication"
+    )
 
 
 if __name__ == "__main__":

@@ -2,11 +2,14 @@
 
 import json
 import re
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError
+
+from app.errors import ErrorCode, ProtocolError, validation_summary
 
 PROTOCOL_VERSION = 1
 UUID_PATTERN = re.compile(r"[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}")
@@ -98,23 +101,11 @@ class Users(WireModel):
     users: list[User]
 
 
-class ProtocolError(Exception):
-    def __init__(
-        self, code: str, message: str, message_id: str | None = None, retryable: bool = False
-    ) -> None:
-        super().__init__(message)
-        self.code = code
-        self.message_id = message_id
-        self.retryable = retryable
-
-    def event(self) -> dict[str, Any]:
-        return event(
-            "protocol_error",
-            code=self.code,
-            message=str(self),
-            messageId=self.message_id,
-            retryable=self.retryable,
-        )
+@dataclass(frozen=True)
+class ParsedEvent:
+    command: Identify | SendMessage | MessagePersisted
+    # Keep wire spelling for rejected-operation correlation before UUID normalization.
+    message_id: str | None
 
 
 def event(kind: str, **fields: Any) -> dict[str, Any]:
@@ -134,40 +125,60 @@ def unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     return result
 
 
-def parse_event(text: str) -> Identify | SendMessage | MessagePersisted:
+def parse_event(text: str) -> ParsedEvent:
     try:
         data = json.loads(text, parse_constant=reject_constant, object_pairs_hook=unique_object)
+        # Python's decoder accepts overflowed numbers and lone escaped surrogates.
+        # Reject them before they can poison a user record or a delivery queue.
+        json.dumps(data, ensure_ascii=False, allow_nan=False).encode("utf-8")
     except (ValueError, RecursionError) as exc:
-        raise ProtocolError("INVALID_JSON", "Expected valid JSON with unique object keys") from exc
+        raise ProtocolError(
+            ErrorCode.INVALID_JSON,
+            "Expected valid Unicode JSON with finite numbers and unique keys",
+        ) from exc
     if not isinstance(data, dict):
-        raise ProtocolError("INVALID_EVENT", "Expected a JSON object")
+        raise ProtocolError(ErrorCode.INVALID_EVENT, "Expected a JSON object")
+    kind = data.get("type")
     message = data.get("message")
-    candidate = message.get("messageId") if isinstance(message, dict) else data.get("messageId")
+    candidate = None
+    if kind == "send_message" and isinstance(message, dict):
+        candidate = message.get("messageId")
+    elif kind == "message_persisted":
+        candidate = data.get("messageId")
     message_id = None
     if isinstance(candidate, str):
         try:
-            message_id = normalize_uuid(candidate)
+            normalize_uuid(candidate)
+            message_id = candidate
         except ValueError:
             pass
     if type(data.get("protocolVersion")) is not int:
-        raise ProtocolError("INVALID_EVENT", "protocolVersion must be an integer", message_id)
+        raise ProtocolError(
+            ErrorCode.INVALID_EVENT, "protocolVersion must be an integer", message_id
+        )
     if data["protocolVersion"] != PROTOCOL_VERSION:
         raise ProtocolError(
-            "UNSUPPORTED_VERSION", "Only protocolVersion 1 is supported", message_id
+            ErrorCode.UNSUPPORTED_PROTOCOL_VERSION,
+            "Only protocolVersion 1 is supported",
+            message_id,
         )
     models = {
         "identify": Identify,
         "send_message": SendMessage,
         "message_persisted": MessagePersisted,
     }
-    kind = data.get("type")
     if not isinstance(kind, str) or kind not in models:
-        raise ProtocolError("UNKNOWN_EVENT", "Unsupported client event type", message_id)
+        raise ProtocolError(ErrorCode.INVALID_EVENT, "Unsupported client event type", message_id)
     try:
-        return models[kind].model_validate(data)
+        return ParsedEvent(models[kind].model_validate(data), message_id)
     except ValidationError as exc:
-        details = "; ".join(
-            f"{'.'.join(str(part) for part in error['loc'])}: {error['msg']}"
-            for error in exc.errors(include_input=False, include_url=False)
+        errors = exc.errors(include_input=False, include_url=False, include_context=False)
+        # A malformed send envelope is an event error; invalid MessageDTO fields
+        # are message rejections, as required by the shared error contract.
+        is_message_error = (
+            kind == "send_message"
+            and isinstance(message, dict)
+            and all(error["loc"] and error["loc"][0] == "message" for error in errors)
         )
-        raise ProtocolError("INVALID_EVENT", details, message_id) from exc
+        code = ErrorCode.INVALID_MESSAGE if is_message_error else ErrorCode.INVALID_EVENT
+        raise ProtocolError(code, validation_summary(errors), message_id) from exc

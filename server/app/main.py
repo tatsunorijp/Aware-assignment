@@ -1,13 +1,23 @@
 """HTTP routes and WebSocket transport. Run with: python -m uvicorn app.main:app."""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
+from uuid import uuid4
 
 import anyio
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
+from app.errors import ErrorCode, ProtocolError, logger
+from app.http_errors import HTTP_ERROR_RESPONSES, register_http_errors
 from app.hub import CloseConnection, MessagingHub, Session
-from app.protocol import Health, ProtocolError, Users, parse_event
+from app.protocol import Health, Users, parse_event
+
+
+def get_hub(application: FastAPI) -> MessagingHub:
+    hub = getattr(application.state, "hub", None)
+    if hub is None:
+        raise ProtocolError(ErrorCode.TEMPORARY_UNAVAILABLE, "The messaging service is not ready.")
+    return hub
 
 
 def create_app() -> FastAPI:
@@ -18,10 +28,12 @@ def create_app() -> FastAPI:
 
     application = FastAPI(
         title="Aware Messaging Server",
-        version="0.1.0",
+        version="0.2.0",
         description="Local in-memory messaging. See spec/protocol.md for the WebSocket contract.",
         lifespan=lifespan,
+        responses=HTTP_ERROR_RESPONSES,
     )
+    register_http_errors(application)
 
     @application.get("/health", response_model=Health)
     async def health() -> Health:
@@ -29,26 +41,39 @@ def create_app() -> FastAPI:
 
     @application.get("/users", response_model=Users)
     async def users() -> Users:
-        hub: MessagingHub = application.state.hub
-        return Users(users=sorted(hub.users_by_id.values(), key=lambda user: user.userId))
+        return Users(users=get_hub(application).list_users())
 
     @application.websocket("/ws")
     async def websocket_endpoint(socket: WebSocket) -> None:
         await socket.accept()
-        hub: MessagingHub = application.state.hub
+        hub: MessagingHub | None = None
         session = Session()
 
         async def read() -> None:
+            nonlocal hub
             while True:
                 frame = await socket.receive()
                 if frame["type"] == "websocket.disconnect":
                     return
+                parsed = None
                 try:
                     if frame.get("text") is None:
-                        raise ProtocolError("INVALID_FRAME", "Send JSON in a text frame")
-                    hub.handle(session, parse_event(frame["text"]))
+                        raise ProtocolError(ErrorCode.INVALID_EVENT, "Send JSON in a text frame")
+                    parsed = parse_event(frame["text"])
+                    hub = get_hub(application)
+                    hub.handle(session, parsed.command)
                 except ProtocolError as exc:
+                    if parsed is not None and (
+                        exc.message_id is not None or exc.code == ErrorCode.TEMPORARY_UNAVAILABLE
+                    ):
+                        exc.message_id = parsed.message_id
                     session.emit(exc.event())
+                except Exception:
+                    # Acceptance might already have happened. Do not fabricate a
+                    # correlated rejection or let an uncertain error undo an ACK.
+                    logger.exception("requestId=%s unexpected WebSocket failure", str(uuid4()))
+                    session.outbound.put_nowait(CloseConnection(1011, "Unexpected server failure"))
+                    await anyio.sleep_forever()
 
         async def write() -> None:
             while True:
@@ -58,7 +83,7 @@ def create_app() -> FastAPI:
                     return
                 await socket.send_json(payload)
 
-        async def run(operation) -> None:
+        async def run(operation: Callable[[], Awaitable[None]]) -> None:
             try:
                 await operation()
             except (WebSocketDisconnect, OSError):
@@ -71,7 +96,8 @@ def create_app() -> FastAPI:
                 group.start_soon(run, read)
                 group.start_soon(run, write)
         finally:
-            hub.disconnect(session)
+            if hub is not None:
+                hub.disconnect(session)
 
     return application
 

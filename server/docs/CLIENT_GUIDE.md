@@ -72,10 +72,65 @@ If the socket disconnects or the ACK times out, restore the message to
 including the message ID, timestamp and sequence. Always omit or null the outgoing
 `serverReceivedAt`. Never generate a fresh ID merely because the ACK was lost.
 
-For a permanent `protocol_error` associated with this outgoing message, retain it
-locally as `failed` and continue handling the rest of the outbox. Keep temporary
-connection failures pending. Do not change an outgoing state because an error
-refers to a recipient's `message_persisted` operation.
+For a permanent rejection correlated to a still-unacknowledged outgoing send,
+persist `failed` only on that message and continue handling the rest of the outbox.
+A correlated temporary rejection returns it to `pendingToSend`. Keep temporary
+connection failures pending. Never downgrade a message already confirmed as `sent`,
+including when a delayed error arrives. An error about `message_persisted` belongs
+to the recipient ACK operation, not to the outgoing-message state machine.
+
+Use the shared policy in [spec/protocol.md](../../spec/protocol.md): a 10-second
+sender-ACK timeout and retry delays of 1, 2, 4, 8, 16, then at most 30 seconds.
+Wait for an identified connection and reset the counter after success.
+`isRetryable: true` permits a later retry; it never means retry immediately.
+
+## Decode and propagate structured errors
+
+WebSocket failures use `protocol_error` with `messageId` in the envelope and a
+nested `error`. HTTP failures carry `{"error":{...}}` alongside their failure
+status. Both contain the same `ServerError`:
+
+```json
+{
+  "code": "INVALID_MESSAGE",
+  "userMessage": "This message could not be sent.",
+  "developerMessage": "Field 'message.text' is missing, unsupported or invalid.",
+  "isRetryable": false,
+  "requestId": "example-request-123"
+}
+```
+
+Require `code`, a non-blank `userMessage` and boolean `isRetryable`. Optional
+`developerMessage` and `requestId` may be omitted or null. Ignore extra response
+fields and preserve unknown codes as strings. Branch only on the code and retry
+flag, not message text. Display `userMessage`; use a local generic fallback for
+an invalid body. Never display `developerMessage` as the user's error.
+
+The networking layer must recognize the error and propagate a typed failure.
+Decoding alone does not throw it. Swift's DTO can conform to `Codable`, `Error`
+and `LocalizedError`, exposing `userMessage` through `errorDescription`. Kotlin
+can wrap the equivalent DTO in a custom exception or typed result; it must not
+subclass `java.lang.Error`. Keep this stream handling in the shared messaging
+service, independent of any open chat.
+
+Inspect the HTTP status before interpreting the body. Non-success with an invalid
+or absent error body is a local invalid-response/transport failure, not success
+and not a fabricated backend error. Keep transport, timeout, decoding and local
+persistence failures distinct from actual ServerError responses.
+
+Correlate only a rejected send with its pending outgoing operation. Normalize an
+error's original `messageId` for lookup, without replacing or regenerating it.
+Errors with no message ID must not fail every queued message. `requestId` is for
+finding the corresponding server log; never use it as a message or idempotency ID.
+
+On WebSocket close 1011, acceptance may be unknown. Keep acknowledged messages
+`sent` and recover only the unacknowledged outbox. Close 4001 means another session
+replaced this identity; resolve ownership instead of competing with reconnect loops.
+
+The original provisional top-level `code`, `message` and `retryable` fields are
+replaced by `error.code`, the two message fields and `error.isRetryable`. Code
+renames are listed in the protocol's compatibility section. Both generated clients
+must adopt the new contract together, still using `protocolVersion: 1`.
 
 ## Receive and acknowledge
 
@@ -103,8 +158,11 @@ state belong to the client database; do not add them to strict protocol DTOs.
 - Duplicate names do not merge users or route messages to the wrong UUID.
 - Server restart reconstructs the registry as clients identify and leaves local
   history intact, while acknowledging the loss of volatile server-side messages.
-- The bidirectional offline scenario in generalSpecs.md section 20 works between
+- The bidirectional offline scenario in [the planning draft](../../ASSIGNMENT_SPEC_DRAFT.md) section 20 works between
   the actual generated iOS and Android applications.
+- Shared [error fixtures](../../fixtures/protocol/README.md) decode correctly with
+  complete, omitted, null and unknown fields/codes. Tests use codes and structure,
+  not literal display text. A delayed error must never downgrade `sent`.
 
 Run `server/scripts/smoke_test.py` against the running server as an independent
 protocol check during client development. It does not replace native-client

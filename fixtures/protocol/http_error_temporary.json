@@ -1,0 +1,9 @@
+{
+  "error": {
+    "code": "TEMPORARY_UNAVAILABLE",
+    "userMessage": "The service is temporarily unavailable. Please try again later.",
+    "developerMessage": null,
+    "isRetryable": true,
+    "requestId": "example-request-124"
+  }
+}

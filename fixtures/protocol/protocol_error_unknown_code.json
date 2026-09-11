@@ -1,0 +1,12 @@
+{
+  "type": "protocol_error",
+  "protocolVersion": 1,
+  "messageId": "85D983AB-9592-444C-9046-25046CA9B770",
+  "futureEnvelopeField": "ignore this field",
+  "error": {
+    "code": "FUTURE_SERVER_CONDITION",
+    "userMessage": "Please try again later.",
+    "isRetryable": true,
+    "futureErrorField": {"example": true}
+  }
+}

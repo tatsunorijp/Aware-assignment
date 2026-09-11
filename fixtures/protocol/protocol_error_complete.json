@@ -1,0 +1,12 @@
+{
+  "type": "protocol_error",
+  "protocolVersion": 1,
+  "messageId": "85D983AB-9592-444C-9046-25046CA9B770",
+  "error": {
+    "code": "INVALID_MESSAGE",
+    "userMessage": "This message could not be sent.",
+    "developerMessage": "Field 'message.text' is missing, unsupported or invalid.",
+    "isRetryable": false,
+    "requestId": "example-request-123"
+  }
+}

@@ -92,7 +92,7 @@ def test_only_receiver_can_remove_pending_message(client):
         send(alice, payload)
         for socket in [alice, carol]:
             persist(socket, payload)
-            assert socket.receive_json()["code"] == "NOT_RECEIVER"
+            assert socket.receive_json()["error"]["code"] == "NOT_RECEIVER"
     with client.websocket_connect("/ws") as bob:
         identify(bob, BOB, "Bob", pending=1)
 
@@ -124,46 +124,46 @@ def test_conflicting_message_id_is_rejected(client):
         payload = message()
         send(alice, payload)
         error = send(alice, {**payload, "text": "Changed content"})
-        assert error["code"] == "MESSAGE_ID_CONFLICT"
+        assert error["error"]["code"] == "MESSAGE_ID_CONFLICT"
         assert error["messageId"] == payload["messageId"]
-        assert error["retryable"] is False
+        assert error["error"]["isRetryable"] is False
 
 
 def test_identify_required_and_identity_cannot_change_on_same_socket(client):
     with client.websocket_connect("/ws") as socket:
         error = send(socket, message())
-        assert error["code"] == "NOT_IDENTIFIED"
-        assert error["retryable"] is True
+        assert error["error"]["code"] == "IDENTIFICATION_REQUIRED"
+        assert error["error"]["isRetryable"] is True
         identify(socket)
         socket.send_json(event("identify", user={"userId": BOB, "name": "Bob"}))
-        assert socket.receive_json()["code"] == "ALREADY_IDENTIFIED"
+        assert socket.receive_json()["error"]["code"] == "INVALID_EVENT"
 
 
 @pytest.mark.parametrize(
     "changes,code",
     [
-        ({"senderId": CAROL}, "SENDER_MISMATCH"),
+        ({"senderId": CAROL}, "INVALID_MESSAGE"),
         ({"receiverId": ALICE}, "INVALID_MESSAGE"),
         ({"conversationId": f"{BOB}:{ALICE}"}, "INVALID_MESSAGE"),
         ({"serverReceivedAt": "2026-09-10T18:30:00Z"}, "INVALID_MESSAGE"),
-        ({"text": " \n "}, "INVALID_EVENT"),
-        ({"text": 3}, "INVALID_EVENT"),
-        ({"clientSequence": True}, "INVALID_EVENT"),
-        ({"clientSequence": "1"}, "INVALID_EVENT"),
-        ({"clientSequence": 1.0}, "INVALID_EVENT"),
-        ({"clientSequence": 0}, "INVALID_EVENT"),
-        ({"clientSequence": 2**63}, "INVALID_EVENT"),
-        ({"clientCreatedAt": "2026-09-10T18:30:00"}, "INVALID_EVENT"),
-        ({"clientCreatedAt": "2026-09-10T18:30:00-03:00"}, "INVALID_EVENT"),
-        ({"clientCreatedAt": "2026-02-30T18:30:00Z"}, "INVALID_EVENT"),
-        ({"receiverId": "bob-id"}, "INVALID_EVENT"),
-        ({"extra": "unsupported"}, "INVALID_EVENT"),
+        ({"text": " \n "}, "INVALID_MESSAGE"),
+        ({"text": 3}, "INVALID_MESSAGE"),
+        ({"clientSequence": True}, "INVALID_MESSAGE"),
+        ({"clientSequence": "1"}, "INVALID_MESSAGE"),
+        ({"clientSequence": 1.0}, "INVALID_MESSAGE"),
+        ({"clientSequence": 0}, "INVALID_MESSAGE"),
+        ({"clientSequence": 2**63}, "INVALID_MESSAGE"),
+        ({"clientCreatedAt": "2026-09-10T18:30:00"}, "INVALID_MESSAGE"),
+        ({"clientCreatedAt": "2026-09-10T18:30:00-03:00"}, "INVALID_MESSAGE"),
+        ({"clientCreatedAt": "2026-02-30T18:30:00Z"}, "INVALID_MESSAGE"),
+        ({"receiverId": "bob-id"}, "INVALID_MESSAGE"),
+        ({"extra": "unsupported"}, "INVALID_MESSAGE"),
     ],
 )
 def test_invalid_message_never_enters_pending_queue(client, changes, code):
     with client.websocket_connect("/ws") as alice:
         identify(alice)
-        assert send(alice, message(**changes))["code"] == code
+        assert send(alice, message(**changes))["error"]["code"] == code
     with client.websocket_connect("/ws") as bob:
         identify(bob, BOB, "Bob")
 
@@ -178,26 +178,26 @@ def test_invalid_message_never_enters_pending_queue(client, changes, code):
         ("null", "INVALID_EVENT"),
         ('{"type":"identify"}', "INVALID_EVENT"),
         ('{"type":"identify","protocolVersion":true}', "INVALID_EVENT"),
-        ('{"type":"identify","protocolVersion":2}', "UNSUPPORTED_VERSION"),
-        ('{"type":{},"protocolVersion":1}', "UNKNOWN_EVENT"),
-        ('{"type":"unknown","protocolVersion":1}', "UNKNOWN_EVENT"),
+        ('{"type":"identify","protocolVersion":2}', "UNSUPPORTED_PROTOCOL_VERSION"),
+        ('{"type":{},"protocolVersion":1}', "INVALID_EVENT"),
+        ('{"type":"unknown","protocolVersion":1}', "INVALID_EVENT"),
         ('{"type":"identify","protocolVersion":1,"user":{}}', "INVALID_EVENT"),
     ],
 )
 def test_malformed_event_returns_error_and_connection_recovers(client, raw, code):
     with client.websocket_connect("/ws") as socket:
         socket.send_text(raw)
-        assert socket.receive_json()["code"] == code
+        assert socket.receive_json()["error"]["code"] == code
         identify(socket)
 
 
 def test_binary_frames_and_unknown_receipts(client):
     with client.websocket_connect("/ws") as socket:
         socket.send_bytes(b"{}")
-        assert socket.receive_json()["code"] == "INVALID_FRAME"
+        assert socket.receive_json()["error"]["code"] == "INVALID_EVENT"
         identify(socket)
         persist(socket, message())
-        assert socket.receive_json()["code"] == "UNKNOWN_MESSAGE"
+        assert socket.receive_json()["error"]["code"] == "UNKNOWN_MESSAGE"
 
 
 def test_uppercase_ids_and_fractional_utc_dates_are_normalized(client):

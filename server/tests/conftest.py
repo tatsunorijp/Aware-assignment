@@ -52,4 +52,4 @@ def persist(socket, payload):
 def barrier(socket):
     # Ordered response proves all preceding frames have been processed.
     socket.send_json(event("test_barrier"))
-    assert socket.receive_json()["code"] == "UNKNOWN_EVENT"
+    assert socket.receive_json()["error"]["code"] == "INVALID_EVENT"

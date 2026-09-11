@@ -1,8 +1,12 @@
 # Aware messaging server
 
 A local Python/FastAPI server implementing the messaging MVP from
-[generalSpecs.md](../spec/generalSpecs.md). It connects the future iOS and Android
+[ASSIGNMENT_SPEC_DRAFT.md](../ASSIGNMENT_SPEC_DRAFT.md). It connects the future iOS and Android
 clients through the same HTTP and WebSocket protocol. All state lives in memory.
+
+Release 0.2.0 uses the shared `ServerError` response defined in draft sections 12–13.
+See the [protocol](../spec/protocol.md) for its fields and migration from the initial
+provisional format, and the [review notes](docs/REVIEW.md) for the implementation audit.
 
 ## Required tools
 
@@ -94,13 +98,17 @@ python scripts/smoke_test.py --base-url http://127.0.0.1:8765
 
 The smoke test creates two uniquely identified test users and exercises real HTTP
 and WebSocket connections, both message directions, offline queues, reconnection,
-lost recipient ACK recovery and duplicate sender retries. Its users remain
+lost recipient ACK recovery, duplicate sender retries and structured errors. Its users remain
 registered until the server restarts. This is a server protocol demonstration;
 the actual iOS-to-Android acceptance test requires the mobile clients.
 
 Tests cover registration, duplicate names, HTTP listing, session replacement,
 validation, malformed JSON, private delivery, both ACKs, offline replay, FIFO,
-idempotence, ID conflicts and volatile restart state. Third-party test dependencies
+idempotence, ID conflicts and volatile restart state. Error tests also verify exact
+message correlation, requester-only rejection, no false acceptance, safe diagnostics,
+request-ID/log correlation, retry eligibility, HTTP 404/405/422/500/503, unknown-code
+fixtures and unexpected WebSocket failures before and after acceptance.
+Third-party test dependencies
 currently emit deprecation warnings for HTTPX and a BlockingPortal alias; these do
 not indicate failed server tests.
 
@@ -110,10 +118,13 @@ not indicate failed server tests.
 | --- | --- |
 | `app/main.py` | Application lifecycle, HTTP routes and WebSocket reader/writer tasks. |
 | `app/protocol.py` | Strict input models, UUID/date normalization, event parsing and errors. |
+| `app/errors.py` | Shared ServerError DTO, stable code/retry catalog and request-ID error logging. |
+| `app/http_errors.py` | Structured HTTP exception responses and OpenAPI error definitions. |
 | `app/hub.py` | In-memory users, active sessions, pending delivery queues and processed IDs. |
 | `tests/` | Automated protocol and lifecycle tests through the application. |
 | `scripts/smoke_test.py` | Independent client exercising a running server. |
 | `docs/CLIENT_GUIDE.md` | Integration workflow and client-side responsibilities. |
+| `docs/REVIEW.md` | Findings, corrections, regression coverage and remaining limits. |
 
 The hub registers users by UUID and keeps disconnected users discoverable. It
 accepts validated direct messages, assigns a UTC receive time, records an
@@ -131,6 +142,35 @@ loop. Each connection has an ordered outbound queue and one writer task. Initial
 replay is enqueued atomically, so live delivery cannot overtake `sync_completed`.
 Reader/writer tasks share a cancellation scope; disconnecting either side cleans
 up the session without removing a newer replacement session.
+
+## Structured errors
+
+Known WebSocket rejections use
+`{"type":"protocol_error","protocolVersion":1,"messageId":null,"error":{...}}`.
+HTTP failures use `{"error":{...}}` with a failure status. The shared object contains
+`code`, `userMessage`, `developerMessage`, `isRetryable` and `requestId`.
+`developerMessage` and `requestId` are optional for decoders; this server emits
+them, using null when no diagnostic is provided.
+
+Display `userMessage` and reserve `developerMessage` for diagnosis. A fresh request
+UUID appears in both the response and the local `aware.errors` log. It identifies
+that failed operation, not the chat message and not an idempotency key. Diagnostics
+exclude raw request values, unknown input keys and internal exception details.
+
+An identifiable rejected message keeps its original wire `messageId`, including
+uppercase spelling; successful DTOs and stored keys use normalized lowercase UUIDs.
+Errors about identity or unknown operations do not fabricate message correlation.
+An offline recipient still causes acceptance and queuing, not a temporary error.
+
+HTTP error handlers cover routing, method, validation, service-readiness and
+unexpected application failures. `/health` remains a process-liveness endpoint.
+Unexpected WebSocket handler failures close with 1011 without inventing a rejection
+when acceptance might already have happened. Clients preserve any previous ACK
+and retry only their still-unacknowledged sends through the normal reconnect flow.
+
+Example error requests and responses are in [fixtures/protocol](../fixtures/protocol/README.md).
+See [acceptance criteria](../spec/acceptance-tests.md) for backend coverage and
+future client error-handling requirements. Retry policy remains client-owned.
 
 ## Limits and troubleshooting
 
@@ -157,3 +197,4 @@ up the session without removing a newer replacement session.
 - [FastAPI WebSockets](https://fastapi.tiangolo.com/advanced/websockets/)
 - [FastAPI WebSocket tests](https://fastapi.tiangolo.com/advanced/testing-websockets/)
 - [Pydantic strict validation](https://docs.pydantic.dev/latest/concepts/strict_mode/)
+- [FastAPI custom error handlers](https://fastapi.tiangolo.com/tutorial/handling-errors/)

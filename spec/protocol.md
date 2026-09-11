@@ -1,7 +1,7 @@
 # Messaging protocol, version 1
 
 This is the concrete wire contract for the server and both generated mobile clients.
-It implements the messaging requirements in [generalSpecs.md](generalSpecs.md),
+It implements [ASSIGNMENT_SPEC_DRAFT.md](../ASSIGNMENT_SPEC_DRAFT.md),
 especially sections 2, 6–10, 12, 13 and 17. The response envelopes, error codes,
 normalization rules and reconnect details below resolve choices left open by that
 specification. All clients must use these same rules.
@@ -12,10 +12,14 @@ specification. All clients must use these same rules.
 - WebSocket URL: `ws://127.0.0.1:8000/ws`.
 - Each WebSocket text frame contains one JSON object with required `type` and
   integer `protocolVersion: 1`. Binary frames are rejected.
-- Unknown fields in client events and nested objects are rejected. Duplicate JSON
-  keys, `NaN`, infinity, arrays and other non-object envelopes are invalid.
+- Unknown fields in requests from clients and nested request objects are rejected.
+  In the opposite direction, clients must ignore unknown additional response/error
+  fields and accept unknown error codes as strings. Duplicate JSON keys, `NaN`,
+  infinity (including numeric overflow), invalid Unicode, arrays and other
+  non-object envelopes are invalid.
 - IDs are hyphenated UUID strings. Uppercase input is accepted; the server returns
-  lowercase. Clients must normalize IDs to lowercase before storing, comparing,
+  lowercase in successful events. Error envelopes preserve the original spelling
+  of an identifiable rejected `messageId`. Normalize IDs to lowercase before storing, comparing,
   or constructing a conversation ID. Generate new user/message IDs with UUID v4.
 - A direct `conversationId` is the two lowercase participant UUIDs sorted
   lexicographically and joined with `:`. The participants must be different.
@@ -83,7 +87,7 @@ with the user. The latest connection replaces any existing connection for the
 same ID; the previous connection is closed with code `4001`. It must not enter an
 automatic reconnect loop competing with the replacement. Use a separate UUID
 for a separate device identity. Changing identity on an already identified
-connection returns `ALREADY_IDENTIFIED`; open a new connection instead.
+connection returns `INVALID_EVENT`; open a new connection instead.
 
 Immediately after `identity_accepted`, the server queues zero or more
 `incoming_message` events for this recipient's pending messages, in acceptance
@@ -200,9 +204,12 @@ delivered; arrival order from multiple senders defines their interleaving.
 
 On connection loss or sender-ACK timeout, return `sending` messages to
 `pendingToSend`, reconnect, identify and retry using the same IDs and payloads.
-Use a bounded timeout (for example 10 seconds) and reconnect backoff with jitter
-(for example 1, 2, 4, 8 seconds, capped at 30 seconds). These client timing values
-are recommendations, not server deadlines.
+Both clients use a 10-second sender-ACK timeout and progressive retry delays of
+1, 2, 4, 8, 16, then 30 seconds (capped at 30). Reset the counter after the pending
+operation succeeds. Retry only when the connection is identified; connection
+recovery uses the same capped schedule. These are client policy values, not
+server deadlines. Apply them to temporary rejections as well as connection
+recovery; `isRetryable` never instructs an immediate retry loop.
 
 Everything on the server is volatile. A restart loses users, pending messages and
 processed IDs. Re-identification reconstructs registration; it cannot recover
@@ -212,43 +219,145 @@ remain on the devices. This is an intentional MVP limitation.
 
 ## Errors
 
-Errors return a WebSocket event and normally leave the connection open:
+### Shared ServerError object
+
+HTTP and WebSocket use the same logical error model from draft sections 12–13.
+
+| Field | Type | Required | Meaning |
+| --- | --- | --- | --- |
+| `code` | string | yes | Stable programmatic code; unknown codes must remain decodable. |
+| `userMessage` | string | yes | Non-blank English text suitable for the operation's UI. |
+| `developerMessage` | string or null | no | Limited technical explanation, never UI text. |
+| `isRetryable` | boolean | yes | The same operation may succeed later without changing content. |
+| `requestId` | string or null | no | Server operation/log correlation, never an idempotency key. |
+
+Optional fields may be absent or null. Clients ignore unknown additional fields
+and use `code`/`isRetryable` for behavior, not either message text. The server emits
+all five fields and assigns a fresh UUID request ID for each reported error. Its
+local error log uses that same ID. No client-supplied request ID or tracing service
+is required. A repeated operation keeps its message ID but has a new request ID.
+
+Validation diagnostics are bounded and omit raw input, unknown field names and
+validator context. Unhandled HTTP failures expose no exception detail. Stack
+traces and internal details belong only in local logs, not in responses.
+
+### WebSocket envelope
+
+Known rejections return this event only to the requesting connection and normally
+leave it open. No `message_accepted` or delivery is produced by a rejected attempt:
 
 ```json
 {
   "type":"protocol_error",
   "protocolVersion":1,
-  "code":"SENDER_MISMATCH",
-  "message":"senderId must match the connection identity",
-  "messageId":"85d983ab-9592-444c-9046-25046ca9b770",
-  "retryable":false
+  "messageId":"85D983AB-9592-444C-9046-25046CA9B770",
+  "error":{
+    "code":"INVALID_MESSAGE",
+    "userMessage":"This message could not be sent.",
+    "developerMessage":"Field 'message.text' is missing, unsupported or invalid.",
+    "isRetryable":false,
+    "requestId":"example-request-123"
+  }
 }
 ```
 
-`messageId` is `null` when no valid correlation ID can be extracted. `message` is
-English diagnostic text; clients branch on `code` and `retryable` instead.
+`messageId` belongs to the envelope and preserves the exact original UUID string
+when a rejected send or recipient ACK is identifiable. It is null for malformed
+JSON, invalid IDs, unknown operations and connection identification errors. A
+message-shaped extra field inside `identify` must not fabricate message correlation.
+Clients normalize the ID for database lookup while preserving the immutable send.
 
-| Code | Meaning | Retryable |
+An unexpected handler exception has uncertain acceptance status. The server logs
+it and closes the connection with code `1011` rather than fabricating a permanent
+rejection. Any ACK already queued remains valid. The client recovers only its
+unacknowledged sends; retrying them with their existing IDs recovers safely through
+server idempotence. Transport loss can prevent any error body from reaching a client.
+
+### HTTP envelope
+
+Controlled HTTP errors have an appropriate failure status and an `error` object.
+For example, an unavailable messaging service produces HTTP 503:
+
+```json
+{
+  "error":{
+    "code":"TEMPORARY_UNAVAILABLE",
+    "userMessage":"The service is temporarily unavailable. Please try again later.",
+    "developerMessage":null,
+    "isRetryable":true,
+    "requestId":"example-request-124"
+  }
+}
+```
+
+The HTTP status is not duplicated inside `ServerError` or WebSocket events.
+Routing errors (404/405), request validation (422), controlled service failures
+(503) and unexpected application failures (500) use this envelope. `Allow` and
+other applicable HTTP exception headers are preserved. OpenAPI documents the
+shared error schema. `/health` is a process-liveness check; `/users` can report
+503 if the messaging service is not ready. There is no public failure-injection
+or maintenance-control endpoint.
+
+### Codes and retry eligibility
+
+The six initial codes required by the draft are:
+
+| Code | Meaning | `isRetryable` |
 | --- | --- | --- |
-| `INVALID_FRAME` | A binary frame was sent. | false |
-| `INVALID_JSON` | Malformed JSON, duplicate keys or non-JSON constants. | false |
-| `INVALID_EVENT` | Wrong envelope, missing fields, extra fields or invalid field values. | false |
-| `UNSUPPORTED_VERSION` | The integer protocol version is not 1. | false |
-| `UNKNOWN_EVENT` | Event type is missing, invalid or unsupported for clients. | false |
-| `NOT_IDENTIFIED` | Identify before sending or acknowledging. | true |
-| `ALREADY_IDENTIFIED` | A second identify was sent on the same socket. | false |
+| `INVALID_JSON` | Malformed or non-interoperable JSON, duplicate keys, non-finite numbers or invalid Unicode. | false |
+| `INVALID_EVENT` | Unknown type, binary frame, invalid envelope/identity/ACK structure, or repeated identification. | false |
+| `UNSUPPORTED_PROTOCOL_VERSION` | The integer protocol version is not 1. | false |
+| `IDENTIFICATION_REQUIRED` | Identify and receive `identity_accepted` before sending or acknowledging. | true |
+| `INVALID_MESSAGE` | Invalid MessageDTO fields, sender mismatch, self-send, incorrect conversation ID or client-supplied server timestamp. | false |
+| `TEMPORARY_UNAVAILABLE` | The service cannot currently process the operation; HTTP uses 503. An offline recipient is not this error. | true |
+
+Additional stable codes distinguish message/connection rules and HTTP failures:
+
+| Code | Meaning | `isRetryable` |
+| --- | --- | --- |
 | `SESSION_REPLACED` | The socket is no longer the active session for its user. | true |
-| `SENDER_MISMATCH` | Sender ID differs from the identified user. | false |
-| `INVALID_MESSAGE` | Self-send, incorrect conversation ID or a client-supplied server timestamp. | false |
 | `MESSAGE_ID_CONFLICT` | An accepted message ID was reused with another payload. | false |
 | `UNKNOWN_MESSAGE` | A persistence ACK refers to an ID not known in this process. | false |
 | `NOT_RECEIVER` | A persistence ACK was sent by someone other than the recipient. | false |
+| `NOT_FOUND` | HTTP route/resource does not exist (404). | false |
+| `METHOD_NOT_ALLOWED` | HTTP method is unsupported for the resource (405). | false |
+| `INVALID_REQUEST` | Invalid HTTP request or request validation failure (400/422). | false |
+| `INTERNAL_ERROR` | Unexpected HTTP server failure (500); retry with backoff. | true |
 
-For permanent errors correlated to an outgoing send, persist its state as `failed`.
-For retryable errors, repair the session and keep the send pending. Errors about a
-recipient ACK must not change outgoing message states. `UNKNOWN_MESSAGE` after a
-restart does not invalidate a locally persisted incoming message. Connection and
-unidentified errors without a message correlation belong to connection state.
+`SESSION_REPLACED` requires resolving which session owns the identity, not starting
+competing reconnect loops. Retry eligibility does not override that precondition.
+
+### Client handling and compatibility
+
+Only a correlated rejection of a still-unacknowledged outgoing send may update its
+state: permanent rejection → `failed`; temporary rejection → `pendingToSend`.
+Never downgrade `sent` due to a delayed event. Errors about recipient ACKs must
+not change outgoing states. Errors without message correlation affect their
+operation/connection, not every queued message. `UNKNOWN_MESSAGE` after restart
+does not invalidate a locally persisted incoming message.
+
+Display `userMessage` in the operation's UI and keep `developerMessage` for
+diagnostics. An unknown code still uses the valid object's correlation and retry
+flag. Invalid/incomplete error bodies, timeouts, decoding failures and local
+storage errors are distinct local failures; they are not fabricated ServerError
+objects or proof of success. For HTTP, inspect the status first; non-success with
+an invalid body requires a client fallback and must not be treated as success.
+
+Server release 0.2.0 aligns the previously provisional contract with the draft.
+The assignment's wire `protocolVersion` remains 1; update consumers together:
+
+| Previous provisional representation | Current contract |
+| --- | --- |
+| Top-level `code`, `message`, `retryable` | Nested `error.code`, `error.userMessage`/`developerMessage`, `error.isRetryable` |
+| `UNSUPPORTED_VERSION` | `UNSUPPORTED_PROTOCOL_VERSION` |
+| `NOT_IDENTIFIED` | `IDENTIFICATION_REQUIRED` |
+| `UNKNOWN_EVENT`, `INVALID_FRAME`, `ALREADY_IDENTIFIED` | `INVALID_EVENT` |
+| `SENDER_MISMATCH` and MessageDTO field validation errors | `INVALID_MESSAGE` |
+
+The previous keys and code aliases are not emitted. Shared examples are in
+[fixtures/protocol](../fixtures/protocol/README.md); test criteria are in
+[acceptance-tests.md](acceptance-tests.md). Clients must exercise complete,
+minimal, null-optional and unknown-code examples without comparing literal texts.
 
 ## Scope
 
