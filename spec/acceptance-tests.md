@@ -108,8 +108,9 @@ state/orchestration logic using fakes as allowed by the platform test workflow.
 - The messages header shows Back and the peer name. Incoming gray cards align left;
   outgoing blue cards align right. Times appear below each card. The composer
   remains usable with the keyboard and larger accessibility text.
-- Only `sent` displays the server-acceptance checkmark. Pending, sending and failed
-  states cannot imply delivery/read receipts; failure status is not color-only.
+- Only `sent` displays the server-acceptance checkmark. `sending` displays no ACK
+  icon; `failed` displays the accessible red X from the failure prototype. Incoming
+  messages never display an ACK icon. These states cannot imply delivery/read receipts.
 - Outgoing times survive offline retries unchanged; incoming receipt times survive
   duplicate delivery and relaunch. Do not label server acceptance as device receipt.
 - Prototype framing/sample content is not hardcoded into the app. Document any

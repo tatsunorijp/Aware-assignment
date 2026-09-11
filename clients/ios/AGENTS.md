@@ -122,6 +122,13 @@ Keep the MVP light-only, preserve Dynamic Type and non-color-only status cues.
 Report unspecified visual choices or contrast issues without silently changing
 approved values or inventing extra UI/backend capabilities.
 
+Reuse the implemented `LargeButton`, `LoadingScreen`, `ErrorScreen`, and
+`MessageContainer` contracts for their documented roles. For message status,
+`.sending` has no ACK icon, `.sent` has the server-acceptance checkmark, and
+`.failed` has the accessible X using `Tokens.Colors.red`; received messages never
+show an ACK icon. Keep these presentation states derived from persisted service
+state rather than moving ACK logic into the component.
+
 ## Server compatibility boundary
 
 - During iOS generation, implementation, debugging and validation, adapt the client

@@ -7,8 +7,10 @@
 
 extension Tokens {
   enum Icons {
-    // This is an example about how to create icons to be used in the app
-    /// Calendar to represent dates and periods
-//    static let calendar = "calendar"
+    /// Server acceptance of an outgoing message.
+    static let checkmark = "checkmark"
+
+    /// Permanent failure of an outgoing message.
+    static let failed = "xmark"
   }
 }

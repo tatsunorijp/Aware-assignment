@@ -5,6 +5,11 @@ owned by `Chat` / `chat`. See the [catalog](README.md).
 
 ![Messages prototype with gray incoming cards and blue outgoing cards](images/messages-screen.png)
 
+![Messages failure prototype with a red X beside failed outgoing-message times](images/message-screen-sent-failed.png)
+
+The failure prototype is an additional state of this same screen, not a separate
+screen or navigation destination.
+
 ## Visual structure
 
 - Header: back indicator followed by the other participant's display name.
@@ -35,11 +40,13 @@ a second checkmark on the sender's screen.
 | `pendingToSend` | Visible queued message; pending indication, no acceptance checkmark. |
 | `sending` | Waiting-for-ACK indication, no acceptance checkmark. |
 | `sent` | One server-acceptance checkmark next to the time. |
-| `failed` | Visible failure indication, no acceptance checkmark. |
+| `failed` | One red X next to the time, replacing the acceptance checkmark. |
 
-The PNG shows accepted outgoing messages only. Exact pending/sending/failure
-symbols are not supplied; use accessible non-color-only indicators consistent
-with the shared tokens, and document the choices instead of inventing ACK states.
+The original PNG shows accepted outgoing messages; the failure PNG defines the
+failed state. `sending` shows neither a checkmark nor an X. Incoming messages
+never show an ACK icon, regardless of any state value supplied to a reusable view.
+Icons require accessible labels so status does not depend on color alone. Do not
+invent delivery or read states.
 
 For outgoing messages, show the original `clientCreatedAt` (the user's send/queue
 action); an offline retry must not change the displayed time. For incoming
@@ -49,6 +56,12 @@ acceptance) for device receipt. Persist receipt time once and keep it on duplica
 and relaunch. See [timestamp storage](../persistence.md#display-timestamps).
 Format times for display separately from the UTC wire encoding; the sample times
 are not hardcoded data or a global message-ordering rule.
+
+On iOS, `MessageContainer` receives `Origin`, message text, `Date`, and
+`ACKMessageState`. It uses the localized `Date.messageTime` display extension;
+that extension does not change protocol timestamp encoding. The corresponding
+Android component must apply the same visual and semantic behavior through native
+types and tokens.
 
 ## Behavior and recovery
 

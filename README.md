@@ -47,7 +47,7 @@ migration does not authorize runtime changes or change `protocolVersion: 1`.
 | Area | Status |
 | --- | --- |
 | Server | Implemented in `server/`; package release 0.2.0, nested shared ServerError. |
-| iOS | Existing `AwareChat-iOS` Xcode starter under `clients/ios/`; messaging and native tests are not implemented. |
+| iOS | Existing `AwareChat-iOS` Xcode starter under `clients/ios/`, with initial reusable design-system components and color tokens; complete messaging screens and native tests are not implemented. |
 | Android | Existing `AwareChat-Android` Gradle/Compose starter under `clients/android/`, with template theme and example tests; messaging and assignment-specific tests are not implemented. |
 | Generator | Maintained requirements and prompt inputs exist; `generate.sh` and `verify.sh` are empty placeholders, not working commands. |
 | Native demo | Specified in acceptance criteria; not implemented or verified. `scripts/run-demo.sh` does not exist yet. |

@@ -25,5 +25,8 @@ extension Tokens {
 
     /// Subtle separators and borders.
     static let divider = Color(.divider)
+
+    /// Failed-message indicators and destructive error accents.
+    static let red = Color(.customRed)
   }
 }

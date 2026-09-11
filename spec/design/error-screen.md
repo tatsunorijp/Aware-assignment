@@ -17,6 +17,12 @@ Networking exposes typed failures; the owning operation determines recovery.
 The visual component receives display content and available actions, not raw JSON
 or a socket. See [typed error ownership](../../DESIGN.md#error-presentation-and-ownership).
 
+On iOS the reusable `ErrorScreen` receives the display message and Retry closure.
+Its Cancel button calls SwiftUI's environment dismiss action, revealing the
+presentation's underlying content. The owning flow remains responsible for
+choosing a safe presentation context and for the retry operation itself. Its
+preview demonstrates both Retry and dismissal behavior.
+
 ## Essential failures and actions
 
 - **Initial registration:** a failure to save identity, connect, identify, decode

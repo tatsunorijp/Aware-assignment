@@ -18,6 +18,8 @@ extension Tokens {
     case xxxLarge = 256
     case xxxxLarge = 512
 
+    case LargeButtonHeight = 44
+
     var value: CGFloat {
       return self.rawValue
     }

@@ -8,9 +8,11 @@ essential operation in progress, not a separate main screen. See the [catalog](R
 ## Appearance and ownership
 
 An opaque white app surface hides the underlying screen, with a centered progress
-indicator and "Loading..." beneath it. Do not leave underlying content visible,
+indicator and "Loading..." in the platform body font beneath it. Do not leave underlying content visible,
 tappable or accessible to screen readers. A native animated indicator may express
 the same indeterminate progress on each platform; do not render the PNG as the UI.
+
+On iOS this reusable view is named `LoadingScreen` and has a dedicated preview.
 
 The component only renders supplied state. The feature ViewModel or flow owner
 starts/cancels work and transitions to ready or error. Present accessible progress

@@ -14,6 +14,7 @@ what currently exists.
 - [Shared visual references](#shared-visual-references)
 - [Extensions and design system](#extensions-and-design-system)
 - [Color assets and Swift tokens](#color-assets-and-swift-tokens)
+- [Reusable UI components](#reusable-ui-components)
 - [iOS persistence files](#ios-persistence-files)
 - [iOS error organization](#ios-error-organization)
 - [Observation and presentation state](#observation-and-presentation-state)
@@ -37,8 +38,9 @@ The existing project is
 [AwareChat-iOS.xcodeproj](AwareChat-iOS/AwareChat-iOS.xcodeproj),
 with application target `AwareChat-iOS` and source root
 `clients/ios/AwareChat-iOS/AwareChat-iOS/`. It currently contains a SwiftUI starter,
-reusable text components, extensions and six named color assets/tokens. Messaging
-screens, networking, persistence and native test targets are not implemented. Preserve its name,
+reusable text, button, loading, error and message-container components, extensions,
+and seven named color assets/tokens. Complete messaging screens, networking,
+persistence and native test targets are not implemented. Preserve its name,
 project, signing and build settings unless a task explicitly requires a change.
 
 The entry point is `MyApp.swift`. Current project settings declare iOS 27.0,
@@ -98,12 +100,13 @@ iOS/
 │   └── AppDependencies.swift
 ├── Assets.xcassets/
 │   └── Colors/
-│       ├── Primary.colorset/
-│       ├── Secondary.colorset/
+│       ├── primaryColor.colorset/
+│       ├── secondaryColor.colorset/
 │       ├── Background.colorset/
 │       ├── TextPrimary.colorset/
 │       ├── TextSecondary.colorset/
-│       └── Divider.colorset/
+│       ├── Divider.colorset/
+│       └── customRed.colorset/
 ├── Core/
 │   ├── Extensions/
 │   ├── Models/
@@ -180,30 +183,34 @@ authorize rewriting user-created files during an unrelated generation task.
 
 ### Color assets and Swift tokens
 
-The six [approved palette values](../../spec/design/README.md#color-palette) are implemented
+The seven [approved palette values](../../spec/design/README.md#color-palette) are implemented
 in [Assets.xcassets/Colors](AwareChat-iOS/AwareChat-iOS/Assets.xcassets/Colors).
 Each color set contains one opaque, universal sRGB value with no dark override.
 `Colors` is an organizational folder with **Provides Namespace disabled**; asset
-names remain `Primary`, `Secondary`, `Background`, `TextPrimary`, `TextSecondary`
-and `Divider`, not `Colors/Primary` or prefixed alternatives.
+names remain `primaryColor`, `secondaryColor`, `Background`, `TextPrimary`,
+`TextSecondary`, `Divider` and `customRed`, not names prefixed with `Colors/`.
 
 [DesignSystem/Tokens/Colors.swift](AwareChat-iOS/AwareChat-iOS/DesignSystem/Tokens/Colors.swift)
 exposes the following SwiftUI values through generated color resources:
 
 | Asset | Public app-facing token |
 | --- | --- |
-| `Primary` | `Tokens.Colors.primary` |
-| `Secondary` | `Tokens.Colors.secondary` |
+| `primaryColor` | `Tokens.Colors.primary` |
+| `secondaryColor` | `Tokens.Colors.secondary` |
 | `Background` | `Tokens.Colors.background` |
 | `TextPrimary` | `Tokens.Colors.textPrimary` |
 | `TextSecondary` | `Tokens.Colors.textSecondary` |
 | `Divider` | `Tokens.Colors.divider` |
+| `customRed` | `Tokens.Colors.red` |
 
 Use these tokens in views/components instead of duplicating RGB literals or asset
-lookup strings. `Color(.primary)` in the token selects the generated color resource;
-SwiftUI's built-in `Color.primary` is not this asset. The same distinction applies
-to `secondary`. Keep catalog values, token mappings and palette documentation in
-sync when colors change. Rebuild the Xcode target to regenerate resource symbols.
+lookup strings. Xcode removes the `Color` suffix when generating typed resource
+symbols, so the token implementation uses `Color(.primary)`, `Color(.secondary)`,
+and `Color(.customRed)` for the catalog names above. Generated convenience
+extensions on SwiftUI `Color` are disabled in the project to prevent those symbols
+from colliding with the framework's built-in `primary` and `secondary` members.
+Keep catalog values, token mappings and palette documentation in sync when colors
+change. Rebuild the Xcode target to regenerate resource symbols.
 
 For white content on primary-blue controls or outgoing cards, the existing white
 `background` value can be reused; `textPrimary` is for text on light surfaces, not
@@ -219,6 +226,27 @@ Text("Chat")
   .foregroundStyle(Tokens.Colors.textPrimary)
   .background(Tokens.Colors.background)
 ```
+
+### Reusable UI components
+
+The following SwiftUI components are implemented in
+`DesignSystem/Components/`. Each file includes a `#Preview`:
+
+| Component | Contract |
+| --- | --- |
+| `LargeButton` | Receives a title, `.primary` or `.secondary` style, and an action. It uses body text at medium weight and `Tokens.Size.LargeButtonHeight` height; its caller determines the available width. |
+| `LoadingScreen` | Opaque white full-screen loading presentation with a centered native spinner and `Loading...` body text. |
+| `MessageContainer` | Receives `.sended` or `.received`, message text, a `Date`, and `ACKMessageState`. Outgoing cards show no icon while sending, a checkmark when sent, or an accessible red X when failed; incoming cards never show an ACK icon. |
+| `ErrorScreen` | Receives a display message and Retry closure. Its Cancel action uses the SwiftUI environment dismiss action so the underlying presentation becomes visible again. |
+
+`Date.messageTime` in `Core/Extensions/Date+Extensions.swift` is the single current
+message-time display convention: a locale-aware short time. Callers supply the
+persisted `clientCreatedAt` or `receivedAt` required by the shared design. This
+display helper does not parse, encode, or redefine UTC protocol timestamps.
+
+These components render supplied state and actions; they do not own network work,
+ACK transitions, navigation, or feature ViewModels. Reuse them when implementing
+the corresponding screens instead of creating feature-local duplicates.
 
 ## iOS persistence files
 

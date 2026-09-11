@@ -8,5 +8,8 @@
 import Foundation
 
 extension Date {
-  
+  /// A localized hour-and-minute representation for message metadata.
+  var messageTime: String {
+    formatted(date: .omitted, time: .shortened)
+  }
 }

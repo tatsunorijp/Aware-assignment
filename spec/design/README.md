@@ -66,12 +66,13 @@ They take precedence over apparent shades, gradients or compression in the PNGs.
 
 | Semantic color | Usage | Hex | RGB |
 | --- | --- | --- | --- |
-| `Primary` | Outgoing message backgrounds, Retry, Send and server-acceptance checkmarks; primary Confirm action. | `#0191C4` | 1, 145, 196 |
-| `Secondary` | Incoming message backgrounds and Cancel button background. | `#F0F4FA` | 240, 244, 250 |
+| `primaryColor` | Outgoing message backgrounds, Retry, Send and server-acceptance checkmarks; primary Confirm action. | `#0191C4` | 1, 145, 196 |
+| `secondaryColor` | Incoming message backgrounds and Cancel button background. | `#F0F4FA` | 240, 244, 250 |
 | `Background` | Screen backgrounds. | `#FFFFFF` | 255, 255, 255 |
 | `TextPrimary` | Names, titles and message text on light surfaces. | `#07143F` | 7, 20, 63 |
 | `TextSecondary` | Dates, times and placeholders. | `#8796B8` | 135, 150, 184 |
 | `Divider` | Subtle separators and borders. | `#E6EAF1` | 230, 234, 241 |
+| `customRed` | Failed outgoing-message X indicator. | `#FF0000` | 255, 0, 0 |
 
 Outgoing cards and primary actions retain white foreground content as shown in
 the prototypes. This palette does not constitute completed accessibility/contrast
