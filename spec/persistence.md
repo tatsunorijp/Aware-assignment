@@ -22,6 +22,23 @@ messages
 
 Represents the local identity or another known user.
 
+### Registration completion
+
+Persist client-only metadata distinguishing a saved current identity from
+completed first registration, for example `registrationCompleted`. Initially it
+is false; set and commit it only after `identity_accepted` for the active identity
+and registration attempt. Both clients must expose reading and saving this state
+through `UserLocalRepository`, not infer completion from the existence of a user
+record or fetch it from `GET /users`.
+
+The first registration flow navigates only after this completion save succeeds.
+If the app closes or a save/request fails before completion, retain the UUID/name
+and resume the identification form on relaunch. Retrying must not create another
+identity. Once completed, ordinary reconnect failure or server restart does not
+clear the marker; confirmed users retain offline access. This is client storage
+metadata, never an additional `User` wire field or a server authentication claim.
+See [sign-up behavior](design/sign-up-screen.md).
+
 ### Conversation
 
 Represents a direct conversation between the current user and another user.
@@ -61,7 +78,7 @@ Each repository must expose a contract: a `protocol` in Swift and an `interface`
 
 | Contract | Responsibilities and Minimum Operations |
 | --- | --- |
-| `UserLocalRepository` | Save the local identity; retrieve the current user; find a user by `userId`; save or update known users by the same ID. |
+| `UserLocalRepository` | Save the local identity; retrieve the current user and registration completion; commit registration completion; find a user by `userId`; save or update known users by the same ID without overwriting local completion metadata. |
 | `ConversationLocalRepository` | List local conversations; find a conversation by `conversationId`; get or create a conversation between two participants without duplication; save and update its local data. |
 | `MessageLocalRepository` | Save messages; find a message by `messageId`; list messages by `conversationId`; query pending messages in FIFO order; update an existing message's state; persist server-returned data such as `serverReceivedAt`. |
 
@@ -102,7 +119,7 @@ Dependencies must be composed during application initialization in a dedicated f
 
 | Consumer | Expected Local Dependencies |
 | --- | --- |
-| `IdentificationViewModel` | `UserLocalRepository` to retrieve and save the identity. |
+| `IdentificationViewModel` | `UserLocalRepository` to retrieve/save identity and registration completion, plus an injected identification service for the server acceptance gate. |
 | `UserListViewModel` | `UserLocalRepository` and `ConversationLocalRepository` to display known users, list conversations, and get or create the selected conversation. |
 | `ChatViewModel` | `MessageLocalRepository` and, when needed, `ConversationLocalRepository` to load and observe local history. Sending must be requested through the messaging service. |
 | Messaging and synchronization service | The persistence contracts needed to save messages before sending, query the queue, persist received messages, and update states. |
@@ -142,6 +159,23 @@ The logical wrapper above is illustrative Swift notation, not a SwiftData model.
 Android must represent the same direction and optional outgoing state. Client-only
 fields must not be serialized into strict server requests. The server neither
 stores nor interprets a client's local outbox state.
+
+### Display timestamps
+
+The [messages prototype](design/messages-screen.md#timestamps-and-ack-meaning)
+requires outgoing action time and incoming device receipt time beneath cards.
+Outgoing display time uses immutable `clientCreatedAt`, including offline sends.
+For incoming messages, capture a client-only `receivedAt` on receipt and save it
+with the first successful incoming transaction. Preserve the stored value on
+duplicate delivery and relaunch; replay must not rewrite it. If an initial save
+fails, a later successful receipt may establish that value.
+
+Expose this metadata in the logical local model and persist it in SwiftData/Room;
+the illustrative wrapper above is not an exhaustive storage schema. Do not add
+`receivedAt` to MessageDTO or any wire request. `serverReceivedAt` is server
+acceptance time, not recipient-device receipt time. Format display values
+separately from UTC wire serialization and do not replace FIFO/idempotency rules
+with clock-based ordering.
 
 ## Outgoing message states
 

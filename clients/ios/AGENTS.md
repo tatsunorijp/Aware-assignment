@@ -41,6 +41,10 @@
 
 1. Read [product scope](../../spec/product.md), [application design](../../DESIGN.md),
    [shared persistence](../../spec/persistence.md) and [iOS requirements](../../spec/ios.md).
+   For UI work, read the [shared visual catalog](../../spec/design/README.md),
+   each affected screen/component document and inspect its actual embedded PNG.
+   These references apply equally to iOS and Android; report missing assets or
+   contradictions instead of inventing a design or changing backend behavior.
    Read [future work](../../FUTURE.md) for excluded features and
    [generator requirements](../../generator/README.md) when working on generation.
 2. Read the maintained [wire protocol](../../spec/protocol.md) and
@@ -140,7 +144,7 @@ state in enum payloads and separate properties. Small UI toggles may remain bool
 
 | State dimension | Cases / meaning | UI and behavior |
 | --- | --- | --- |
-| Local `ScreenState` (or feature `State`) | `loading`, `ready`, `error` | Full-screen loading only for essential local reads. A database/history failure can produce a screen error; successful empty data is ready, not an error. |
+| Feature `ScreenState` (or `State`) | `loading`, `ready`, `error` | Full-screen loading for essential local reads or initial registration. Essential failures use the shared error component; successful empty local data is ready. A ready form is not registration completion. |
 | `ConnectionState` | `disconnected`, `connecting`, `connected`, `connectionFailure` | Independent indicator and retry action. Network loss must not replace usable local content with a full-screen error. |
 | Registered-users section | Loading, available list, empty result, error with retry | Only this remote section changes; local conversations remain visible. |
 | Outgoing `MessageState` | `pendingToSend`, `sending`, `sent`, `failed` | Persisted per-message lifecycle, not a screen or connection state. |
@@ -151,8 +155,14 @@ state in enum payloads and separate properties. Small UI toggles may remain bool
   open transport, expose identification readiness separately and enforce the gate.
 - Keep initial replay/synchronization progress separate from local loading.
   `sync_completed` ends the initial replay, not local persistence or all delivery.
-- Once local data is loaded, allow history reading, composition and submission to
-  the local queue while connecting, synchronizing or offline. Connection failure
+- Initial Confirm hides the form with full-screen loading. Commit identity before
+  `identify`; navigate only after `identity_accepted` for the active attempt and
+  durable registration completion. Essential failures use the shared error screen.
+  Retry preserves identity; Cancel returns to the prefilled form. Guard duplicate
+  attempts/stale results and provide a bounded timeout rather than endless loading.
+- After completed registration and local loading, allow history reading,
+  composition and submission to the local queue while connecting, synchronizing
+  or offline. Connection failure
   offers a retry action without restarting full-screen local loading.
 - Scope operation errors to the relevant form, message or section. Show server
   `userMessage` when valid, otherwise a suitable client-defined fallback. Never
@@ -162,6 +172,10 @@ state in enum payloads and separate properties. Small UI toggles may remain bool
 
 - Persist one generated identity UUID before connecting; reuse it on relaunch and
   identify on every new socket. Distinguish the current identity from other users.
+  A saved identity is not completed registration: persist and read the client-only
+  completion marker defined in [persistence](../../spec/persistence.md#registration-completion).
+  Incomplete registration resumes the form with the same UUID; completed
+  registration permits offline access and is not reset by server restart.
   Names are display data, not unique keys. Normalize UUIDs to lowercase; construct
   conversation IDs by sorting the two participant IDs and joining them with `:`.
 - Use one shared SwiftData container with fixed users, conversations and messages
@@ -196,6 +210,9 @@ state in enum payloads and separate properties. Small UI toggles may remain bool
 - Persist incoming messages and required related records before `message_persisted`.
   ACK already-persisted duplicates again without insertion. Never ACK a failed save;
   after storage recovery, reconnect for replay. Reception must work without an open chat.
+  Persist first successful receipt time as client-only metadata for display and
+  preserve it on duplicates. Outgoing time uses immutable `clientCreatedAt`;
+  `serverReceivedAt` is not recipient-device receipt time.
 - `sent` means server acceptance, not recipient persistence or reading. Server
   restarts lose volatile data; preserve local history and do not resend all sent
   messages. Handle session replacement (close 4001) without competing reconnect
@@ -239,14 +256,21 @@ state in enum payloads and separate properties. Small UI toggles may remain bool
   complexity, not for every simple screen. No global coordinator singleton or
   business/persistence logic in coordinators.
 - Prefer a clean, minimalist interface with clear hierarchy. Support readable
-  accessibility labels, Dynamic Type and light/dark appearance. Message status
+  accessibility labels, Dynamic Type and light appearance only, even when the
+  device is set to dark. [Dark mode](../../FUTURE.md#dark-mode) is deferred. Message status
   must not rely on color alone.
+- Follow the [shared screen references](../../spec/design/README.md): `chat-screen`
+  is `Features/UserList`; `messages-screen` is `Features/Chat`. Incoming cards are
+  gray/left-aligned; outgoing cards are blue/right-aligned, with time beneath each.
+  Show the single checkmark only for server-accepted `sent`, not socket writes,
+  recipient persistence or reads. Use the shared loading/error components only
+  within their documented blocking boundaries; discovery errors stay sectional.
 - Check existing extensions, components and tokens before creating new ones.
   Keep `Core/Extensions/` deterministic and narrowly scoped; extensions must not
   hide feature logic, I/O, mutable global state or dependency ownership.
 - Extract likely reusable UI to `DesignSystem/Components/`; do not force one-use
   wrappers or premature abstractions. Reuse semantically appropriate values from
-  `DesignSystem/Tokens/`. Prefer semantic, theme-aware colors/assets; if no suitable
+  `DesignSystem/Tokens/`. Prefer semantic light-mode colors/assets; if no suitable
   token exists, use a clear local value rather than an unrelated token.
 - The AwareChat iOS project has its own extensions, components and token files.
   Inspect them and preserve their conventions. Do not import or assume PadelRithm's
@@ -314,6 +338,8 @@ state in enum payloads and separate properties. Small UI toggles may remain bool
   generated output. Never designate all of `clients/ios/` for deletion: it contains
   this file and a user-created project. Require explicit generated-path ownership
   before regeneration and preserve all files not declared generated.
+  Protect `spec/design/`, including PNGs and behavior documents; update affected
+  shared visual references and acceptance criteria when UI requirements change.
 - Fix iOS-generated-code defects in the responsible iOS specification, prompt or
   harness logic so the fix survives regeneration, without changing the server or
   redefining shared wire behavior. If the cause is a suspected backend defect,

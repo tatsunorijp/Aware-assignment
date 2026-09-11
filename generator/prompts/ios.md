@@ -7,6 +7,9 @@ and [the iOS agent](../../clients/ios/AGENTS.md) before an authorized generation
   the app name and user-owned configuration unless a requested change requires otherwise.
 - Use SwiftUI/MVVM with main-actor-isolated `@Observable` ViewModels, explicit
   independent screen/connection states and initializer injection.
+- Follow the [shared visual catalog](../../spec/design/README.md), behavior files
+  and actual PNGs in light mode only. Reusable full-screen loading/error components
+  render ViewModel state; their views do not own registration or retry networking.
 - Preserve `Core/Extensions/` for focused, deterministic reusable extensions and
   `DesignSystem/Tokens/` for semantic visual constants. Inspect existing files
   before adding helpers, components or tokens; do not duplicate equivalent values.

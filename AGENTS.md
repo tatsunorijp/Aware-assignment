@@ -1,6 +1,6 @@
 # Repository instructions
 
-- Communicate with the user in Portuguese unless requested otherwise. Write all
+- Communicate with the user in same language the user is using unless requested otherwise. Write all
   repository code, comments, documentation, fixtures and commit messages in English.
 - Use the [README documentation map](README.md#documentation-map) to find each
   topic's maintained source. Update the owner document and affected references;

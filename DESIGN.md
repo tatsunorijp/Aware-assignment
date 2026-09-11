@@ -6,6 +6,15 @@ behavior, [persistence](spec/persistence.md) owns local durability, and the
 [iOS](spec/ios.md) and [Android](spec/android.md) specifications own platform details.
 These are implementation requirements, not claims that the client screens exist.
 
+## Shared prototypes and appearance
+
+The [visual catalog](spec/design/README.md) owns shared iOS/Android PNG references
+and a behavior document for each screen/component. Follow
+[sign up](spec/design/sign-up-screen.md), [chat list](spec/design/chat-screen.md),
+[messages](spec/design/messages-screen.md), [loading](spec/design/loading-screen-component.md)
+and [essential errors](spec/design/error-screen.md) together.
+The MVP supports light mode only; [dark mode](FUTURE.md#dark-mode) is deferred.
+
 ## User identification
 
 ### First launch
@@ -18,14 +27,26 @@ Only after a successful save may the connection service identify with that value
 A failed read must not be mistaken for an absent identity. A failed save must not
 be presented as a completed registration or cause a connection with an identity
 that has not been persisted. Surface the failure in the identification flow and
-allow a retry. No network connection is required to keep an already committed
-identity or to display available local content.
+allow a retry.
+
+On a valid **Confirm**, immediately show full-screen loading, hiding the form
+through identity persistence and registration. Registration uses `identify` on
+the existing WebSocket, not a new HTTP endpoint. Navigate to the chat list only
+after `identity_accepted` for the active attempt and a successful local save of
+[registration completion](spec/persistence.md#registration-completion).
+Do not wait for discovery or `sync_completed`. An essential failure presents the
+full-screen error; Retry resumes safely and Cancel returns to the prefilled form.
+Prevent duplicate attempts and bound the blocking operation so it cannot spin
+indefinitely. A saved UUID alone does not establish completed registration.
 
 ### Subsequent launches and reconnects
 
-Read the persisted current identity. If it exists, reuse its UUID and name and
-skip the identification form. If it is absent, show the form. If app data was
-deleted, a new identity is created through the next first-launch flow.
+Read the persisted current identity and registration completion. If completed,
+reuse its UUID and name and skip the form, even offline. If incomplete, return to
+the prefilled form and retry with the same UUID. If absent, show the empty form.
+If app data was deleted, a new identity is created through the next first-launch
+flow. Keep confirmed local content available during ordinary reconnection;
+server restart does not reset local completion or require another blocking sign-up.
 
 Every newly established socket sends `identify` automatically with the saved
 identity, including after reconnect or server restart. Wait for
@@ -89,24 +110,28 @@ or a neutral fallback while user information is unavailable.
 
 ## Screen loading and state dimensions
 
-Local data loading and network state are independent. Use mutually exclusive
+Screen readiness and network state are independent. Use mutually exclusive
 phases rather than overlapping loading/error/ready flags. Platform state types
 may carry typed failures or data without changing these shared semantics.
 
 | Dimension | States | Meaning |
 | --- | --- | --- |
-| `ScreenState` / feature `State` | `loading`, `ready`, `error` | Loading essential local data, displaying it, or failing to obtain it. |
+| `ScreenState` / feature `State` | `loading`, `ready`, `error` | Essential local reads or initial registration in progress, usable feature content, or an essential failure. A ready sign-up form is not registration completion. |
 | `ConnectionState` | `disconnected`, `connecting`, `connected`, `connectionFailure` | Connection status shown independently from local content. |
 | Registered-users section | Loading, available list, empty, error | State of the remote discovery operation only. |
 | Outgoing `MessageState` | `pendingToSend`, `sending`, `sent`, `failed` | Persisted per-message state, defined in [persistence](spec/persistence.md#outgoing-message-states). |
 
-Full-screen loading is used only while essential local data is loading. Once that
-read succeeds, display the screen, including an empty local result. Database-open
-failures, failed history reads or invalid local data may produce a screen error;
-remote HTTP/socket failures must not replace usable local content.
+Full-screen loading hides an unavailable screen during essential local reads or
+the first registration attempt. Registration must reach server acceptance and
+durable local completion before opening the chat list. Essential failures use the
+[error screen](spec/design/error-screen.md), with operation-specific recovery.
+After completed registration, successful local reads display the screen, including
+empty results. Remote discovery, reconnection and replay must not replace usable
+local content with full-screen loading or error.
 
-Connecting or synchronizing uses a small indicator. A connection failure keeps
-the UI available, shows an offline indication and offers retry. New outgoing
+After completed registration, connecting or synchronizing uses a small indicator.
+A connection failure keeps the UI available, shows an offline indication and
+offers retry. New outgoing
 messages remain pending locally. `sync_completed` marks the end of initial server
 replay, not a local commit or proof of an empty pending queue. Transport readiness
 must not bypass the separate identification gate.
@@ -160,6 +185,12 @@ perform durable state changes; ViewModels expose appropriate presentation state.
 Display a valid server `userMessage` in the affected operation. Keep
 `developerMessage` for diagnosis only; use a generic client-defined message when
 there is no valid display text. Never infer behavior by comparing error sentences.
+
+Use the shared full-screen error only when the failed operation is indispensable
+to continuing, such as first registration or an essential local read. Discovery
+errors stay in their section and outgoing failures stay with their message. Retry
+and Cancel follow the [error component contract](spec/design/error-screen.md);
+neither action implies success or discards saved identity/history.
 
 Transport failures, timeouts, invalid responses/decoding and local storage errors
 remain distinguishable from actual `ServerError` responses. Absence of a valid

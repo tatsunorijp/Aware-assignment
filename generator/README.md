@@ -19,6 +19,7 @@ and prompt layers:
 | Input | Responsibility |
 | --- | --- |
 | [product](../spec/product.md) and [design](../DESIGN.md) | MVP scope, screens, local-first behavior and independent states. |
+| [shared visual catalog](../spec/design/README.md), per-screen Markdown and embedded PNGs | Same light-mode references for both clients, screen navigation, blocking loading/errors and ACK presentation. Inspect images, not just filenames. |
 | [persistence](../spec/persistence.md) | Shared models, entity-specific repositories, sequence/state writes and DI. |
 | [protocol](../spec/protocol.md) | Exact existing HTTP/WS model, events, validation, error and retry contract. |
 | [acceptance criteria](../spec/acceptance-tests.md) and [fixtures](../fixtures/protocol/README.md) | Equivalent tests, decoding cases and native integration checks. |
@@ -39,6 +40,9 @@ Generate native projects that can build with their documented platform tools and
 
 - Implement the three screens and identical shared behavior, including independent
   local/connection/discovery states.
+- Follow shared light-only prototypes and component behavior. Initial registration
+  blocks until server acceptance and durable local completion; subsequent offline
+  history remains usable. Preserve single-checkmark server-ACK semantics.
 - Generate fixed user/conversation/message entities, separated persistence models,
   contracts and implementations, one shared database, and initializer/constructor
   dependency composition.
@@ -62,7 +66,8 @@ which files are manually maintained, user-created or AI-generated. An AI-authore
 document is not automatically disposable generated code.
 
 Protect repository instructions, specifications, prompts, shared fixtures and
-server files. The existing `clients/ios/AwareChat-iOS/` project is user-created;
+server files, including all `spec/design/` images and behavior documents. The
+existing `clients/ios/AwareChat-iOS/` project is user-created;
 `clients/ios/AGENTS.md` is maintained guidance. No broad client tree is currently
 approved for deletion. Preserve files outside explicitly declared generated paths.
 

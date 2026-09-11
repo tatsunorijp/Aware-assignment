@@ -61,7 +61,17 @@ and [Apple local network privacy](https://developer.apple.com/documentation/tech
 6. On reconnect, repeat identification and flush the same persistent outbox.
    Restore interrupted `sending` messages to `pendingToSend` on startup/reconnect.
 
-Keep local loading separate from networking. Show local conversations and history
+For first registration, Confirm immediately shows shared full-screen loading.
+`identity_accepted` for the active identity/attempt, followed by durable local
+registration completion, permits navigation to the chat list. A saved UUID or
+open socket alone does not. Essential failure uses the shared error screen;
+Retry reuses the UUID and Cancel returns to the prefilled form. This is a client
+flow over the existing `identify` event, not a new server endpoint or wire field.
+See [sign-up behavior](../../spec/design/sign-up-screen.md) and
+[completion metadata](../../spec/persistence.md#registration-completion).
+
+After completed registration, keep local loading separate from networking.
+Show local conversations and history
 as soon as the database is available. HTTP errors, reconnection and synchronization
 must not block reading history or composing an offline message.
 

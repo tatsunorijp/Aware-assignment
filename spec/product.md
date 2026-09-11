@@ -24,9 +24,15 @@ The application has three main screens:
 2. Conversations and registered users screen.
 3. Conversation screen for two users.
 
+Both platforms follow the same [shared prototypes](design/README.md), including
+full-screen loading and essential-error states. The MVP is light-mode only;
+[dark mode](../FUTURE.md#dark-mode) is deferred.
+
 The MVP must support:
 
-- Identifying the user by name on first launch.
+- Identifying the user by name on first launch, showing full-screen loading on
+  Confirm and opening the chat list only after server acceptance and locally
+  persisted registration completion.
 - Persisting the user's identity on the device for reuse on subsequent launches.
 - Listing conversations stored on the device.
 - Fetching users registered on the server.
@@ -51,7 +57,9 @@ The server will run locally in a single process and store its data only in memor
 - Discovery lists registered users, including disconnected users. Registration
   does not imply online presence.
 - The device is the source of local identity, conversations, history and outbox.
-  Existing local content remains usable without the server. Discovery of users
+  After completed registration, local content remains usable without the server.
+  Initial registration requires a successful server identification; saving a UUID
+  alone does not bypass that step. Discovery of users
   not already known locally requires a successful server query.
 - Sender acceptance, recipient persistence and reading are different concepts.
   The sender's `sent` indicator means only server acceptance. There is no delivery
@@ -67,6 +75,8 @@ The server will run locally in a single process and store its data only in memor
 
 - [DESIGN.md](../DESIGN.md): identification, list and chat flows, screen/connection
   states, user-facing failures and responsibility boundaries.
+- [design/README.md](design/README.md): shared visual catalog, prototype images and
+  per-screen/component behavior, navigation and appearance.
 - [persistence.md](persistence.md): local entities, repositories, transactions,
   message states, sequences and dependency composition.
 - [protocol.md](protocol.md): canonical wire models, endpoints, events, validation,

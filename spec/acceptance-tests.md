@@ -54,7 +54,9 @@ The iOS and Android clients must have equivalent tests for the most important be
 
 Required behavioral coverage:
 
-- A persisted user is not shown the identification screen again.
+- A persisted user with completed registration skips identification, even offline.
+- A saved identity with incomplete registration resumes the prefilled form and
+  reuses its UUID; its existence alone does not permit entering the chat list.
 - A missing user causes the identification screen to be displayed.
 - Local conversations are displayed without a connection.
 - A message is persisted before any send attempt.
@@ -69,26 +71,66 @@ Required behavioral coverage:
 - A repeated incoming message is not duplicated and is acknowledged again.
 - JSON objects are encoded and decoded correctly.
 - ViewModels expose the expected states.
-- Server failure does not prevent access to local data.
+- After completed registration, server failure does not prevent access to local data.
 
 Networking tests must use fake implementations or transport mocks so they do not depend on a real server.
 
 Also verify section-scoped discovery loading/empty/error/retry; exclusion of self
 and existing conversations by ID; and independent local and connection states.
 A database failure is not an absent identity or a successfully empty query.
-Keep history and composition available while connecting, replaying or offline.
+After completed registration, keep history and composition available while
+connecting, replaying or offline.
+
+## Shared visual and flow acceptance
+
+Validate both native clients against the [shared catalog](design/README.md), each
+behavior document and its PNG. These are future checks, not results of this
+documentation change. Check presentation through native UI inspection; test
+state/orchestration logic using fakes as allowed by the platform test workflow.
+
+- Light mode remains active under both light and dark device settings. Restore
+  temporary device settings after checks; do not require dark-mode app designs.
+- Valid Confirm immediately hides the sign-up form with full-screen loading and
+  prevents duplicate attempts. Blank input remains a local form validation error.
+- Local identity save precedes `identify`. Opening the socket or sending the event
+  cannot navigate; valid `identity_accepted` and a successful local completion save
+  are required. Discovery/replay completion is not another registration gate.
+- Registration save/request/decoding failures and a controlled timeout present the
+  essential error screen. Retry uses the same UUID; Cancel returns to the prefilled
+  form without advancing. Ignore stale attempt results and respect retry eligibility.
+- The upper "Chat" section contains local conversations; "People on server"
+  excludes self and existing conversation peers by ID. Either section navigates
+  to the selected peer's messages, and Back returns to the updated list.
+- Essential local loading hides unavailable content, but successful empty data is
+  ready. Discovery failure affects only its section; reconnect and message sending
+  do not replace usable history with full-screen loading/error.
+- The messages header shows Back and the peer name. Incoming gray cards align left;
+  outgoing blue cards align right. Times appear below each card. The composer
+  remains usable with the keyboard and larger accessibility text.
+- Only `sent` displays the server-acceptance checkmark. Pending, sending and failed
+  states cannot imply delivery/read receipts; failure status is not color-only.
+- Outgoing times survive offline retries unchanged; incoming receipt times survive
+  duplicate delivery and relaunch. Do not label server acceptance as device receipt.
+- Prototype framing/sample content is not hardcoded into the app. Document any
+  necessary native adaptation or unspecified visual choice instead of silently
+  inventing product features or backend capabilities.
 
 ## Client persistence
 
 Tests must follow the entity separation, with distinct groups for users, conversations, and messages inside the persistence test folder.
 
 - Save and retrieve the current identity without confusing it with other known users.
+- Persist registration completion only after acceptance. Reopen both incomplete
+  and completed identities correctly; completion-save failure prevents navigation.
+  Known-user upserts and server restart do not erase local registration completion.
 - Update users by ID without duplicating records, allowing matching names for different IDs.
 - Get or create a conversation without duplicating it, and return only its messages when querying by `conversationId`.
 - Update an existing message's state without changing its ID, text, or conversation.
 - Query the pending queue in the order defined by `clientSequence` and preserve the sequence after reopening the database.
 - Propagate write errors and prevent partially completed operations from being treated as successful.
 - Reflect persisted changes in the data consumed by ViewModels, including after acknowledgments received by the messaging service.
+- Persist incoming receipt time once with the first successful message write;
+  duplicates and database reopen preserve it, without adding a wire field.
 
 Tests of real implementations must use an isolated test database, in memory when appropriate. Scenarios that verify persistence across database openings must use a temporary on-disk database. ViewModel tests must inject contract fakes without depending on SwiftData or Room.
 
@@ -127,7 +169,8 @@ someone else's active session without authorization.
 
 ### Native offline scenario
 
-Use two distinct persisted identities (Alice on iOS and Bob on Android), the same
+Use two distinct persisted identities with completed registration (Alice on iOS
+and Bob on Android), the same
 unchanged single-process server, and clean isolated test data. Do not restart the
 server during this scenario; restart loss is a separate documented limitation.
 Record message IDs, directions, sequence values and persisted states so the

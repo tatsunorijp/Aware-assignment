@@ -13,6 +13,7 @@ requirements back into a single draft.
 | --- | --- |
 | [spec/product.md](spec/product.md) | Purpose, MVP scope, deliverables and product boundaries. |
 | [DESIGN.md](DESIGN.md) | Identification, conversations/users, chat flows, state and responsibility boundaries. |
+| [spec/design/README.md](spec/design/README.md) | Shared iOS/Android prototype catalog, original PNG copies and per-screen/component behavior; light mode only. |
 | [spec/persistence.md](spec/persistence.md) | Local entities, repositories, transactions, message state and dependency composition. |
 | [spec/protocol.md](spec/protocol.md) | Canonical HTTP/WebSocket contract, models, ACKs, errors, ordering and retry rules. |
 | [spec/ios.md](spec/ios.md) | SwiftUI/MVVM/Observation, SwiftData and iOS implementation requirements. |

@@ -2,6 +2,16 @@
 
 The following features must remain outside the MVP:
 
+## Dark Mode
+
+- Dark appearance and following the device's light/dark preference.
+- Approved dark variants of the shared prototypes, semantic tokens and components
+  for both iOS and Android, with contrast and accessibility validation.
+
+The MVP uses light mode only, including when the device is configured for dark
+appearance. Do not generate dark palettes or a theme-switching setting from the
+current [shared light-mode prototypes](spec/design/README.md).
+
 ## Error Model Evolution
 
 - `retryAfterSeconds`: a server-suggested interval before another attempt.

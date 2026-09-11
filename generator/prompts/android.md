@@ -7,6 +7,9 @@ Read [shared instructions](shared.md) and
   package/build configuration and actual commands; none is established yet.
 - Follow equivalent MVVM responsibilities with Android ViewModel/StateFlow,
   constructor injection, coroutines and the specified native UI/navigation guidance.
+- Follow the [shared visual catalog](../../spec/design/README.md), behavior files
+  and actual PNGs in light mode only. Reusable full-screen loading/error composables
+  render ViewModel state; UI components do not own registration or retry networking.
 - Include `core/extensions/` for focused, deterministic Kotlin extensions and
   `designsystem/tokens/` for Compose-native semantic visual constants. Preserve
   equivalent UI intent without copying Swift types or filenames literally.

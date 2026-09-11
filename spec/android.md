@@ -72,6 +72,21 @@ Android/
 
 The organization does not need to be a literal copy of iOS, but both clients must have equivalent responsibilities and behavior.
 
+## Shared visual references
+
+Read the [shared catalog](design/README.md), the relevant screen/component Markdown
+and its embedded PNG before implementing UI. These are the same references used
+by iOS, not Android-specific mockups. Map `sign-up-screen` to
+`feature/identification`, `chat-screen` to `feature/userlist`, and `messages-screen`
+to `feature/chat`. Reusable full-screen loading/error composables belong in
+`designsystem/components`; operation state belongs to the owning ViewModel.
+
+Implement light mode only, even under a dark device appearance. Preserve native
+insets, keyboard handling, navigation and accessibility without drawing the device
+frame from the PNG. [Dark mode](../FUTURE.md#dark-mode) is deferred. Validate against
+the same [visual and flow criteria](acceptance-tests.md#shared-visual-and-flow-acceptance)
+as iOS when an Android implementation exists.
+
 ## Extensions and design system
 
 | Location | Responsibility |
@@ -90,7 +105,7 @@ must not silently change the shared UTC wire format.
 Android tokens must express the same UI intent as iOS while using Compose-native
 types and Android naming conventions; they do not need to duplicate Swift type or
 file names literally. Prefer semantic tokens over repeated literals when a matching
-value exists. Support light/dark appearance, accessibility and non-color status
+value exists. Support light appearance, accessibility and non-color status
 cues. Components consume tokens instead of redefining equivalent values. Tokens
 must not contain feature state, navigation, networking or persistence logic.
 
@@ -140,6 +155,13 @@ typed failures/data when useful. Keep local loading/ready/error independent of
 disconnected/connecting/connected/connectionFailure. Remote discovery has its own
 loading/list/empty/error states. Follow the
 [shared screen semantics](../DESIGN.md#screen-loading-and-state-dimensions).
+
+First registration is a blocking network exception: Confirm presents full-screen
+loading through local identity save, `identify`, `identity_accepted` and durable
+local registration completion. An essential failure uses the shared error screen.
+After completed registration, ordinary reconnect/replay never hides usable local
+history. Preserve pending registration on relaunch and keep receipt timestamps
+client-only as defined in [persistence](persistence.md).
 
 The app-scoped messaging service owns reception and FIFO flushing independently
 of a chat ViewModel. Compose UI and ViewModels must not create databases or access

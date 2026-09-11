@@ -70,6 +70,22 @@ iOS/
 
 Do not create dedicated unit tests for SwiftUI View types. Logic must remain in ViewModels, repositories, and services to enable deterministic testing.
 
+## Shared visual references
+
+Read the [shared catalog](design/README.md), the relevant screen/component Markdown
+and its embedded PNG before implementing UI. Both clients use the same prototypes.
+`sign-up-screen` maps to `Features/Identification`, `chat-screen` to
+`Features/UserList`, and `messages-screen` to `Features/Chat`. Reusable full-screen
+loading/error views belong in `DesignSystem/Components`, with operation state in
+the owning ViewModel. These are future implementation requirements, not new Swift
+files created by the documentation update.
+
+Implement light mode only, even under a dark device appearance. Preserve native
+safe areas, keyboard behavior and accessibility without drawing the prototype's
+device frame. Treat [dark mode](../FUTURE.md#dark-mode) as future work. Use
+[visual and flow acceptance](acceptance-tests.md#shared-visual-and-flow-acceptance)
+for later Simulator validation.
+
 ## Extensions and design system
 
 | Location | Responsibility |
@@ -88,7 +104,7 @@ date extension must not silently redefine the protocol's UTC encoding rules.
 Design tokens provide one semantic source for recurring visual decisions. Prefer
 tokens over repeated literals when a matching semantic value exists, but do not
 force unrelated values into a token merely to avoid a local constant. Colors must
-support the intended light/dark appearances, and status meaning must not depend on
+support the required light appearance, and status meaning must not depend on
 color alone. Components consume tokens rather than redefining equivalent values.
 Tokens must not contain feature state, navigation, networking or persistence logic.
 
@@ -142,8 +158,11 @@ Use feature `State`/`ScreenState` cases `loading`, `ready`, `error`, independent
 from `ConnectionState` cases `disconnected`, `connecting`, `connected`,
 `connectionFailure`. Associated typed failures/data may be added when useful.
 Preserve [shared state semantics](../DESIGN.md#screen-loading-and-state-dimensions):
-local loading alone gates the screen; remote discovery errors belong to its
-section; offline users can read history and queue messages. Outbox states are
+essential local loading and first registration can gate the screen. Confirm shows
+full-screen loading until `identity_accepted` and a local registration-completion
+save succeed; essential failures use the shared error component. Remote discovery
+errors belong to its section; after completed registration, offline users can read
+history and queue messages. Outbox states are
 persisted per message, not inferred from a screen flag.
 
 Use state-driven `NavigationStack` routes with lightweight identifiers and a
