@@ -41,6 +41,14 @@ Logical organization (future responsibilities, not an existing directory snapsho
 iOS/
 ├── App/
 │   └── AppDependencies.swift
+├── Assets.xcassets/
+│   └── Colors/
+│       ├── Primary.colorset/
+│       ├── Secondary.colorset/
+│       ├── Background.colorset/
+│       ├── TextPrimary.colorset/
+│       ├── TextSecondary.colorset/
+│       └── Divider.colorset/
 ├── Core/
 │   ├── Extensions/
 │   ├── Models/
@@ -93,6 +101,7 @@ for later Simulator validation.
 | `Core/Extensions/` | Small, reusable Swift or framework extensions shared across features. Prefer focused files named for the extended type and purpose. |
 | `DesignSystem/Components/` | Reusable SwiftUI components with clear UI semantics. |
 | `DesignSystem/Tokens/` | Centralized semantic colors, icons, spacing, sizes, corner radii and other reusable visual constants. |
+| `Assets.xcassets/Colors/` | Named sRGB color assets; the stored values consumed by `Tokens.Colors`. |
 
 Extensions must be deterministic and narrowly scoped. Do not hide feature business
 rules, persistence access, network operations, mutable global state or unrelated
@@ -112,6 +121,39 @@ The current iOS project already contains `Core/Extensions/`,
 `DesignSystem/Components/` and `DesignSystem/Tokens/`. Inspect existing extensions,
 components and tokens before adding or duplicating one. Their presence does not
 authorize rewriting user-created files during an unrelated generation task.
+
+### Color assets and Swift tokens
+
+The six [approved palette values](design/README.md#color-palette) are implemented
+in [Assets.xcassets/Colors](../clients/ios/AwareChat-iOS/AwareChat-iOS/Assets.xcassets/Colors).
+Each color set contains one opaque, universal sRGB value with no dark override.
+`Colors` is an organizational folder with **Provides Namespace disabled**; asset
+names remain `Primary`, `Secondary`, `Background`, `TextPrimary`, `TextSecondary`
+and `Divider`, not `Colors/Primary` or prefixed alternatives.
+
+[DesignSystem/Tokens/Colors.swift](../clients/ios/AwareChat-iOS/AwareChat-iOS/DesignSystem/Tokens/Colors.swift)
+exposes the following SwiftUI values through generated color resources:
+
+| Asset | Public app-facing token |
+| --- | --- |
+| `Primary` | `Tokens.Colors.primary` |
+| `Secondary` | `Tokens.Colors.secondary` |
+| `Background` | `Tokens.Colors.background` |
+| `TextPrimary` | `Tokens.Colors.textPrimary` |
+| `TextSecondary` | `Tokens.Colors.textSecondary` |
+| `Divider` | `Tokens.Colors.divider` |
+
+Use these tokens in views/components instead of duplicating RGB literals or asset
+lookup strings. `Color(.primary)` in the token selects the generated color resource;
+SwiftUI's built-in `Color.primary` is not this asset. The same distinction applies
+to `secondary`. Keep catalog values, token mappings and palette documentation in
+sync when colors change. Rebuild the Xcode target to regenerate resource symbols.
+
+For white content on primary-blue controls or outgoing cards, the existing white
+`background` value can be reused; `textPrimary` is for text on light surfaces, not
+an instruction to replace the prototype's white outgoing text. Named colors alone
+do not force the entire app into light mode: root appearance configuration remains
+part of screen implementation. See [iOS setup and usage](../clients/ios/README.md).
 
 ## iOS persistence files
 

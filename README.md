@@ -17,6 +17,7 @@ requirements back into a single draft.
 | [spec/persistence.md](spec/persistence.md) | Local entities, repositories, transactions, message state and dependency composition. |
 | [spec/protocol.md](spec/protocol.md) | Canonical HTTP/WebSocket contract, models, ACKs, errors, ordering and retry rules. |
 | [spec/ios.md](spec/ios.md) | SwiftUI/MVVM/Observation, SwiftData and iOS implementation requirements. |
+| [clients/ios/README.md](clients/ios/README.md) | Existing iOS project setup, build guidance and named color asset/token usage. |
 | [spec/android.md](spec/android.md) | Native Android architecture, Room and equivalent implementation requirements. |
 | [spec/acceptance-tests.md](spec/acceptance-tests.md) | Server/client tests, persistence/error checks and native offline demonstration. |
 | [FUTURE.md](FUTURE.md) | Complete deferred feature backlog, outside the MVP. |

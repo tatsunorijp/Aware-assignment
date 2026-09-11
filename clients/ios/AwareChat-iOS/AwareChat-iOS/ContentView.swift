@@ -11,7 +11,3 @@ struct ContentView: View {
 #Preview {
     ContentView()
 }
-
-#Playground {
-    _ = 1 + 2
-}

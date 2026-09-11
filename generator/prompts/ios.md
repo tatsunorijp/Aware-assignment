@@ -13,6 +13,11 @@ and [the iOS agent](../../clients/ios/AGENTS.md) before an authorized generation
 - Preserve `Core/Extensions/` for focused, deterministic reusable extensions and
   `DesignSystem/Tokens/` for semantic visual constants. Inspect existing files
   before adding helpers, components or tokens; do not duplicate equivalent values.
+- Preserve `Assets.xcassets/Colors/` and the
+  [asset/token mapping](../../spec/ios.md#color-assets-and-swift-tokens). Keep the
+  folder non-namespaced and the six colors opaque sRGB with no dark variants.
+  Consume them through `Tokens.Colors`, not duplicate literals or SwiftUI's built-in
+  primary/secondary styles. Compile the catalog and generated resource references.
 - Generate separated SwiftData entity models, repository protocols/implementations
   and shared container composition. Keep contexts out of Views/ViewModels.
 - Use NavigationStack and URLSessionWebSocketTask with app-scoped messaging,

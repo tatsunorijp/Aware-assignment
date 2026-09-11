@@ -47,8 +47,9 @@ usable local history. See [loading boundaries](loading-screen-component.md).
 - The images illustrate states with sample people, messages and dates. Runtime
   content comes from local repositories and the server, not hardcoded sample data.
 - Screenshots are not measurements or a complete state specification. Reuse
-  semantic design tokens; do not claim exact font sizes, color hex values or layout
-  constants were supplied when they were not. Document important visual decisions.
+  semantic design tokens and the [approved palette](#color-palette); do not infer
+  different colors by sampling the images. Exact font sizes and layout constants
+  have not been supplied. Document important visual decisions.
 - Explicit written requirements govern behavior and clarify differences from an
   image. For example, the list prototype says "Chats", but the requested heading
   is "Chat". The sign-up wording does not add authenticated accounts. A checkmark
@@ -57,6 +58,30 @@ usable local history. See [loading boundaries](loading-screen-component.md).
   reproduce sample UI. Report conflicts to the developer; do not modify the server
   during client generation. Missing visual references must be reported, not replaced
   with invented mockups or described as inspected.
+
+## Color palette
+
+The developer supplied these exact opaque sRGB values for the light-mode design.
+They take precedence over apparent shades, gradients or compression in the PNGs.
+
+| Semantic color | Usage | Hex | RGB |
+| --- | --- | --- | --- |
+| `Primary` | Outgoing message backgrounds, Retry, Send and server-acceptance checkmarks; primary Confirm action. | `#0191C4` | 1, 145, 196 |
+| `Secondary` | Incoming message backgrounds and Cancel button background. | `#F0F4FA` | 240, 244, 250 |
+| `Background` | Screen backgrounds. | `#FFFFFF` | 255, 255, 255 |
+| `TextPrimary` | Names, titles and message text on light surfaces. | `#07143F` | 7, 20, 63 |
+| `TextSecondary` | Dates, times and placeholders. | `#8796B8` | 135, 150, 184 |
+| `Divider` | Subtle separators and borders. | `#E6EAF1` | 230, 234, 241 |
+
+Outgoing cards and primary actions retain white foreground content as shown in
+the prototypes. This palette does not constitute completed accessibility/contrast
+validation; verify actual text sizes and color pairings during screen implementation
+and report any issue without silently changing approved values.
+
+iOS stores these colors under `Assets.xcassets/Colors/` and exposes them through
+`Tokens.Colors`; see the [iOS asset/token mapping](../ios.md#color-assets-and-swift-tokens).
+Android must express the same palette through its native design tokens, not import
+an Xcode catalog; no Android color implementation is added by this iOS task.
 
 ## Asset ownership and maintenance
 

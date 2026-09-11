@@ -59,7 +59,7 @@
    [server instructions](../../server/AGENTS.md) for a separately authorized backend
    task; reading those instructions does not authorize changes from a client task.
 5. Inspect the current Xcode project, affected source and tests, and any maintained
-   iOS README/design notes before editing. Recheck these rather than treating the
+   [iOS README](README.md)/design notes before editing. Recheck these rather than treating the
    baseline below as permanently current.
 
 The maintained documents above are the requirements sources; the former draft is
@@ -88,6 +88,7 @@ them by changing the backend or the shared contract during iOS work.
 | Future location under the source root | Responsibility |
 | --- | --- |
 | `App/` | App composition, `AppDependencies`, root flow and navigation ownership. |
+| `Assets.xcassets/Colors/` | Named, opaque sRGB assets backing the six `Tokens.Colors` values; no folder namespace or dark overrides. |
 | `Core/Extensions/` | Focused reusable Swift/framework extensions without feature business logic or dependency ownership. |
 | `Core/Models/` | Logical client/domain models independent of database details. |
 | `Core/Protocol/` | Wire DTOs, events and shared `ServerError`. |
@@ -275,6 +276,15 @@ state in enum payloads and separate properties. Small UI toggles may remain bool
 - The AwareChat iOS project has its own extensions, components and token files.
   Inspect them and preserve their conventions. Do not import or assume PadelRithm's
   concrete token names, components, assets, bundle identifier or test targets.
+- Keep named colors in `Assets.xcassets/Colors/` and expose them through
+  `DesignSystem/Tokens/Colors.swift` as `Tokens.Colors`. Follow the
+  [asset/token mapping](../../spec/ios.md#color-assets-and-swift-tokens) and
+  [approved palette](../../spec/design/README.md#color-palette). Keep Provides
+  Namespace disabled, preserve exact sRGB values, and use generated color resources
+  in the tokens rather than SwiftUI's built-in `Color.primary`/`Color.secondary`.
+  Do not add dark variants, duplicate RGB constants in views or rename assets
+  without updating consumers and documentation. Compile assets and token references
+  together when validating a change.
 - Stay within the three-screen text-messaging MVP. Presence, read receipts, groups,
   attachments, history pagination, conversation deletion, manual retry of failed
   messages and background-delivery guarantees remain deferred unless requested.
