@@ -7,6 +7,9 @@ and [the iOS agent](../../clients/ios/AGENTS.md) before an authorized generation
   the app name and user-owned configuration unless a requested change requires otherwise.
 - Use SwiftUI/MVVM with main-actor-isolated `@Observable` ViewModels, explicit
   independent screen/connection states and initializer injection.
+- Preserve `Core/Extensions/` for focused, deterministic reusable extensions and
+  `DesignSystem/Tokens/` for semantic visual constants. Inspect existing files
+  before adding helpers, components or tokens; do not duplicate equivalent values.
 - Generate separated SwiftData entity models, repository protocols/implementations
   and shared container composition. Keep contexts out of Views/ViewModels.
 - Use NavigationStack and URLSessionWebSocketTask with app-scoped messaging,

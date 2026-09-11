@@ -7,6 +7,9 @@ Read [shared instructions](shared.md) and
   package/build configuration and actual commands; none is established yet.
 - Follow equivalent MVVM responsibilities with Android ViewModel/StateFlow,
   constructor injection, coroutines and the specified native UI/navigation guidance.
+- Include `core/extensions/` for focused, deterministic Kotlin extensions and
+  `designsystem/tokens/` for Compose-native semantic visual constants. Preserve
+  equivalent UI intent without copying Swift types or filenames literally.
 - Use one Room database with separated entities, DAOs, repository interfaces and
   implementations. Keep persistence behind contracts and expose observable local data.
 - Select and document one WebSocket transport from the specified alternatives.

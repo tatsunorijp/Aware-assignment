@@ -84,6 +84,7 @@ them by changing the backend or the shared contract during iOS work.
 | Future location under the source root | Responsibility |
 | --- | --- |
 | `App/` | App composition, `AppDependencies`, root flow and navigation ownership. |
+| `Core/Extensions/` | Focused reusable Swift/framework extensions without feature business logic or dependency ownership. |
 | `Core/Models/` | Logical client/domain models independent of database details. |
 | `Core/Protocol/` | Wire DTOs, events and shared `ServerError`. |
 | `Core/Networking/` | HTTP/WebSocket contracts, adapters and local network failures. |
@@ -92,6 +93,7 @@ them by changing the backend or the shared contract during iOS work.
 | `Core/Services/` | App-scoped messaging, synchronization and outbox behavior. |
 | `Features/Identification/`, `UserList/`, `Chat/` | Feature views, ViewModels and presentation state. |
 | `DesignSystem/Components/` | Genuinely reusable UI components. |
+| `DesignSystem/Tokens/` | Semantic colors, icons, spacing, sizes, corner radii and other recurring visual constants. |
 
 These are future locations, not existing implementations or a scaffolding task.
 When tests are authorized, put them in a separate test target/source directory,
@@ -239,12 +241,16 @@ state in enum payloads and separate properties. Small UI toggles may remain bool
 - Prefer a clean, minimalist interface with clear hierarchy. Support readable
   accessibility labels, Dynamic Type and light/dark appearance. Message status
   must not rely on color alone.
-- Check existing components before creating new ones. Extract likely reusable UI
-  to `DesignSystem/Components/`; do not force one-use wrappers or premature abstractions.
-- Reuse semantically appropriate design tokens when they exist. Prefer semantic,
-  theme-aware colors/assets; if no suitable token exists, use a clear local value
-  rather than an unrelated token. Do not assume PadelRithm's `Tokens`, components,
-  assets, bundle identifier or test targets exist in this app.
+- Check existing extensions, components and tokens before creating new ones.
+  Keep `Core/Extensions/` deterministic and narrowly scoped; extensions must not
+  hide feature logic, I/O, mutable global state or dependency ownership.
+- Extract likely reusable UI to `DesignSystem/Components/`; do not force one-use
+  wrappers or premature abstractions. Reuse semantically appropriate values from
+  `DesignSystem/Tokens/`. Prefer semantic, theme-aware colors/assets; if no suitable
+  token exists, use a clear local value rather than an unrelated token.
+- The AwareChat iOS project has its own extensions, components and token files.
+  Inspect them and preserve their conventions. Do not import or assume PadelRithm's
+  concrete token names, components, assets, bundle identifier or test targets.
 - Stay within the three-screen text-messaging MVP. Presence, read receipts, groups,
   attachments, history pagination, conversation deletion, manual retry of failed
   messages and background-delivery guarantees remain deferred unless requested.

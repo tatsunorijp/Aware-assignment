@@ -44,6 +44,7 @@ Android/
 ├── app/
 │   └── AppDependencies.kt
 ├── core/
+│   ├── extensions/
 │   ├── model/
 │   ├── network/
 │   ├── persistence/
@@ -58,7 +59,8 @@ Android/
 │   ├── userlist/
 │   └── chat/
 ├── designsystem/
-│   └── components/
+│   ├── components/
+│   └── tokens/
 └── tests/
     ├── identification/
     ├── userlist/
@@ -69,6 +71,28 @@ Android/
 ```
 
 The organization does not need to be a literal copy of iOS, but both clients must have equivalent responsibilities and behavior.
+
+## Extensions and design system
+
+| Location | Responsibility |
+| --- | --- |
+| `core/extensions/` | Small, reusable Kotlin extension functions shared across features. Prefer focused files named for the receiver type or purpose. |
+| `designsystem/components/` | Reusable Jetpack Compose components with clear UI semantics. |
+| `designsystem/tokens/` | Centralized semantic colors, icons, spacing, sizes, shapes/corner radii and other reusable visual constants. |
+
+Kotlin extensions must be deterministic and narrowly scoped. Do not use them to
+hide feature business rules, database access, network operations, mutable global
+state or dependency ownership. Prefer a named class/service when behavior owns
+state, dependencies or a domain responsibility. Protocol timestamp parsing and
+encoding belongs in `core/protocol/` or `core/network/`; a generic time extension
+must not silently change the shared UTC wire format.
+
+Android tokens must express the same UI intent as iOS while using Compose-native
+types and Android naming conventions; they do not need to duplicate Swift type or
+file names literally. Prefer semantic tokens over repeated literals when a matching
+value exists. Support light/dark appearance, accessibility and non-color status
+cues. Components consume tokens instead of redefining equivalent values. Tokens
+must not contain feature state, navigation, networking or persistence logic.
 
 ## Android persistence files
 

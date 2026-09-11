@@ -42,6 +42,7 @@ iOS/
 ├── App/
 │   └── AppDependencies.swift
 ├── Core/
+│   ├── Extensions/
 │   ├── Models/
 │   ├── Networking/
 │   ├── Persistence/
@@ -56,7 +57,8 @@ iOS/
 │   ├── UserList/
 │   └── Chat/
 ├── DesignSystem/
-│   └── Components/
+│   ├── Components/
+│   └── Tokens/
 └── Tests/
     ├── Identification/
     ├── UserList/
@@ -67,6 +69,33 @@ iOS/
 ```
 
 Do not create dedicated unit tests for SwiftUI View types. Logic must remain in ViewModels, repositories, and services to enable deterministic testing.
+
+## Extensions and design system
+
+| Location | Responsibility |
+| --- | --- |
+| `Core/Extensions/` | Small, reusable Swift or framework extensions shared across features. Prefer focused files named for the extended type and purpose. |
+| `DesignSystem/Components/` | Reusable SwiftUI components with clear UI semantics. |
+| `DesignSystem/Tokens/` | Centralized semantic colors, icons, spacing, sizes, corner radii and other reusable visual constants. |
+
+Extensions must be deterministic and narrowly scoped. Do not hide feature business
+rules, persistence access, network operations, mutable global state or unrelated
+helpers in an extension. A named type or service is preferable when behavior owns
+state, dependencies or a domain responsibility. Keep Foundation/date formatting
+that affects the wire protocol in `Core/Protocol/` or `Core/Networking/`; a generic
+date extension must not silently redefine the protocol's UTC encoding rules.
+
+Design tokens provide one semantic source for recurring visual decisions. Prefer
+tokens over repeated literals when a matching semantic value exists, but do not
+force unrelated values into a token merely to avoid a local constant. Colors must
+support the intended light/dark appearances, and status meaning must not depend on
+color alone. Components consume tokens rather than redefining equivalent values.
+Tokens must not contain feature state, navigation, networking or persistence logic.
+
+The current iOS project already contains `Core/Extensions/`,
+`DesignSystem/Components/` and `DesignSystem/Tokens/`. Inspect existing extensions,
+components and tokens before adding or duplicating one. Their presence does not
+authorize rewriting user-created files during an unrelated generation task.
 
 ## iOS persistence files
 
