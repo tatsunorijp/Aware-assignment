@@ -34,6 +34,22 @@ instead of inventing content or claiming unavailable references were inspected.
   authorize generating all features, creating test targets or cleaning client trees.
 - Commit or push only when requested; preserve unrelated working-tree changes.
 
+## Explicit AI-generated code markers
+
+Only when the developer explicitly asks for code to be marked as AI Generated,
+wrap the exact generated Swift code with these delimiters:
+
+```swift
+// MARK: - AI Generated - Start
+// Generated code goes here.
+// MARK: - AI Generated - End
+```
+
+Place the start marker immediately before the first generated declaration or
+statement and the end marker immediately after the last one. Keep manually written
+code outside the marked region, do not add these markers to ordinary AI-assisted
+changes unless requested, and do not leave an unmatched or nested marker pair.
+
 ## MVVM, Observation and ownership
 
 - Use SwiftUI and MVVM with normally final, `@MainActor`-isolated `@Observable`

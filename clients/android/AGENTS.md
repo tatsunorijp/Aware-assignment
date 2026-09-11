@@ -36,6 +36,22 @@ than inventing references, product features or backend behavior.
 - Preserve unrelated changes and user-owned files; commit or push only if requested.
   Do not import another project's concrete assets, permissions or machine settings.
 
+## Explicit AI-generated code markers
+
+Only when the developer explicitly asks for code to be marked as AI Generated,
+wrap the exact generated Kotlin code with these delimiters:
+
+```kotlin
+// MARK: - AI Generated - Start
+// Generated code goes here.
+// MARK: - AI Generated - End
+```
+
+Place the start marker immediately before the first generated declaration or
+statement and the end marker immediately after the last one. Keep manually written
+code outside the marked region, do not add these markers to ordinary AI-assisted
+changes unless requested, and do not leave an unmatched or nested marker pair.
+
 ## MVVM, state and ownership
 
 - Use native Kotlin/Compose MVVM responsibilities, Android ViewModels, StateFlow
