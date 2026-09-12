@@ -18,7 +18,7 @@ a filename, sample screen or the historical assignment draft.
 | UI, components or visual tokens | [Shared design catalog](../../spec/design/README.md), affected screen/component documents and their actual PNGs; [iOS asset mapping](README.md#color-assets-and-swift-tokens). |
 | Storage, models or synchronization | [Shared persistence](../../spec/persistence.md) and [iOS persistence layout](README.md#ios-persistence-files). |
 | Networking, DTOs, errors or backend integration | [Protocol](../../spec/protocol.md), [client guide](../../server/docs/CLIENT_GUIDE.md), relevant [error fixtures](../../fixtures/protocol/README.md). Read [server changes](../../server/CHANGELOG.md) when adopting an update and [server setup](../../server/README.md) when running it. |
-| Verification or generation | Relevant [acceptance criteria](../../spec/acceptance-tests.md), [generator requirements](../../generator/README.md) and [iOS prompt](../../generator/prompts/ios.md). |
+| Verification or generation | Relevant [acceptance criteria](../../spec/acceptance-tests.md), [generator requirements and sequence](../../generator/README.md#prompt-sequence), and the selected numbered iOS feature prompt. |
 
 Report missing assets, conflicting requirements or backend/documentation mismatches
 instead of inventing content or claiming unavailable references were inspected.

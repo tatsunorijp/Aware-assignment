@@ -212,13 +212,17 @@ backend or weaken the expected result to make the client pass.
 
 ## Generation verification
 
-The [generator requirements](../generator/README.md) define the clean regeneration
-workflow. Once implemented, generate both clients from maintained inputs, build
-both projects, run the required suites and repeat the native offline scenario.
-Generated persistence organization, dependency injection, DTOs and error handling
-must match the platform READMEs, scoped implementation instructions and shared
-specifications. Both platform README/AGENTS pairs are required generation inputs;
-verify component reuse and token-group/local-constant decisions against the agents.
+The [prompt-based generator](../generator/README.md) defines the clean regeneration
+workflow. Once both platform foundations are ready, delete only the declared
+generated boundary, paste each platform's three prompts into Codex or Claude Code
+in the documented order, build both projects, run the required suites, and repeat
+the native offline scenario.
+The resulting clients' persistence organization, dependency injection, DTOs,
+generated features, and error handling must match the platform READMEs, scoped
+implementation instructions, and shared specifications. Both platform README and
+AGENTS pairs are required generation inputs; verify component reuse and
+token-group or local-constant decisions against the agents.
 
-Do not mark this verified by running the currently empty shell placeholders.
-A manual patch to generated output does not establish a reproducible fix.
+No shell generator or verifier is required. Do not mark this verified merely
+because the prompt files exist or because an agent reported success. A manual
+patch to generated output does not establish a reproducible fix.

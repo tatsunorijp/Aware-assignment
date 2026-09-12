@@ -48,8 +48,8 @@ migration does not authorize runtime changes or change `protocolVersion: 1`.
 | Server | Implemented in `server/`; package release 0.2.0, nested shared ServerError. |
 | iOS | `AwareChat-iOS` under `clients/ios/`: reusable design system, typed HTTP/WebSocket layer, navigation foundation, SwiftData repositories, offline messaging service and mirrored Swift Testing suites. Feature screens/ViewModels and root integration remain pending; see the [iOS guide](clients/ios/README.md). |
 | Android | Existing `AwareChat-Android` Gradle/Compose starter under `clients/android/`, with the initial package skeleton, light design system, reusable components and example tests; complete messaging screens and assignment-specific tests are not implemented. |
-| Generator | Maintained requirements and prompt inputs exist; `generate.sh` and `verify.sh` are empty placeholders, not working commands. |
-| Native demo | Specified in acceptance criteria; not implemented or verified. `scripts/run-demo.sh` does not exist yet. |
+| Generator | The documented Codex/Claude Code prompt sequence and exact generated ownership boundary are defined; the three features and clean two-platform regeneration are not yet complete or verified. |
+| Native demo | Specified as maintained manual acceptance steps; the complete iOS/Android scenario is not yet implemented or verified. |
 
 Requirements in the documents above describe the intended deliverable. Their
 presence is not proof of implementation, passing tests or reproducible generation.
@@ -85,17 +85,19 @@ during documentation migration. Native checks and the full
 [iOS/Android offline scenario](spec/acceptance-tests.md#native-offline-scenario)
 remain required once the apps exist.
 
-## Generate the clients
+## Generate the client features
 
-There is no functioning generation command yet; do not treat an empty script's
-exit status as generation success. Read [generator/README.md](generator/README.md)
-for shared and per-platform inputs, required outputs, safe ownership and the
-verification workflow. That document must gain actual iOS, Android, both-client
-and verification commands when the harness is implemented.
+Open this repository root in Codex or Claude Code and follow the numbered iOS or
+Android prompt sequence in [generator/README.md](generator/README.md#prompt-sequence).
+Each prompt is copied into the active coding-agent session; there is intentionally
+no shell generation command. The generator README owns the exact delegated-output
+boundary, protected maintained inputs, order, clean-regeneration procedure and
+native verification commands.
 
-No client directory is currently declared disposable generated output. Preserve
-the user-created Xcode/Gradle projects, platform READMEs and AI instructions; do not delete `clients/ios/`
-or `clients/android/` as a preliminary step.
+The feature prompts are ready, but they have not yet produced and cleanly
+regenerated both complete clients. Preserve everything outside the declared
+feature, feature-test and minimal app-composition paths. In particular, never
+delete `clients/ios/` or `clients/android/` as a regeneration step.
 
 ## Maintenance and ownership
 
@@ -106,8 +108,8 @@ owner document and its affected references in the same change set, preserving
 compatibility and distinguishing product requirements from implementation status.
 
 Specifications, design, future work, instructions, prompts and server documents
-are manually maintained inputs, even when an AI helps edit them. The server is
-maintained source, and the existing iOS/Android starters are user-created; none are
-currently disposable generator output. Future generation must document exactly
-which files it owns and preserve everything else. Fix generated defects at their
-source specification/prompt/harness rather than relying on a patch lost on regeneration.
+are maintained inputs, even when an AI helps edit them. The server and client
+foundations remain maintained source. Only the exact paths in the
+[generator boundary](generator/README.md#generated-ownership-boundary) are
+delegated disposable output. Fix generated defects at their source specification,
+platform instruction, or prompt rather than relying on a patch lost on regeneration.

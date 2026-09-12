@@ -4,15 +4,24 @@
 
 The assignment's primary deliverable is a spec-driven generator that produces
 native Swift/iOS and Kotlin/Android clients with equivalent observable behavior
-and the same messaging protocol. The direct-messaging app demonstrates that the
-generated clients communicate through the local server. Sharing source code
-between platforms is not required.
+and the same messaging protocol. This repository uses the original assignment's
+permitted prompt form: evaluators paste a documented sequence into Codex or Claude
+Code. A custom CLI or shell wrapper is not required. The direct-messaging app
+demonstrates that the generated clients communicate through the local server.
+Sharing source code between platforms is not required.
 
-The deliverable includes maintained specifications, platform generation inputs,
-buildable clients, meaningful automated tests, and an iOS/Android integration
-demonstration. See [the generator requirements](../generator/README.md) and
+The deliverable includes maintained specifications, the reusable agentic harness,
+platform generation prompts, buildable clients, meaningful automated tests, and
+an iOS/Android integration demonstration. See
+[the generator instructions](../generator/README.md) and
 [acceptance criteria](acceptance-tests.md). A manually working app alone does not
-establish successful regeneration.
+establish successful regeneration; deleting the declared generated boundary and
+following the same prompts must restore equivalent working clients.
+
+The maintained client foundations may be authored iteratively outside generator
+cleanup. The prompt harness completes them with the three feature slices, their
+tests, and minimal app UI composition. This mixed authorship is intentional and
+is declared precisely in the generator instructions.
 
 ## MVP scope
 
