@@ -47,12 +47,13 @@ layers, and the `AwareChat-iOS-UnitTests` unit-test target with mirrored network
 and protocol tests. A typed Router/Coordinator navigation foundation is also
 implemented under `App/Navigation`. The SwiftData repositories, app-scoped
 `MessagingService` actor and `AppDependencies` composition are implemented, with
-mirrored persistence/service tests. The identification screen and ViewModel are
-implemented and composed at the app root; they open the shared database and start
-messaging only as required by the registration flow. The conversations and messages
-features remain pending, so the completed-registration flow currently reaches a
-heading-only `Chat` placeholder that their generation will replace. Preserve names,
-signing and build settings unless a task explicitly requires a change.
+mirrored persistence/service tests. The identification and conversations screens
+and ViewModels are implemented and composed at the app root. They open the shared
+database, start messaging only as required by the registration flow, observe local
+conversation summaries and discover registered users through `GET /users`. The
+messages feature remains pending, so row selection currently reaches a heading-only
+`Messages` destination that its generation will replace. Preserve names, signing
+and build settings unless a task explicitly requires a change.
 
 The entry point is `MyApp.swift`. Current project settings declare iOS 26.5,
 Swift language mode 5.0, MainActor default isolation and approachable concurrency.
@@ -114,13 +115,15 @@ Simulator availability depends on the installed runtimes. Physical-device signin
 and server setup are separate concerns.
 
 On 2026-09-12, the app and test bundle built successfully with Xcode 26.5. All
-86 enabled Swift Testing tests passed on the iPhone 17 Pro / iOS 26.5 Simulator
-(94 passed executed cases including parameterized tests); the normal run skips the
+96 enabled Swift Testing tests passed on the iPhone 17 Pro / iOS 26.5 Simulator
+(104 passed executed cases including parameterized tests); the normal run skips the
 single opt-in server integration test. Coverage
 includes in-memory and disk-reopen persistence, concurrent sequence allocation,
 rollback, committed observation, registration durability, FIFO, retry deadlines,
 duplicate delivery, error correlation, cancellation, session replacement and the
-identification ViewModel's launch, validation, retry and stale-attempt behavior.
+identification ViewModel's launch, validation, retry and stale-attempt behavior. It
+also covers the user-list ViewModel's independent local, discovery and connection
+states, ID-based filtering, conversation creation and reactive summaries.
 
 The opt-in `MessagingServiceIntegrationTests` uses two independent in-memory
 SwiftData stores and real network clients. It exercised `/health`, `/users`,
@@ -541,8 +544,8 @@ The service follows these lifecycle and recovery rules:
 This is app-scoped synchronization while the process can run, not iOS background
 delivery. Push notifications, background task scheduling, pagination, manual retry
 of permanently failed messages and remote history APIs remain out of scope. The
-generated `MyApp`/`ContentView` now retain the live dependency graph and compose the
-identification flow. The conversations and messages feature Views/ViewModels remain
+generated `MyApp`/`ContentView` retain the live dependency graph and compose the
+identification and conversations flows. The messages feature View/ViewModel remains
 the next integration work.
 
 ## iOS error organization

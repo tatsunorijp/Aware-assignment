@@ -7,7 +7,10 @@ import SwiftUI
 private final class AppRootViewModel {
   enum State {
     case loading
-    case ready(IdentificationViewModel)
+    case ready(
+      identification: IdentificationViewModel,
+      userList: UserListViewModel
+    )
     case error(String)
   }
 
@@ -33,7 +36,13 @@ private final class AppRootViewModel {
           coordinator?.didCompleteRegistration()
         }
       )
-      state = .ready(identification)
+      let userList = UserListViewModel(
+        users: dependencies.users,
+        conversations: dependencies.conversations,
+        apiClient: dependencies.apiClient,
+        messaging: dependencies.messaging
+      )
+      state = .ready(identification: identification, userList: userList)
       coordinator.start(hasCompletedRegistration: false)
     } catch {
       state = .error(error.localizedDescription)
@@ -62,9 +71,12 @@ struct ContentView: View {
           retryAction: { viewModel.retryStartup() },
           showsCancel: false
         )
-      case .ready(let identification):
+      case .ready(let identification, let userList):
         NavigationStack(path: $router.path) {
-          rootContent(identification: identification)
+          rootContent(identification: identification, userList: userList)
+            .navigationDestination(for: AppRoute.self) { route in
+              destination(for: route)
+            }
         }
       }
     }
@@ -72,20 +84,36 @@ struct ContentView: View {
   }
 
   @ViewBuilder
-  private func rootContent(identification: IdentificationViewModel) -> some View {
+  private func rootContent(
+    identification: IdentificationViewModel,
+    userList: UserListViewModel
+  ) -> some View {
     switch viewModel.coordinator.flow {
     case .loading:
       LoadingScreen()
     case .identification:
       IdentificationView(viewModel: identification)
     case .conversations:
-      conversationsPlaceholder
+      UserListView(
+        viewModel: userList,
+        onSelectUser: { userId in
+          viewModel.coordinator.router.showMessages(with: userId)
+        }
+      )
     }
   }
 
-  private var conversationsPlaceholder: some View {
+  @ViewBuilder
+  private func destination(for route: AppRoute) -> some View {
+    switch route {
+    case .messages:
+      messagesPlaceholder
+    }
+  }
+
+  private var messagesPlaceholder: some View {
     VStack(alignment: .leading) {
-      LargeTitleText("Chat", weight: .bold)
+      LargeTitleText("Messages", weight: .bold)
         .foregroundStyle(Tokens.Colors.textPrimary)
       Spacer()
     }
