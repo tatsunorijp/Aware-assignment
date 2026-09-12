@@ -15,10 +15,12 @@ what currently exists.
 - [Extensions and design system](#extensions-and-design-system)
 - [Color assets and Swift tokens](#color-assets-and-swift-tokens)
 - [Reusable UI components](#reusable-ui-components)
+- [Networking and wire protocol](#networking-and-wire-protocol)
+- [Navigation foundation](#navigation-foundation)
 - [iOS persistence files](#ios-persistence-files)
 - [iOS error organization](#ios-error-organization)
 - [Observation and presentation state](#observation-and-presentation-state)
-- [Typed ServerError example](#typed-servererror-example)
+- [Typed ServerError](#typed-servererror)
 - [Integration, testing and maintenance](#integration-testing-and-maintenance)
 
 ## Shared context
@@ -39,11 +41,13 @@ The existing project is
 with application target `AwareChat-iOS` and source root
 `clients/ios/AwareChat-iOS/AwareChat-iOS/`. It currently contains a SwiftUI starter,
 reusable text, button, loading, error and message-container components, extensions,
-seven named color assets/tokens, and the `AwareChat-iOS-UnitTests` unit-test target.
-The unit-test target is intentionally empty until testable production behavior is
-implemented. Complete messaging screens, networking and persistence are not
-implemented. Preserve the existing names, project, signing and build settings
-unless a task explicitly requires a change.
+seven named color assets/tokens, the HTTP/WebSocket networking and wire-protocol
+layers, and the `AwareChat-iOS-UnitTests` unit-test target with mirrored networking
+and protocol tests. A typed Router/Coordinator navigation foundation is also
+implemented under `App/Navigation`. Complete messaging screens, persistence,
+app-scoped messaging services, navigation destinations and root view integration
+are not implemented. Preserve the existing names, project, signing and build
+settings unless a task explicitly requires a change.
 
 The entry point is `MyApp.swift`. Current project settings declare iOS 26.5,
 Swift language mode 5.0, MainActor default isolation and approachable concurrency.
@@ -62,7 +66,9 @@ toolchain and deployment target; the separately installed Xcode 27 beta is for
 optional testing only and must not upgrade the committed project format or SDK
 requirements. Open [AwareChat-iOS.xcodeproj](AwareChat-iOS/AwareChat-iOS.xcodeproj),
 select the `AwareChat-iOS` scheme and an available iOS 26.5 Simulator. There are
-no third-party package dependencies to install for the color catalog.
+no third-party package dependencies to install for the implemented components,
+color catalog, network layer, navigation foundation or unit tests; they use
+Foundation, Observation, URLSession and Swift Testing from the Apple SDKs.
 Use the shared `AwareChat-iOS-UnitTests` scheme when running unit tests; its Test
 action contains only the `AwareChat-iOS-UnitTests` target and does not include UI
 test targets.
@@ -88,15 +94,25 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
   CODE_SIGNING_ALLOWED=NO build-for-testing
 ```
 
-To execute unit tests, replace the generic destination with an installed Simulator
-destination and use the `test` action. The target currently has no test cases, so
-successful execution only validates the test entry point until tests are added.
-Simulator availability depends on the installed runtimes. Physical-device signing
-and server setup are separate from this task.
+To execute unit tests, use an installed iOS 26.5 Simulator:
 
-On 2026-09-11, the app and shared unit-test scheme passed with Xcode 26.5. The
-unit-test scheme passed `build-for-testing` with a generic iOS Simulator destination
-and the `test` action on an iOS 26.5 Simulator. No test cases existed at that point.
+```sh
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+  xcodebuild -project clients/ios/AwareChat-iOS/AwareChat-iOS.xcodeproj \
+  -scheme AwareChat-iOS-UnitTests -configuration Debug \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' \
+  CODE_SIGNING_ALLOWED=NO test
+```
+
+Simulator availability depends on the installed runtimes. Physical-device signing
+and server setup are separate concerns.
+
+On 2026-09-12, the app and unit-test bundle built successfully with Xcode 26.5,
+and all 51 Swift Testing tests passed on an iOS 26.5 Simulator. Parameterized
+tests expanded these into 59 executed cases. A native Swift integration smoke test
+also passed against a temporary local server instance on 2026-09-12: `/health`,
+`/users`, two client identifications, initial sync, message acceptance, live
+delivery and `message_persisted` were exercised without modifying the server.
 
 ## Required stack and organization
 
@@ -122,7 +138,8 @@ separate `AwareChat-iOS-UnitTests` target:
 ```text
 iOS/
 ├── App/
-│   └── AppDependencies.swift
+│   ├── AppDependencies.swift
+│   └── Navigation/
 ├── Assets.xcassets/
 │   └── Colors/
 │       ├── primaryColor.colorset/
@@ -151,15 +168,24 @@ iOS/
 │   ├── Components/
 │   └── Tokens/
 └── AwareChat-iOS-UnitTests/
-    ├── Identification/
-    ├── UserList/
-    ├── Chat/
-    ├── Persistence/
-    ├── Networking/
-    └── Protocol/
+    ├── App/
+    │   └── Navigation/
+    ├── Core/
+    │   ├── Networking/
+    │   ├── Persistence/
+    │   ├── Protocol/
+    │   └── Services/
+    └── Features/
+        ├── Identification/
+        ├── UserList/
+        └── Chat/
 ```
 
-Do not create dedicated unit tests for SwiftUI View types. Logic must remain in ViewModels, repositories, and services to enable deterministic testing.
+The unit-test tree mirrors the complete production path: for example,
+`AwareChat-iOS/Core/Networking/APIClient.swift` is tested by
+`AwareChat-iOS-UnitTests/Core/Networking/APIClientTests.swift`. Do not create
+dedicated unit tests for SwiftUI View types. Logic must remain in ViewModels,
+repositories and services to enable deterministic testing.
 
 ## Shared visual references
 
@@ -273,6 +299,87 @@ These components render supplied state and actions; they do not own network work
 ACK transitions, navigation, or feature ViewModels. Reuse them when implementing
 the corresponding screens instead of creating feature-local duplicates.
 
+## Networking and wire protocol
+
+The implemented dependency-injected layer exposes exactly the server's public MVP
+surface: `GET /health`, `GET /users` and the `/ws` WebSocket. It uses no external
+networking library.
+
+| File | Responsibility |
+| --- | --- |
+| `Core/Networking/NetworkConfiguration.swift` | Inject the HTTP base URL and WebSocket URL; `localDevelopment` targets `127.0.0.1:8000`. |
+| `Core/Networking/APIEndpoint.swift` | Build the two documented HTTP requests. |
+| `Core/Networking/NetworkManager.swift` | Implement the generic `NetworkProtocol`: execute requests through an injectable HTTP transport, validate status and decode typed success or structured error payloads. |
+| `Core/Networking/APIClient.swift` | Expose narrow server-specific operations and unwrap transport envelopes for higher layers. |
+| `Core/Networking/WebSocketTransport.swift` | Abstract `URLSessionWebSocketTask` so socket behavior is testable without a live server. |
+| `Core/Networking/WebSocketClient.swift` | Actor-isolated connection lifecycle, client-event sending and an `AsyncThrowingStream<ServerEvent, Error>` receive channel. |
+| `Core/Networking/NetworkError.swift` | Keep transport, malformed-response, server, connection-close and cancellation failures distinct. |
+| `Core/Protocol/WireModels.swift` | Validate and encode users, messages, UUIDs, conversation IDs, sequences and HTTP responses. |
+| `Core/Protocol/WireDateCodec.swift` | Accept only documented UTC timestamps with zero to six fractional digits and emit `Z` timestamps. |
+| `Core/Protocol/ServerError.swift` | Decode the shared structured error while tolerating optional and additive fields. |
+| `Core/Protocol/ProtocolCodec.swift` | Encode all client events and decode all server events for protocol version 1. |
+
+The HTTP design follows the separation demonstrated by
+[Robust Network Layer in Swift via Clean Architecture Approach](https://medium.com/@Pavel_Andreev_iOS/robust-network-layer-in-swift-via-clean-architecture-approach-d20d7537cd7f):
+typed endpoints define what to request, the generic network manager owns how a
+request is transported and decoded, and the specialized API client exposes the
+operations consumed by higher layers. Dependencies are injected through protocols,
+so tests can validate each boundary independently. No singleton or third-party
+networking framework is required.
+
+`WebSocketConnectionState.connected` means that the transport task has been
+started and can accept outgoing frames. It is not the registration/synchronization
+gate: the app-scoped messaging service must derive protocol readiness from
+`identity_accepted`, and independently handle `sync_completed` as documented by
+the protocol. Reconnect policy, the ten-second acceptance deadline, persistent
+outbox recovery, ACK-after-save and message state transitions belong to that
+future service/persistence layer, not this transport client.
+
+Nothing in `Core/Networking` imports SwiftUI or performs navigation.
+
+Typical dependency-level usage is:
+
+```swift
+let configuration = NetworkConfiguration.localDevelopment
+let apiClient: any APIClientProtocol = APIClient(configuration: configuration)
+let webSocket: any WebSocketClientProtocol = WebSocketClient(
+  configuration: configuration
+)
+
+let events = await webSocket.connect()
+try await webSocket.send(.identify(user: user))
+
+for try await event in events {
+  // Forward typed events to the app-scoped service.
+}
+```
+
+For a physical device, inject reachable `http://<mac-lan-ip>:8000` and
+`ws://<mac-lan-ip>:8000/ws` addresses and follow the server guide's network and
+transport-security setup. Do not replace `localDevelopment` with a developer's
+machine-specific LAN address.
+
+## Navigation foundation
+
+The initial navigation foundation follows the state-driven ownership from the
+[SwiftUI Coordinator pattern reference](https://levelup.gitconnected.com/coordinator-pattern-in-swiftui-keeping-navigation-logic-out-of-your-views-48c2fd8e35ab).
+It is intentionally independent from the starter UI until the actual feature
+screens and dependency graph exist.
+
+| File | Responsibility |
+| --- | --- |
+| `App/Navigation/AppFlow.swift` | Define the root `loading`, `identification` and `conversations` flows. |
+| `App/Navigation/AppRoute.swift` | Define typed push destinations carrying only lightweight identifiers. |
+| `App/Navigation/AppRouter.swift` | Own the observable `NavigationStack` path and deterministic push/back/root operations. |
+| `App/Navigation/AppCoordinator.swift` | Select the root flow from registration outcomes and reset stale routes during root-flow changes. |
+
+`AppRouter` and `AppCoordinator` are `@MainActor`, `@Observable` state owners.
+Views will report navigation actions and render the selected flow/destination;
+ViewModels and networking code must not mutate routes. The coordinator does not
+perform registration, persistence or network work: it only consumes completed,
+typed outcomes. Mirrored Swift Testing suites exercise all four navigation files
+without rendering SwiftUI.
+
 ## iOS persistence files
 
 The paths below are relative to `Core/Persistence/`. Names are reference examples; the separation of responsibilities is required.
@@ -298,11 +405,11 @@ Access to the persistence context must have consistent isolation and remain enca
 
 ## iOS error organization
 
-| Suggested File | Responsibility |
+| File | Responsibility |
 | --- | --- |
-| `Core/Protocol/ServerError.swift` | Declare the [shared ServerError](../../spec/protocol.md#shared-servererror-object), including `Codable`, `Error`, and the `LocalizedError` extension. |
-| `Core/Protocol/ProtocolErrorEvent.swift` | Represent the WebSocket envelope with `type`, `protocolVersion`, optional `messageId`, and `error`. |
-| `Core/Networking/NetworkError.swift` | Represent local transport or invalid-response failures, distinguishing them from server-returned errors. |
+| `Core/Protocol/ServerError.swift` | Implements the [shared ServerError](../../spec/protocol.md#shared-servererror-object), including `Codable`, `Error` and `LocalizedError`. |
+| `Core/Protocol/ProtocolCodec.swift` | Contains `ProtocolErrorEvent` and decodes its optional `messageId` plus nested `ServerError`. |
+| `Core/Networking/NetworkError.swift` | Represents local transport or invalid-response failures, distinguishing them from server-returned errors. |
 
 The networking layer must decode and propagate errors; the service responsible for the operation must apply the rules in [client error handling](../../spec/protocol.md#client-handling-and-compatibility). ViewModels must receive typed failures or derived states without interpreting JSON or deciding behavior based on technical text.
 
@@ -329,33 +436,20 @@ Use state-driven `NavigationStack` routes with lightweight identifiers and a
 Router/Coordinator only when flow complexity warrants it. Reusable components
 belong in the design system; do not import another app's concrete assets or tokens.
 
-## Typed ServerError example
+## Typed ServerError
 
-This is the logical error representation, not a complete networking implementation.
-The field contract and JSON envelopes remain in [protocol.md](../../spec/protocol.md#errors).
-Validate required types and non-blank display text according to that contract.
+[`ServerError.swift`](AwareChat-iOS/AwareChat-iOS/Core/Protocol/ServerError.swift)
+implements the complete shared error object. It requires non-blank `code` and
+`userMessage`, decodes missing or null optional fields, ignores additive fields
+and preserves unknown codes. `LocalizedError` exposes only `userMessage` for safe
+presentation; it does not translate the server text.
 
-```swift
-import Foundation
-
-struct ServerError: Codable, Error {
-    let code: String
-    let userMessage: String
-    let developerMessage: String?
-    let isRetryable: Bool
-    let requestId: String?
-}
-
-extension ServerError: LocalizedError {
-    var errorDescription: String? {
-        userMessage
-    }
-}
-```
-
-`Codable` allows conversion to and from JSON. Conformance to `Error` allows the value to be thrown with `throw`, caught with `catch`, and used as the failure type in `Result`. `LocalizedError` provides `userMessage` as the error description; it does not automatically translate the received text.
-
-Successfully decoding a `ServerError` does not automatically throw that error. The networking layer must recognize the error response and propagate it through the operation's mechanism: for example, `throw` in an awaited call or a typed event in the ongoing WebSocket stream.
+For HTTP, `NetworkManager` first checks the status and throws
+`NetworkError.server(statusCode:error:)` only when a valid nested error envelope
+was decoded. A malformed non-success body becomes `invalidErrorResponse` rather
+than a fabricated server failure. For WebSocket, `ProtocolCodec` emits
+`ServerEvent.protocolError`; the future app-scoped service must apply correlation
+and retry eligibility before changing message state.
 
 Keep actual server failures distinct from local transport, timeout, malformed
 response and persistence failures. Services apply correlation and retry rules;
@@ -376,6 +470,12 @@ ViewModels do not interpret JSON or compare diagnostic sentences.
   Use repository/transport fakes for ViewModel tests, isolated SwiftData stores for
   persistence tests, temporary disk stores for reopen tests and controlled time
   for backoff. Validate Views with builds/previews/Simulator inspection instead.
+- Use Swift Testing for unit and direct integration tests (`import Testing`,
+  `@Suite`, `@Test`, `#expect`, `#require`). XCTest remains reserved for UI tests
+  or a documented unsupported case. Tests must not depend on execution order or
+  shared mutable state because Swift Testing can execute them in parallel.
+- Mirror production folders and filenames below `AwareChat-iOS-UnitTests/`, as
+  documented in [Required stack and organization](#required-stack-and-organization).
 - The agent's test-implementation checkpoint governs when test code is written;
   it does not remove the final assignment's test requirements.
 - Keep iOS setup/usage documentation and generation inputs consistent with

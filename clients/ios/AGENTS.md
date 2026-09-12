@@ -79,6 +79,29 @@ changes unless requested, and do not leave an unmatched or nested marker pair.
 - Navigate with `NavigationStack` and lightweight IDs, with destinations owned by
   the app/flow. Introduce a Router/Coordinator for meaningful flow complexity only;
   navigation containers must not become business or persistence services.
+- Coordinators consume typed ViewModel/service outcomes and own route changes.
+  Networking and protocol types must not import SwiftUI, push routes, dismiss
+  screens or otherwise decide navigation.
+- Keep routes typed and lightweight. `AppRouter` owns the `NavigationStack` path,
+  while `AppCoordinator` owns root-flow decisions. Views report actions and render
+  destinations; ViewModels do not mutate the navigation path directly. Routers and
+  coordinators must remain free of network, persistence and feature business work.
+
+## Clean networking boundaries
+
+- Keep HTTP responsibilities layered: `APIEndpoint` constructs typed requests;
+  `NetworkManager` performs the generic transport, HTTP validation and decoding;
+  `APIClient` exposes server-specific operations to repositories/services. Feature
+  code depends on the narrowest upper-level protocol and never builds raw requests.
+- Inject `NetworkProtocol`/transport contracts. Do not hide `URLSession` behind a
+  singleton, add endpoint switches to Views/ViewModels or duplicate status/error
+  decoding in each API method.
+- Preserve the equivalent WebSocket split: the transport adapts
+  `URLSessionWebSocketTask`, the typed client owns connection/send/receive mechanics,
+  and the future app-scoped service owns identification readiness, reconnect, sync,
+  ACK, retry and persistence coordination.
+- Keep wire DTOs and codecs in `Core/Protocol`; local/domain models and business
+  policies must not leak into the generic network executor.
 
 ## Explicit state and data boundaries
 
@@ -183,6 +206,18 @@ state rather than moving ACK logic into the component.
 - Authorized tests target ViewModels, repositories, services and deterministic
   helpers/DTOs. Use injected fakes, controlled time, isolated in-memory stores and
   temporary disk stores for reopen tests; never the user's database.
+- Write unit and direct integration tests with Swift Testing: `import Testing`,
+  `@Suite`, `@Test`, `#expect` and `#require`. Do not introduce `XCTestCase` for new
+  unit tests. Reserve XCTest for UI tests or an API Swift Testing cannot support,
+  and document that exception. Swift Testing runs tests in parallel by default, so
+  avoid shared mutable state; use serialization only when isolation cannot solve a
+  justified platform constraint.
+- Mirror every testable production path below the unit-test source root. For
+  example, `AwareChat-iOS/Core/Networking/APIClient.swift` maps to
+  `AwareChat-iOS-UnitTests/Core/Networking/APIClientTests.swift`. Preserve the
+  complete folder hierarchy and an obvious production-to-test filename mapping;
+  place genuinely shared test infrastructure in the nearest mirrored
+  `TestSupport/` folder rather than flattening feature tests.
 - Check the shared acceptance criteria, including independent states, identity
   reuse/completion, durability, FIFO recovery, duplicate delivery/ACK, typed errors,
   no sent downgrade and compatible decoding. Do not treat server-only smoke tests
