@@ -9,7 +9,8 @@ private final class AppRootViewModel {
     case loading
     case ready(
       identification: IdentificationViewModel,
-      userList: UserListViewModel
+      userList: UserListViewModel,
+      chatFactory: ChatViewModelFactory
     )
     case error(String)
   }
@@ -42,7 +43,16 @@ private final class AppRootViewModel {
         apiClient: dependencies.apiClient,
         messaging: dependencies.messaging
       )
-      state = .ready(identification: identification, userList: userList)
+      let chatFactory = ChatViewModelFactory(
+        conversations: dependencies.conversations,
+        messages: dependencies.messages,
+        messaging: dependencies.messaging
+      )
+      state = .ready(
+        identification: identification,
+        userList: userList,
+        chatFactory: chatFactory
+      )
       coordinator.start(hasCompletedRegistration: false)
     } catch {
       state = .error(error.localizedDescription)
@@ -71,11 +81,11 @@ struct ContentView: View {
           retryAction: { viewModel.retryStartup() },
           showsCancel: false
         )
-      case .ready(let identification, let userList):
+      case .ready(let identification, let userList, let chatFactory):
         NavigationStack(path: $router.path) {
           rootContent(identification: identification, userList: userList)
             .navigationDestination(for: AppRoute.self) { route in
-              destination(for: route)
+              destination(for: route, chatFactory: chatFactory)
             }
         }
       }
@@ -104,22 +114,17 @@ struct ContentView: View {
   }
 
   @ViewBuilder
-  private func destination(for route: AppRoute) -> some View {
+  private func destination(
+    for route: AppRoute,
+    chatFactory: ChatViewModelFactory
+  ) -> some View {
     switch route {
-    case .messages:
-      messagesPlaceholder
+    case .messages(let userId):
+      ChatView(
+        viewModel: chatFactory.make(peerId: userId),
+        onCancel: { viewModel.coordinator.router.goBack() }
+      )
     }
-  }
-
-  private var messagesPlaceholder: some View {
-    VStack(alignment: .leading) {
-      LargeTitleText("Messages", weight: .bold)
-        .foregroundStyle(Tokens.Colors.textPrimary)
-      Spacer()
-    }
-    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-    .padding(Tokens.Spacing.large.value)
-    .background(Tokens.Colors.background.ignoresSafeArea())
   }
 }
 
