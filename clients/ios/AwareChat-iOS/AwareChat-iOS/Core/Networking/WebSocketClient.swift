@@ -54,6 +54,7 @@ actor WebSocketClient: WebSocketClientProtocol {
   }
 
   func send(_ event: ClientEvent) async throws {
+    guard !Task.isCancelled else { throw NetworkError.cancelled }
     guard state == .connected, let transport else {
       throw NetworkError.notConnected
     }
@@ -89,6 +90,7 @@ actor WebSocketClient: WebSocketClientProtocol {
     do {
       while !Task.isCancelled {
         let frame = try await activeTransport.receive()
+        guard !Task.isCancelled, let transport, transport === activeTransport else { return }
         guard case .text(let text) = frame,
               let data = text.data(using: .utf8) else {
           throw NetworkError.invalidWebSocketFrame
@@ -102,7 +104,7 @@ actor WebSocketClient: WebSocketClientProtocol {
         continuation?.yield(event)
       }
     } catch {
-      guard !Task.isCancelled else { return }
+      guard !Task.isCancelled, let transport, transport === activeTransport else { return }
       let networkError: NetworkError
       if let close = activeTransport.closeDetails {
         networkError = .webSocketClosed(code: close.code, reason: close.reason)

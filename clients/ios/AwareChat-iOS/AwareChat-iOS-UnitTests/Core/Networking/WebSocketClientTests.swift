@@ -120,6 +120,42 @@ struct WebSocketClientTests {
     #expect(await client.connectionState() == .disconnected)
     #expect(await transport.hasBeenCancelled())
   }
+
+  @Test
+  func cancelledOldReceiveCannotPublishIntoReplacementStream() async throws {
+    let transport = MockWebSocketTransport(cancelResumesReceivers: false)
+    let client = WebSocketClient(
+      configuration: configuration, factory: MockWebSocketTransportFactory(transport: transport)
+    )
+    _ = await client.connect()
+    try await eventually { await transport.waitingReceiverCount() == 1 }
+    let replacement = await client.connect()
+    try await eventually { await transport.waitingReceiverCount() == 2 }
+    await transport.enqueue(.frame(.text(#"{"type":"sync_completed","protocolVersion":1,"pendingCount":99}"#)))
+    await transport.enqueue(.frame(.text(#"{"type":"sync_completed","protocolVersion":1,"pendingCount":0}"#)))
+    var events = replacement.makeAsyncIterator()
+    #expect(try await events.next() == .syncCompleted(pendingCount: 0))
+    await client.disconnect()
+    await transport.enqueue(.failure(.cancelled))
+  }
+
+  @Test
+  func cancelledSendDoesNotReachTheTransport() async throws {
+    let transport = MockWebSocketTransport()
+    let client = WebSocketClient(
+      configuration: configuration, factory: MockWebSocketTransportFactory(transport: transport)
+    )
+    _ = await client.connect()
+    let task = Task {
+      withUnsafeCurrentTask { $0?.cancel() }
+      await #expect(throws: NetworkError.cancelled) {
+        try await client.send(.messagePersisted(messageId: UUID()))
+      }
+    }
+    await task.value
+    #expect(await transport.sentTexts().isEmpty)
+    await client.disconnect()
+  }
 }
 
 private struct MockWebSocketTransportFactory: WebSocketTransportFactory {
@@ -132,10 +168,11 @@ private struct MockWebSocketTransportFactory: WebSocketTransportFactory {
 
 private final class MockWebSocketTransport: WebSocketTransport, @unchecked Sendable {
   let closeDetails: WebSocketCloseDetails?
-  private let state = MockWebSocketTransportState()
+  private let state: MockWebSocketTransportState
 
-  init(closeDetails: WebSocketCloseDetails? = nil) {
+  init(closeDetails: WebSocketCloseDetails? = nil, cancelResumesReceivers: Bool = true) {
     self.closeDetails = closeDetails
+    state = MockWebSocketTransportState(cancelResumesReceivers: cancelResumesReceivers)
   }
 
   func start() {
@@ -174,6 +211,8 @@ private final class MockWebSocketTransport: WebSocketTransport, @unchecked Senda
   func hasBeenCancelled() async -> Bool {
     await state.cancelled
   }
+
+  func waitingReceiverCount() async -> Int { await state.waitingReceiverCount }
 }
 
 private enum MockWebSocketReceive: Sendable {
@@ -182,11 +221,15 @@ private enum MockWebSocketReceive: Sendable {
 }
 
 private actor MockWebSocketTransportState {
+  private let cancelResumesReceivers: Bool
+  var waitingReceiverCount: Int { waiters.count }
   private(set) var sentTexts = [String]()
   private(set) var started = false
   private(set) var cancelled = false
   private var receives = [MockWebSocketReceive]()
   private var waiters = [CheckedContinuation<MockWebSocketReceive, Never>]()
+
+  init(cancelResumesReceivers: Bool) { self.cancelResumesReceivers = cancelResumesReceivers }
 
   func markStarted() {
     started = true
@@ -215,6 +258,7 @@ private actor MockWebSocketTransportState {
 
   func cancel() {
     cancelled = true
+    guard cancelResumesReceivers else { return }
     let pendingWaiters = waiters
     waiters.removeAll()
     pendingWaiters.forEach { $0.resume(returning: .failure(.cancelled)) }

@@ -3,8 +3,9 @@
 This file owns the shared local storage and repository requirements. Both clients
 must implement equivalent behavior using SwiftData on iOS and Room on Android.
 Wire DTOs are defined in [protocol.md](protocol.md#shared-models); user flows are in
-[DESIGN.md](../DESIGN.md). Native storage is not implemented yet; the rules below
-describe the required result, not an existing database.
+[DESIGN.md](../DESIGN.md). The [iOS guide](../clients/ios/README.md#ios-persistence-files)
+records the implemented SwiftData layer. Platform guides distinguish each client's
+implementation status; the requirements below apply to both platforms.
 
 ## Entities and relationships
 

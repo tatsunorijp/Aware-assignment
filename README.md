@@ -27,9 +27,8 @@ requirements back into a single draft.
 | [server/CHANGELOG.md](server/CHANGELOG.md) | Server changes and client/operator impact. |
 | [server/docs/REVIEW.md](server/docs/REVIEW.md) | Existing backend review findings and regression evidence. |
 
-The former [assignment draft](ASSIGNMENT_SPEC_DRAFT.md) is now a migration index
-mapping all 22 original sections to their maintained destinations. It is not a
-second specification or an input required for future implementation.
+The original assignment draft is historical context, not a required generation
+input. Use the maintained documents above for implementation requirements.
 
 Each client README is both the human-readable platform guide and a maintained
 generation input. Its scoped AGENTS file contains implementation rules, including
@@ -47,7 +46,7 @@ migration does not authorize runtime changes or change `protocolVersion: 1`.
 | Area | Status |
 | --- | --- |
 | Server | Implemented in `server/`; package release 0.2.0, nested shared ServerError. |
-| iOS | Existing `AwareChat-iOS` Xcode starter under `clients/ios/`, with initial reusable design-system components and color tokens; complete messaging screens and native tests are not implemented. |
+| iOS | `AwareChat-iOS` under `clients/ios/`: reusable design system, typed HTTP/WebSocket layer, navigation foundation, SwiftData repositories, offline messaging service and mirrored Swift Testing suites. Feature screens/ViewModels and root integration remain pending; see the [iOS guide](clients/ios/README.md). |
 | Android | Existing `AwareChat-Android` Gradle/Compose starter under `clients/android/`, with the initial package skeleton, light design system, reusable components and example tests; complete messaging screens and assignment-specific tests are not implemented. |
 | Generator | Maintained requirements and prompt inputs exist; `generate.sh` and `verify.sh` are empty placeholders, not working commands. |
 | Native demo | Specified in acceptance criteria; not implemented or verified. `scripts/run-demo.sh` does not exist yet. |

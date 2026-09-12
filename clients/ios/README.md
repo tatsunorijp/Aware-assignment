@@ -18,6 +18,7 @@ what currently exists.
 - [Networking and wire protocol](#networking-and-wire-protocol)
 - [Navigation foundation](#navigation-foundation)
 - [iOS persistence files](#ios-persistence-files)
+- [Offline messaging and dependency composition](#offline-messaging-and-dependency-composition)
 - [iOS error organization](#ios-error-organization)
 - [Observation and presentation state](#observation-and-presentation-state)
 - [Typed ServerError](#typed-servererror)
@@ -44,9 +45,11 @@ reusable text, button, loading, error and message-container components, extensio
 seven named color assets/tokens, the HTTP/WebSocket networking and wire-protocol
 layers, and the `AwareChat-iOS-UnitTests` unit-test target with mirrored networking
 and protocol tests. A typed Router/Coordinator navigation foundation is also
-implemented under `App/Navigation`. Complete messaging screens, persistence,
-app-scoped messaging services, navigation destinations and root view integration
-are not implemented. Preserve the existing names, project, signing and build
+implemented under `App/Navigation`. The SwiftData repositories, app-scoped
+`MessagingService` actor and `AppDependencies` composition are implemented, with
+mirrored persistence/service tests. Complete messaging screens, feature ViewModels,
+navigation destinations and root view integration are not implemented. The starter
+does not open a database or connect automatically yet. Preserve names, signing and build
 settings unless a task explicitly requires a change.
 
 The entry point is `MyApp.swift`. Current project settings declare iOS 26.5,
@@ -67,8 +70,9 @@ optional testing only and must not upgrade the committed project format or SDK
 requirements. Open [AwareChat-iOS.xcodeproj](AwareChat-iOS/AwareChat-iOS.xcodeproj),
 select the `AwareChat-iOS` scheme and an available iOS 26.5 Simulator. There are
 no third-party package dependencies to install for the implemented components,
-color catalog, network layer, navigation foundation or unit tests; they use
-Foundation, Observation, URLSession and Swift Testing from the Apple SDKs.
+color catalog, network layer, navigation foundation, offline layer or unit tests;
+they use Foundation, Observation, URLSession, SwiftData and Swift Testing from the
+Apple SDKs. SwiftData does not require installing a separate database server.
 Use the shared `AwareChat-iOS-UnitTests` scheme when running unit tests; its Test
 action contains only the `AwareChat-iOS-UnitTests` target and does not include UI
 test targets.
@@ -107,12 +111,41 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
 Simulator availability depends on the installed runtimes. Physical-device signing
 and server setup are separate concerns.
 
-On 2026-09-12, the app and unit-test bundle built successfully with Xcode 26.5,
-and all 51 Swift Testing tests passed on an iOS 26.5 Simulator. Parameterized
-tests expanded these into 59 executed cases. A native Swift integration smoke test
-also passed against a temporary local server instance on 2026-09-12: `/health`,
-`/users`, two client identifications, initial sync, message acceptance, live
-delivery and `message_persisted` were exercised without modifying the server.
+On 2026-09-12, the app and test bundle built successfully with Xcode 26.5. All
+77 Swift Testing tests passed on the iPhone 17 Pro / iOS 26.5 Simulator with live
+integration enabled (85 executed cases including parameterized tests). The normal
+run has 76 enabled tests and skips the opt-in server integration test. Coverage
+includes in-memory and disk-reopen persistence, concurrent sequence allocation,
+rollback, committed observation, registration durability, FIFO, retry deadlines,
+duplicate delivery, error correlation, cancellation and session replacement.
+
+The opt-in `MessagingServiceIntegrationTests` uses two independent in-memory
+SwiftData stores and real network clients. It exercised `/health`, `/users`,
+offline creation, server acceptance while the recipient was disconnected, replay
+on recipient reconnect and a live reply against an unchanged temporary server.
+It does not verify screens or the iOS-to-Android demonstration.
+
+To repeat the live check, start an isolated server from `server/`:
+
+```sh
+./.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 18765 --workers 1
+```
+
+Then, from the repository root:
+
+```sh
+TEST_RUNNER_AWARE_SERVER_INTEGRATION_URL=http://127.0.0.1:18765 \
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+  xcodebuild -project clients/ios/AwareChat-iOS/AwareChat-iOS.xcodeproj \
+  -scheme AwareChat-iOS-UnitTests -configuration Debug \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' \
+  CODE_SIGNING_ALLOWED=NO test
+```
+
+`xcodebuild` forwards `TEST_RUNNER_` variables to the test process with the prefix
+removed. Without the variable, the suite does not require a running server. Live
+checks create unique test users on the selected server; stop the temporary server
+with Ctrl+C afterward. No personal store is opened or cleared by the tests.
 
 ## Required stack and organization
 
@@ -329,30 +362,20 @@ networking framework is required.
 
 `WebSocketConnectionState.connected` means that the transport task has been
 started and can accept outgoing frames. It is not the registration/synchronization
-gate: the app-scoped messaging service must derive protocol readiness from
+gate: the app-scoped `MessagingService` derives protocol readiness from
 `identity_accepted`, and independently handle `sync_completed` as documented by
 the protocol. Reconnect policy, the ten-second acceptance deadline, persistent
 outbox recovery, ACK-after-save and message state transitions belong to that
-future service/persistence layer, not this transport client.
+service/persistence layer, not this transport client. Cancelled/old transports
+cannot publish frames into a replacement connection or start cancelled writes.
 
 Nothing in `Core/Networking` imports SwiftUI or performs navigation.
 
-Typical dependency-level usage is:
-
-```swift
-let configuration = NetworkConfiguration.localDevelopment
-let apiClient: any APIClientProtocol = APIClient(configuration: configuration)
-let webSocket: any WebSocketClientProtocol = WebSocketClient(
-  configuration: configuration
-)
-
-let events = await webSocket.connect()
-try await webSocket.send(.identify(user: user))
-
-for try await event in events {
-  // Forward typed events to the app-scoped service.
-}
-```
+Use [dependency composition](#offline-messaging-and-dependency-composition) for
+application work. `MessagingService` is the exclusive owner of its injected
+WebSocket client; feature code must not open a second connection or consume that
+client's events directly. `APIClient` remains available separately for health and
+user discovery; sending messages does not use HTTP.
 
 For a physical device, inject reachable `http://<mac-lan-ip>:8000` and
 `ws://<mac-lan-ip>:8000/ws` addresses and follow the server guide's network and
@@ -364,7 +387,7 @@ machine-specific LAN address.
 The initial navigation foundation follows the state-driven ownership from the
 [SwiftUI Coordinator pattern reference](https://levelup.gitconnected.com/coordinator-pattern-in-swiftui-keeping-navigation-logic-out-of-your-views-48c2fd8e35ab).
 It is intentionally independent from the starter UI until the actual feature
-screens and dependency graph exist.
+screens and root dependency integration exist.
 
 | File | Responsibility |
 | --- | --- |
@@ -382,26 +405,141 @@ without rendering SwiftUI.
 
 ## iOS persistence files
 
-The paths below are relative to `Core/Persistence/`. Names are reference examples; the separation of responsibilities is required.
+The following implemented paths are relative to `Core/Persistence/`.
 
 | File | Responsibility |
 | --- | --- |
 | `Database/PersistenceContainer.swift` | Configure the schema and shared SwiftData container, including an in-memory database configuration for tests. |
+| `Database/PersistenceError.swift` | Typed local read/write, validation, identity, uniqueness and sequence failures with safe display text. |
 | `Users/Models/UserRecord.swift` | SwiftData user model, including the information needed to distinguish the local identity. |
 | `Users/UserLocalRepository.swift` | Protocol defining local user operations. |
 | `Users/SwiftDataUserLocalRepository.swift` | Implement user queries, inserts, and updates. |
-| `Conversations/Models/ConversationRecord.swift` | SwiftData conversation model and its relationships. |
+| `Conversations/Models/ConversationRecord.swift` | SwiftData conversation model with participant IDs; related user/message records commit in the same context. |
 | `Conversations/ConversationLocalRepository.swift` | Protocol defining local conversation operations. |
 | `Conversations/SwiftDataConversationLocalRepository.swift` | Implement conversation listing, lookup, creation, and updates. |
 | `Messages/Models/MessageRecord.swift` | SwiftData message model, including direction, state, and local sequence. |
 | `Messages/MessageLocalRepository.swift` | Protocol defining local message and pending queue operations. |
 | `Messages/SwiftDataMessageLocalRepository.swift` | Implement persistence, queries, and state updates by `messageId`. |
 
-Persisted models must support the required updates; for example, `MessageRecord`'s state must be mutable. `LocalMessage` in [persistence.md](../../spec/persistence.md#local-message-representation) is a logical model and does not replace the SwiftData entity definition.
+The contracts expose immutable `LocalUser`, `LocalConversation` and `LocalMessage`
+values, declared alongside their corresponding repository protocol. `@Model`
+records stay inside persistence. All three repositories are `@MainActor` and share
+one context, with autosave disabled. Writes explicitly save or roll back the whole
+operation before publishing notifications. A message, its conversation, unknown
+peer record and sequence increment are one indivisible write.
 
-Access to the persistence context must have consistent isolation and remain encapsulated in this layer. The implementation must not share SwiftData models or contexts across tasks without coordination. Contracts must expose logical models and propagate persistence errors.
+`saveIdentity(name:)` reuses an incomplete identity's UUID. Current identity and
+registration completion are explicit local metadata; discovery cannot overwrite
+them. Renaming a completed identity is outside the MVP. `lastClientSequence` lives
+on the current user and survives relaunch; synchronous transactions serialize
+concurrent enqueue requests. Unknown peers have a nil name until discovery updates
+them, so incoming persistence never depends on an HTTP request.
 
-`App/AppDependencies.swift` must compose these implementations and inject the protocols into ViewModels and services. Synchronization logic must reside in `Core/Services/`, separate from persistence files.
+The outbox queries outgoing `pendingToSend` messages by `clientSequence`; no
+additional queue table or local/server ID pair is needed. `messageId` is the
+single client-generated UUID used for persistence and server idempotence.
+Incoming duplicates preserve their first committed `receivedAt` and acceptance
+metadata, including when the volatile server reaccepts the same immutable payload
+with a new server timestamp after restart. Conflicting client content for the same
+ID is rejected locally. Outgoing display
+time remains `clientCreatedAt`; local fields never enter wire requests. Conversation
+summaries are derived from persisted messages, ordered by display time, not cached
+in a second mutable copy. FIFO sends use sequence, never display-clock ordering.
+
+Observation methods provide an initial local snapshot and committed updates via
+`AsyncThrowingStream`, buffering the latest snapshot. Every subscriber gets its own
+stream. User, conversation and message queries are re-evaluated after commits;
+failed writes publish no dirty state. Cancel the consuming task when its ViewModel
+is released. ViewModels do not use `@Query` or access `ModelContext`.
+
+## Offline messaging and dependency composition
+
+| File | Responsibility |
+| --- | --- |
+| `App/AppDependencies.swift` | Compose a single shared database, repositories, HTTP client and messaging service; inject replacements for tests. |
+| `Core/Services/MessagingServiceProtocol.swift` | Service actions, protocol-ready connection state, typed failures and transient server issues. |
+| `Core/Services/MessagingService.swift` | Actor-owned identification, one FIFO outbox, reception, ACK-after-save, reconnection and cancellation. |
+| `Core/Services/MessagingClock.swift` | Injectable time and the capped retry policy. |
+
+Create and retain `AppDependencies.live()` once at the future app root. Handle a
+thrown database-open failure as an essential local error: do not silently switch
+to an in-memory database or erase the store. Tests inject `PersistenceContainer(
+inMemory: true)` or a unique temporary `storeURL`. Production uses the SDK-managed
+application store with CloudKit disabled.
+
+Example action calls from a main-actor owner (not a View body):
+
+```swift
+let dependencies = try AppDependencies.live()
+let identity = try dependencies.users.saveIdentity(name: "Alice")
+await dependencies.messaging.start()
+// Observe connection state; start() schedules work and is NOT registration success.
+// Navigate only after .connected, which includes the registration-completion save.
+
+let queued = try await dependencies.messaging.sendMessage(
+  text: "Hello", receiverId: peerId
+)
+// queued is durably pending locally, not proof of server acceptance.
+```
+
+For a previously completed registration, load local data immediately and start the
+service independently; a reconnect failure must not hide usable history. On first
+registration, observe `observeConnectionState()` before requesting work and use
+`.connected` as the success outcome. `identity_accepted` must match the current
+identity and its completion must save successfully. `sync_completed` is not a
+second gate and does not prove that messages were persisted.
+
+Future `@MainActor @Observable` ViewModels can consume local snapshots directly:
+
+```swift
+for try await messages in messageRepository.observeMessages(conversationId: conversationId) {
+  state = .ready(messages)
+}
+```
+
+Own/cancel that observation task in the ViewModel and map thrown errors to its
+typed screen state. Keep the app-scoped service alive when leaving a conversation.
+`LocalMessage.state` maps `pendingToSend`/`sending` to the component's `.sending`,
+`sent` to `.sent` and `failed` to `.failed`; incoming cards ignore ACK presentation.
+Pass `displayTimestamp` to `MessageContainer`, which formats it with the existing
+`Date.messageTime` extension. No new date format or networking UI component is needed.
+
+The service follows these lifecycle and recovery rules:
+
+- `start()` is idempotent while running. `stop()` cancels and awaits its worker,
+  disconnects and recovers interrupted sends. Await `stop()` before an explicit
+  restart, and before changing an incomplete registration's name.
+- `sendMessage` saves before networking, including while stopped/offline. It wakes
+  the shared sender after commit. There is at most one unacknowledged outgoing
+  message; receiving continues while sends and deadlines are outstanding.
+- A send becomes `sent` only after `message_accepted` is committed, with the server
+  timestamp. A duplicate ACK does not rewrite that timestamp. A delayed rejection
+  cannot downgrade `sent`; recipient-ACK errors never fail outgoing messages.
+- Incoming data and related records commit before `message_persisted`. Duplicates
+  are ACKed again. A save failure sends no receipt ACK and stops synchronization
+  with a typed storage error; after resolving it, explicitly stop/start to replay.
+- Startup/reconnect returns `sending` to `pendingToSend`. The sender-ACK deadline
+  is 10 seconds; reconnection and temporary rejections use 1, 2, 4, 8, 16, then 30
+  seconds, capped. Retried messages retain IDs, content, client time and sequence;
+  outgoing payloads omit local server-acceptance metadata. Opening a socket alone
+  does not reset a failed message's backoff. Identification also has a local
+  10-second deadline so first registration cannot remain loading indefinitely.
+- Correlated permanent rejections leave a visible `failed` message. Uncorrelated
+  errors affect the connection, not the whole queue. `observeIssues()` exposes
+  transient typed server errors separately, including recipient-ACK issues; it
+  buffers the latest issue and does not replay errors from before subscription.
+  Use `userMessage` for UI and never `developerMessage`.
+- Close code 4001 / `SESSION_REPLACED` stops automatic reconnection to avoid two
+  sessions competing. Permanent connection errors and storage errors also need an
+  explicit developer/user-driven restart. Ordinary temporary failures retry.
+- A server restart does not erase local registration/history or resend all `sent`
+  history. The backend's volatile-delivery limitation still applies.
+
+This is app-scoped synchronization while the process can run, not iOS background
+delivery. Push notifications, background task scheduling, pagination, manual retry
+of permanently failed messages and remote history APIs remain out of scope. The
+starter `MyApp`/`ContentView` are unchanged; root lifetime/error presentation and
+feature ViewModels/screens are the next integration work.
 
 ## iOS error organization
 
@@ -410,6 +548,8 @@ Access to the persistence context must have consistent isolation and remain enca
 | `Core/Protocol/ServerError.swift` | Implements the [shared ServerError](../../spec/protocol.md#shared-servererror-object), including `Codable`, `Error` and `LocalizedError`. |
 | `Core/Protocol/ProtocolCodec.swift` | Contains `ProtocolErrorEvent` and decodes its optional `messageId` plus nested `ServerError`. |
 | `Core/Networking/NetworkError.swift` | Represents local transport or invalid-response failures, distinguishing them from server-returned errors. |
+| `Core/Persistence/Database/PersistenceError.swift` | Represents local storage failures without exposing database diagnostics in UI. |
+| `Core/Services/MessagingServiceProtocol.swift` | Separates connection/storage/deadline/session failures from transient structured server issues. |
 
 The networking layer must decode and propagate errors; the service responsible for the operation must apply the rules in [client error handling](../../spec/protocol.md#client-handling-and-compatibility). ViewModels must receive typed failures or derived states without interpreting JSON or deciding behavior based on technical text.
 
@@ -448,8 +588,8 @@ For HTTP, `NetworkManager` first checks the status and throws
 `NetworkError.server(statusCode:error:)` only when a valid nested error envelope
 was decoded. A malformed non-success body becomes `invalidErrorResponse` rather
 than a fabricated server failure. For WebSocket, `ProtocolCodec` emits
-`ServerEvent.protocolError`; the future app-scoped service must apply correlation
-and retry eligibility before changing message state.
+`ServerEvent.protocolError`; `MessagingService` applies correlation and retry
+eligibility before changing message state.
 
 Keep actual server failures distinct from local transport, timeout, malformed
 response and persistence failures. Services apply correlation and retry rules;

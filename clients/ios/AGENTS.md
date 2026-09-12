@@ -98,7 +98,7 @@ changes unless requested, and do not leave an unmatched or nested marker pair.
   decoding in each API method.
 - Preserve the equivalent WebSocket split: the transport adapts
   `URLSessionWebSocketTask`, the typed client owns connection/send/receive mechanics,
-  and the future app-scoped service owns identification readiness, reconnect, sync,
+  and the app-scoped `MessagingService` owns identification readiness, reconnect, sync,
   ACK, retry and persistence coordination.
 - Keep wire DTOs and codecs in `Core/Protocol`; local/domain models and business
   policies must not leak into the generic network executor.
@@ -129,6 +129,35 @@ changes unless requested, and do not leave an unmatched or nested marker pair.
   eligibility and correlation; ViewModels receive typed/derived presentation state,
   not JSON or diagnostic sentences. Display valid `userMessage` or a safe fallback,
   never `developerMessage`. See [iOS errors](README.md#ios-error-organization).
+
+## Offline implementation invariants
+
+- Reuse `AppDependencies`, the three local repository protocols and
+  `MessagingServiceProtocol`; do not introduce another message orchestrator or
+  database instance in a feature. Inject only the contracts a consumer needs.
+- Preserve the current isolation boundary: synchronous `@MainActor` SwiftData
+  transactions, immutable `Sendable` logical values and an actor-owned messaging
+  loop. Never suspend in the middle of a local transaction or pass records/context
+  into the networking actor. Do not add `@unchecked Sendable` to SwiftData models.
+- Route repository mutations through the shared explicit-save/rollback helper.
+  Publish only committed snapshots; keep sequence allocation and related inserts
+  atomic. Do not infer current identity from the first known user or allocate
+  client sequences in a ViewModel. Reuse the single client-generated message UUID.
+- Sending goes through the service, reading/observation through local repositories.
+  `start()` is not registration success. Preserve the acceptance plus durable
+  completion gate and independent offline access for an already registered user.
+- The app root owns service lifetime; a chat ViewModel owns only its subscription.
+  Await `stop()` before explicit restart/identity editing. Preserve session/timer
+  invalidation and cancellation checks so old callbacks cannot drive a new session.
+- Keep storage failure, session replacement, temporary connection failure and
+  permanently rejected messages distinct. Do not silently replace a failed disk
+  store with memory or clear it. Map states to existing components in presentation,
+  not by importing SwiftUI into storage/services.
+- Extend the mirrored Swift Testing coverage when changing these invariants.
+  Use controlled clocks for retry policy, isolated stores for transactions and
+  temporary disk reopen tests for durability. Read the
+  [offline lifecycle guide](README.md#offline-messaging-and-dependency-composition)
+  for implemented APIs, policy and current integration limits.
 
 ## Components, tokens and local constants
 
