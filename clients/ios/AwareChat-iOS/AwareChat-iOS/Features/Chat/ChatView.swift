@@ -6,7 +6,7 @@ struct ChatView: View {
     static let maximumContentWidth: CGFloat = 700
     static let composerCornerRadius: CGFloat = 24
     static let sendButtonSize: CGFloat = 44
-    static let statusCornerRadius: CGFloat = 16
+    static let issueCornerRadius: CGFloat = 16
   }
 
   @State private var viewModel: ChatViewModel
@@ -44,7 +44,10 @@ struct ChatView: View {
     ScrollViewReader { proxy in
       ScrollView {
         LazyVStack(spacing: Tokens.Spacing.medium.value) {
-          connectionStatus
+          ConnectionStatusView(
+            state: viewModel.connectionState,
+            retryAction: { viewModel.retryConnection() }
+          )
           generalIssue
 
           ForEach(messages) { message in
@@ -111,45 +114,7 @@ struct ChatView: View {
     }
     .padding(Tokens.Spacing.medium.value)
     .background(Tokens.Colors.secondary)
-    .clipShape(RoundedRectangle(cornerRadius: Constants.statusCornerRadius))
-  }
-
-  @ViewBuilder
-  private var connectionStatus: some View {
-    switch viewModel.connectionState {
-    case .connected:
-      EmptyView()
-    case .connecting:
-      statusBanner(
-        icon: "arrow.triangle.2.circlepath",
-        message: "Connecting...",
-        allowsRetry: false
-      )
-    case .offline(let message):
-      statusBanner(icon: "wifi.slash", message: message, allowsRetry: true)
-    }
-  }
-
-  private func statusBanner(
-    icon: String,
-    message: String,
-    allowsRetry: Bool
-  ) -> some View {
-    HStack(spacing: Tokens.Spacing.small.value) {
-      Image(systemName: icon)
-        .accessibilityHidden(true)
-      BodyText(message)
-        .frame(maxWidth: .infinity, alignment: .leading)
-      if allowsRetry {
-        Button("Retry") { viewModel.retryConnection() }
-          .font(.body.weight(.semibold))
-          .foregroundStyle(Tokens.Colors.primary)
-      }
-    }
-    .foregroundStyle(Tokens.Colors.textPrimary)
-    .padding(Tokens.Spacing.medium.value)
-    .background(Tokens.Colors.secondary)
-    .clipShape(RoundedRectangle(cornerRadius: Constants.statusCornerRadius))
+    .clipShape(RoundedRectangle(cornerRadius: Constants.issueCornerRadius))
   }
 
   private var composer: some View {

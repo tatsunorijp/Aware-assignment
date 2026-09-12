@@ -34,7 +34,10 @@ struct UserListView: View {
   private func content(conversations: [LocalConversation]) -> some View {
     ScrollView {
       LazyVStack(alignment: .leading, spacing: Tokens.Spacing.large.value) {
-        connectionStatus
+        ConnectionStatusView(
+          state: viewModel.connectionState,
+          retryAction: { viewModel.retryConnection() }
+        )
         conversationSection(conversations)
         peopleSection
       }
@@ -45,37 +48,6 @@ struct UserListView: View {
     }
     .refreshable { await viewModel.refreshUsers() }
     .background(Tokens.Colors.background.ignoresSafeArea())
-  }
-
-  @ViewBuilder
-  private var connectionStatus: some View {
-    switch viewModel.connectionState {
-    case .connected:
-      EmptyView()
-    case .connecting:
-      statusBanner(icon: "arrow.triangle.2.circlepath", message: "Connecting...", retry: false)
-    case .offline(let message):
-      statusBanner(icon: "wifi.slash", message: message, retry: true)
-    }
-  }
-
-  private func statusBanner(icon: String, message: String, retry: Bool) -> some View {
-    HStack(spacing: Tokens.Spacing.small.value) {
-      Image(systemName: icon)
-        .accessibilityHidden(true)
-      BodyText(message)
-        .lineLimit(2)
-      Spacer(minLength: Tokens.Spacing.small.value)
-      if retry {
-        Button("Retry") { viewModel.retryConnection() }
-          .font(.body.weight(.semibold))
-          .foregroundStyle(Tokens.Colors.primary)
-      }
-    }
-    .foregroundStyle(Tokens.Colors.textPrimary)
-    .padding(Tokens.Spacing.medium.value)
-    .background(Tokens.Colors.secondary)
-    .clipShape(RoundedRectangle(cornerRadius: Constants.containerRadius))
   }
 
   private func conversationSection(_ conversations: [LocalConversation]) -> some View {

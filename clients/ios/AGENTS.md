@@ -98,11 +98,16 @@ AI-assisted changes, and never leave nested or unmatched marker pairs.
 
 1. Reuse a suitable existing component before creating another. Extend it
    compatibly when the behavior is genuinely shared; avoid one-use wrappers.
-2. Reuse a semantically correct existing token. Equal numeric values do not make
+2. Before adding a screen-local View or `@ViewBuilder` helper, inspect the design
+   system and sibling screens. When the same UI structure or behavior appears in
+   more than one screen, extract it into a parameterized reusable component under
+   `DesignSystem/Components` and have callers supply feature state and actions.
+   Do not keep duplicated feature-local implementations.
+3. Reuse a semantically correct existing token. Equal numeric values do not make
    unrelated tokens interchangeable.
-3. If the correct token group exists but lacks a required value, add it there using
+4. If the correct token group exists but lacks a required value, add it there using
    established naming and types.
-4. If no appropriate group exists, keep the value near its owner in a
+5. If no appropriate group exists, keep the value near its owner in a
    `private enum Constants`. Promote a global token group only when broader reuse
    is part of the task. Screen-specific visual values, such as a container radius
    or maximum content width used by only one View, belong in that View's local
@@ -110,7 +115,7 @@ AI-assisted changes, and never leave nested or unmatched marker pairs.
    Declare that local constants namespace at the top of its owning type's scope,
    immediately after the type declaration and before other properties or `body`,
    so screen-specific layout values are easy to discover.
-5. Keep extensions deterministic and narrowly scoped, without hidden I/O,
+6. Keep extensions deterministic and narrowly scoped, without hidden I/O,
    business rules, mutable global state or dependency ownership.
 
 Inspect the affected UX specification and prototype for visual work. Preserve

@@ -21,12 +21,6 @@ nonisolated enum UserDiscoveryState: Equatable, Sendable {
   case error(String)
 }
 
-nonisolated enum UserListConnectionState: Equatable, Sendable {
-  case connected
-  case connecting
-  case offline(String)
-}
-
 nonisolated struct ConversationSelectionError: Equatable, Sendable {
   let userId: UUID
   let message: String
@@ -37,7 +31,7 @@ nonisolated struct ConversationSelectionError: Equatable, Sendable {
 final class UserListViewModel {
   private(set) var screenState = UserListScreenState.loading
   private(set) var discoveryState = UserDiscoveryState.idle
-  private(set) var connectionState = UserListConnectionState.connecting
+  private(set) var connectionState = ConnectionStatusState.connecting
   private(set) var selectionError: ConversationSelectionError?
   private(set) var selectedUserId: UUID?
 
@@ -202,7 +196,7 @@ final class UserListViewModel {
 
   private static func presentationState(
     _ state: MessagingConnectionState
-  ) -> UserListConnectionState {
+  ) -> ConnectionStatusState {
     switch state {
     case .connected:
       .connected

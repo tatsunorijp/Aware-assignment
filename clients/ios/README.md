@@ -328,6 +328,7 @@ The following SwiftUI components are implemented in
 | --- | --- |
 | `LargeButton` | Receives a title, `.primary` or `.secondary` style, and an action. It uses body text at medium weight and `Tokens.Size.LargeButtonHeight` height; its caller determines the available width. |
 | `LoadingScreen` | Opaque white full-screen loading presentation with a centered native spinner and `Loading...` body text. |
+| `ConnectionStatusView` | Receives shared connected, connecting or offline presentation state plus a retry action. It hides connected state and renders the consistent connecting/offline banner without owning messaging lifecycle. |
 | `MessageContainer` | Receives `.sended` or `.received`, message text, a `Date`, and `ACKMessageState`. Outgoing cards show no icon while sending, a checkmark when sent, or an accessible red X when failed; incoming cards never show an ACK icon. |
 | `ErrorScreen` | Receives a display message and optional Retry action. Cancel uses an explicit action when supplied and otherwise uses SwiftUI dismissal; either action can be hidden when the owning flow has no safe or valid recovery path. |
 

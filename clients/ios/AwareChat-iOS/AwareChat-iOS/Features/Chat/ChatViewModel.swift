@@ -8,12 +8,6 @@ nonisolated enum ChatScreenState: Equatable, Sendable {
   case error(String)
 }
 
-nonisolated enum ChatConnectionState: Equatable, Sendable {
-  case connected
-  case connecting
-  case offline(String)
-}
-
 nonisolated struct ChatIssuePresentation: Equatable, Sendable {
   let messageId: UUID?
   let message: String
@@ -39,7 +33,7 @@ struct ChatViewModelFactory {
 @Observable
 final class ChatViewModel {
   private(set) var screenState = ChatScreenState.loading
-  private(set) var connectionState = ChatConnectionState.connecting
+  private(set) var connectionState = ConnectionStatusState.connecting
   private(set) var peerName = "Unknown user"
   var draft = "" {
     didSet {
@@ -212,7 +206,7 @@ final class ChatViewModel {
 
   private static func presentationState(
     _ state: MessagingConnectionState
-  ) -> ChatConnectionState {
+  ) -> ConnectionStatusState {
     switch state {
     case .connected:
       .connected
