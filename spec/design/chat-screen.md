@@ -47,6 +47,6 @@ empty local conversation still belongs in the upper section.
 - After completed registration, offline/connecting/synchronizing indicators remain
   secondary; users can still open their local conversations.
 
-See [shared list behavior](../../DESIGN.md#conversations-and-registered-users),
+See [shared list behavior](../../SYSTEM_DESIGN.md#conversations-and-registered-users),
 [sign-up entry](sign-up-screen.md), [persistence](../persistence.md) and
 [acceptance checks](../acceptance-tests.md#shared-visual-and-flow-acceptance).

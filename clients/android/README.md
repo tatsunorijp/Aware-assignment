@@ -23,7 +23,7 @@ separately from future work.
 
 ## Shared context
 
-Follow [product scope](../../spec/product.md), [application behavior](../../DESIGN.md),
+Follow [product scope](../../spec/product.md), [system behavior](../../SYSTEM_DESIGN.md),
 [UI prototypes and palette](../../spec/design/README.md),
 [shared persistence](../../spec/persistence.md), [wire protocol](../../spec/protocol.md),
 [client integration](../../server/docs/CLIENT_GUIDE.md),
@@ -304,7 +304,7 @@ through `StateFlow`. Use enum/sealed types for mutually exclusive phases, carryi
 typed failures/data when useful. Keep local loading/ready/error independent of
 disconnected/connecting/connected/connectionFailure. Remote discovery has its own
 loading/list/empty/error states. Follow the
-[shared screen semantics](../../DESIGN.md#screen-loading-and-state-dimensions).
+[shared screen semantics](../../SYSTEM_DESIGN.md#screen-loading-and-state-dimensions).
 
 First registration is a blocking network exception: Confirm presents full-screen
 loading through local identity save, `identify`, `identity_accepted` and durable

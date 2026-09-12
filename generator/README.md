@@ -8,9 +8,9 @@ wrapper, model API, or slash command is intentionally unnecessary: the original
 assignment permits prompts and evaluates reproducible behavior rather than form.
 
 The maintained specifications and platform instructions are authoritative. The
-prompts tell the coding agent what to read, define its ownership boundary, and ask
-it to implement or restore code and verify the result. They do not copy the full
-product, architecture, or protocol into another specification.
+prompts tell the coding agent how to locate relevant context, define its ownership
+boundary, and ask it to implement or restore code and verify the result. They do
+not copy the full product, architecture, or protocol into another specification.
 
 The prompt interface is defined, but both complete feature sets and clean
 regeneration have not yet been demonstrated. Do not describe regeneration as
@@ -36,7 +36,7 @@ routes it to the applicable maintained context:
 | Input | Responsibility |
 | --- | --- |
 | [Repository instructions](../AGENTS.md) | Repository-wide language, scope, compatibility, and maintenance rules. |
-| [Product](../spec/product.md) and [design](../DESIGN.md) | MVP scope, flows, and independent state behavior. |
+| [Product](../spec/product.md) and [system design](../SYSTEM_DESIGN.md) | MVP scope, flows, and independent state behavior. |
 | [Visual catalog](../spec/design/README.md) | Shared prototypes, images, palette, and screen behavior. |
 | [Persistence](../spec/persistence.md) | Local-first models, transactions, observation, and outbox state. |
 | [Protocol](../spec/protocol.md) | Existing HTTP/WebSocket, identity, ACK, retry, and error contract. |

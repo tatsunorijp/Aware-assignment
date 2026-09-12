@@ -1,6 +1,6 @@
 # Acceptance criteria
 
-These criteria cover the [product](product.md), [design](../DESIGN.md),
+These criteria cover the [product](product.md), [system design](../SYSTEM_DESIGN.md),
 [persistence](persistence.md), [protocol](protocol.md), native clients and generator.
 The server is implemented; both clients have starter projects, while native
 messaging and generation are not implemented yet. Android's template tests do not

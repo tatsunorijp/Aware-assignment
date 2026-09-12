@@ -1,4 +1,4 @@
-# Application design
+# System design
 
 This document specifies shared client flows and state ownership for the
 [product](spec/product.md). The [protocol](spec/protocol.md) owns exact wire

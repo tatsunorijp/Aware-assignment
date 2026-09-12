@@ -4,7 +4,7 @@ Read [spec/protocol.md](../../spec/protocol.md) for exact fields, JSON examples,
 validation rules, ACK semantics, ordering and error codes. That file is the shared
 wire contract for Swift/iOS and Kotlin/Android. Read [server/README.md](../README.md)
 for setup and operations. This guide describes how a client uses that contract.
-Shared screen flows live in [DESIGN.md](../../DESIGN.md), local storage contracts in
+Shared screen flows live in [SYSTEM_DESIGN.md](../../SYSTEM_DESIGN.md), local storage contracts in
 [spec/persistence.md](../../spec/persistence.md), and platform details in
 [iOS README](../../clients/ios/README.md) and [Android README](../../clients/android/README.md).
 

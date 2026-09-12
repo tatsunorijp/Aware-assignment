@@ -37,4 +37,4 @@ ready local content on `sync_completed` or discovery completion.
 
 See [sign up](sign-up-screen.md), [chat list](chat-screen.md),
 [messages](messages-screen.md), [error recovery](error-screen.md) and
-[independent state dimensions](../../DESIGN.md#screen-loading-and-state-dimensions).
+[independent state dimensions](../../SYSTEM_DESIGN.md#screen-loading-and-state-dimensions).

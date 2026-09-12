@@ -15,7 +15,7 @@ raw transport diagnostics or stack traces. Preserve readability for longer error
 
 Networking exposes typed failures; the owning operation determines recovery.
 The visual component receives display content and available actions, not raw JSON
-or a socket. See [typed error ownership](../../DESIGN.md#error-presentation-and-ownership).
+or a socket. See [typed error ownership](../../SYSTEM_DESIGN.md#error-presentation-and-ownership).
 
 On iOS the reusable `ErrorScreen` receives the display message and Retry closure.
 Its Cancel button calls SwiftUI's environment dismiss action, revealing the
@@ -59,5 +59,5 @@ Outgoing-message failures stay attached to their [message](messages-screen.md);
 a failed compose/save operation retains the user's draft. None of these failures
 alone requires replacing the entire usable screen.
 
-See [shared state boundaries](../../DESIGN.md#screen-loading-and-state-dimensions)
+See [shared state boundaries](../../SYSTEM_DESIGN.md#screen-loading-and-state-dimensions)
 and [acceptance checks](../acceptance-tests.md#shared-visual-and-flow-acceptance).

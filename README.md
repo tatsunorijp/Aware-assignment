@@ -12,7 +12,7 @@ requirements back into a single draft.
 | File | Owns |
 | --- | --- |
 | [spec/product.md](spec/product.md) | Purpose, MVP scope, deliverables and product boundaries. |
-| [DESIGN.md](DESIGN.md) | Identification, conversations/users, chat flows, state and responsibility boundaries. |
+| [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) | Cross-client flows, state dimensions and responsibility boundaries. |
 | [spec/design/README.md](spec/design/README.md) | Shared iOS/Android prototype catalog, original PNG copies and per-screen/component behavior; light mode only. |
 | [spec/persistence.md](spec/persistence.md) | Local entities, repositories, transactions, message state and dependency composition. |
 | [spec/protocol.md](spec/protocol.md) | Canonical HTTP/WebSocket contract, models, ACKs, errors, ordering and retry rules. |
@@ -26,6 +26,7 @@ requirements back into a single draft.
 | [fixtures/protocol/README.md](fixtures/protocol/README.md) | Shared error fixture purposes and decoding expectations. |
 | [server/CHANGELOG.md](server/CHANGELOG.md) | Server changes and client/operator impact. |
 | [server/docs/REVIEW.md](server/docs/REVIEW.md) | Existing backend review findings and regression evidence. |
+| [.agents/skills/feature-intake/SKILL.md](.agents/skills/feature-intake/SKILL.md) | Guided requirement discovery and canonical-document routing for a new or changed feature. |
 
 The original assignment draft is historical context, not a required generation
 input. Use the maintained documents above for implementation requirements.
@@ -35,6 +36,12 @@ generation input. Its scoped AGENTS file contains implementation rules, includin
 component/token reuse and validation workflow. Shared product, behavior, UI,
 persistence and protocol documents keep their own responsibilities; they are
 linked as context instead of being copied into every platform guide.
+
+For a new or materially changed feature, use the repository's `feature-intake`
+skill. It identifies the affected domains, presents every currently known open
+decision before asking for answers one at a time, and routes confirmed decisions
+to their maintained owners before implementation. It does not create a permanent
+feature document when code and tests are sufficient.
 
 The wire contract describes the current server; platform details cannot silently
 redefine it. During either client's implementation, adapt to the server and report
@@ -114,3 +121,12 @@ foundations remain maintained source. Only the exact paths in the
 [generator boundary](generator/README.md#generated-ownership-boundary) are
 delegated disposable output. Fix generated defects at their source specification,
 platform instruction, or prompt rather than relying on a patch lost on regeneration.
+
+Keep documentation proportional as the project grows. Clear code and meaningful
+tests document straightforward implementation. Comments explain only non-obvious
+reasons or invariants. Create a feature-local document only for a large, durable
+structure that code, tests, comments and existing canonical documents cannot make
+reasonably clear. Platform READMEs own durable setup, structure, architecture,
+integration, limitations and verification; AGENTS files own reusable implementation
+rules. Product and behavioral decisions still belong in their canonical
+specifications, regardless of implementation size.

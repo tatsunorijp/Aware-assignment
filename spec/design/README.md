@@ -2,7 +2,7 @@
 
 These prototypes and behavior documents apply to **both iOS and Android**.
 They are maintained generation inputs, not implemented screens or app image assets.
-Read them alongside [DESIGN.md](../../DESIGN.md), [product scope](../product.md),
+Read them alongside [system design](../../SYSTEM_DESIGN.md), [product scope](../product.md),
 [persistence](../persistence.md) and the [existing protocol](../protocol.md).
 
 ## Screen catalog
@@ -94,7 +94,7 @@ behavior document embeds its corresponding repository-local PNG. No external
 workspace path is required by either client or generator.
 
 Keep this catalog, each image and its behavior document together under version
-control. Update affected cross-links, [shared design](../../DESIGN.md), platform
+control. Update affected cross-links, [system design](../../SYSTEM_DESIGN.md), platform
 READMEs, [acceptance criteria](../acceptance-tests.md#shared-visual-and-flow-acceptance)
 and generation inputs when a prototype or its behavior changes. Do not duplicate
 the same shared images inside both client trees or treat `spec/design/` as

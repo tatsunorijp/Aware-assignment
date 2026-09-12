@@ -9,19 +9,14 @@ clients/ios/AwareChat-iOS/AwareChat-iOS/ContentView.swift
 clients/ios/AwareChat-iOS/AwareChat-iOS/MyApp.swift
 ```
 
-Read and follow `generator/prompts/shared.md`, `clients/ios/AGENTS.md`, and
-`spec/design/messages-screen.md`, including their referenced documents and every
-prototype variant. This prompt explicitly authorizes the feature's ViewModel tests.
+Follow `generator/prompts/shared.md` and `clients/ios/AGENTS.md`. Start from
+`spec/design/messages-screen.md` and every prototype variant, then load only the
+canonical context it and the affected code require.
 
-Create the SwiftUI screen and a `@MainActor @Observable` MVVM implementation using
-the maintained local message repository, app-scoped messaging service, navigation,
-components, and tokens. Local history remains available offline; sends persist
-before networking; persisted state drives the existing message ACK presentation.
-Feature cancellation must not stop app-scoped messaging.
+Implement the complete messages feature and its ViewModel tests using the
+maintained iOS foundations. This prompt authorizes those tests. Compose the app
+entry files only when their required features exist; otherwise report composition
+as pending. Stay inside scope, run the documented iOS checks, and report results
+and unavailable visual/native checks.
 
-When the other features exist, replace the starter entry views only as needed to
-compose one dependency graph and all destinations. Otherwise implement this feature
-and report composition as pending. If maintained foundation is missing, report it
-instead of editing outside scope. Update affected README status, build and run the
-complete Swift Testing suite with Xcode 26.5, and report visual/native checks.
-Mark all the files generated using the AI-generated code markers
+Mark all generated files using the AI-generated code markers.

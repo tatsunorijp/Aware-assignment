@@ -55,7 +55,7 @@ access to existing local content while re-identifying in the background.
 
 ## Related contracts
 
-- [Shared identification flow](../../DESIGN.md#user-identification).
+- [Shared identification flow](../../SYSTEM_DESIGN.md#user-identification).
 - [WebSocket identification](../protocol.md#identification-and-synchronization).
 - [Essential errors and actions](error-screen.md).
 - [Client acceptance checks](../acceptance-tests.md#shared-visual-and-flow-acceptance).

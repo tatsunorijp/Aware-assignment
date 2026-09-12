@@ -83,7 +83,7 @@ The server will run locally in a single process and store its data only in memor
 
 ## Requirement ownership
 
-- [DESIGN.md](../DESIGN.md): identification, list and chat flows, screen/connection
+- [SYSTEM_DESIGN.md](../SYSTEM_DESIGN.md): identification, list and chat flows, screen/connection
   states, user-facing failures and responsibility boundaries.
 - [design/README.md](design/README.md): shared visual catalog, prototype images and
   per-screen/component behavior, navigation and appearance.

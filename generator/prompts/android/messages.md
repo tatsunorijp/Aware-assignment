@@ -10,18 +10,13 @@ clients/android/AwareChat-Android/app/src/test/java/com/example/awarechat_androi
 clients/android/AwareChat-Android/app/src/androidTest/java/com/example/awarechat_android/feature/**
 ```
 
-Read and follow `generator/prompts/shared.md`, `clients/android/AGENTS.md`, and
-`spec/design/messages-screen.md`, including their referenced documents and every
-prototype variant. This prompt explicitly authorizes feature ViewModel tests and
-only meaningful connected UI/navigation tests.
+Follow `generator/prompts/shared.md` and `clients/android/AGENTS.md`. Start from
+`spec/design/messages-screen.md` and every prototype variant, then load only the
+canonical context it and the affected code require.
 
-Create the Compose screen and Android MVVM implementation using the maintained
-Flow-based message repository, app-scoped messaging service, navigation,
-components, and tokens. Local history works offline; sends persist first; persisted
-state drives existing ACK presentation. ViewModel clearing does not stop messaging.
-
-When other features exist, replace the starter activity and create `AwareChatApp`
-only as needed to compose one dependency graph/navigation host. Otherwise report
-composition pending. If maintained foundation is missing, do not expand scope or
-change build files. Update README status, run tests, assemble/lint, and report
-device/native checks.
+Implement the complete messages feature and its ViewModel tests using the
+maintained Android foundations. This prompt authorizes those tests and only
+meaningful connected UI/navigation tests. Compose the app entry files only when
+their required features exist; otherwise report composition as pending. Stay
+inside scope, run the documented Android checks, and report results and unavailable
+visual/native checks.

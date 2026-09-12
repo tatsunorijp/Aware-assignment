@@ -78,6 +78,6 @@ Keep history and offline composition usable during reconnection and replay.
 
 Incoming messages are persisted before recipient ACK, even with this screen
 closed. Observe ACK/state updates without reopening the conversation. Preserve
-the [shared send/recovery rules](../../DESIGN.md#sending-messages),
+the [shared send/recovery rules](../../SYSTEM_DESIGN.md#sending-messages),
 [wire ACK contract](../protocol.md#sending-and-sender-ack) and
 [client acceptance checks](../acceptance-tests.md#shared-visual-and-flow-acceptance).

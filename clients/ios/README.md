@@ -26,7 +26,7 @@ what currently exists.
 
 ## Shared context
 
-Follow [product scope](../../spec/product.md), [application behavior](../../DESIGN.md),
+Follow [product scope](../../spec/product.md), [system behavior](../../SYSTEM_DESIGN.md),
 [UI prototypes and palette](../../spec/design/README.md),
 [shared persistence](../../spec/persistence.md), [wire protocol](../../spec/protocol.md),
 [client integration](../../server/docs/CLIENT_GUIDE.md),
@@ -564,7 +564,7 @@ patterns. Follow the agent's ownership, task cancellation and concurrency rules.
 Use feature `State`/`ScreenState` cases `loading`, `ready`, `error`, independently
 from `ConnectionState` cases `disconnected`, `connecting`, `connected`,
 `connectionFailure`. Associated typed failures/data may be added when useful.
-Preserve [shared state semantics](../../DESIGN.md#screen-loading-and-state-dimensions):
+Preserve [shared state semantics](../../SYSTEM_DESIGN.md#screen-loading-and-state-dimensions):
 essential local loading and first registration can gate the screen. Confirm shows
 full-screen loading until `identity_accepted` and a local registration-completion
 save succeed; essential failures use the shared error component. Remote discovery

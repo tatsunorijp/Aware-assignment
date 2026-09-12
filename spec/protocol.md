@@ -1,7 +1,7 @@
 # Messaging protocol, version 1
 
 This is the concrete wire contract for the server and both generated mobile clients.
-It supports the [product scope](product.md) and [application design](../DESIGN.md).
+It supports the [product scope](product.md) and [system design](../SYSTEM_DESIGN.md).
 The response envelopes, error codes, normalization and reconnect rules below are
 the shared source of truth. All clients must use these same rules. Documentation
 redistribution does not change version-1 behavior or the implemented server.
