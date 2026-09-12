@@ -67,6 +67,11 @@ AI-assisted changes, and never leave nested or unmatched marker pairs.
   work. App-scoped work must not accidentally inherit a screen's lifetime.
 - Use typed, state-driven navigation with lightweight identifiers. Routers and
   coordinators own route changes, not feature business logic, storage or transport.
+- For vertically scrolling collections with a potentially large or unbounded row
+  count, prefer `LazyVStack` over an eager `VStack`. Lazy row creation reduces
+  initial rendering work and memory usage, avoids constructing off-screen rows,
+  and helps keep scrolling responsive as the collection grows. Use `List` instead
+  when its native interaction, selection or accessibility semantics are required.
 
 ## Networking, persistence and concurrency boundaries
 
@@ -99,7 +104,12 @@ AI-assisted changes, and never leave nested or unmatched marker pairs.
    established naming and types.
 4. If no appropriate group exists, keep the value near its owner in a
    `private enum Constants`. Promote a global token group only when broader reuse
-   is part of the task.
+   is part of the task. Screen-specific visual values, such as a container radius
+   or maximum content width used by only one View, belong in that View's local
+   `private enum Constants`; do not create or expand a shared token group for them.
+   Declare that local constants namespace at the top of its owning type's scope,
+   immediately after the type declaration and before other properties or `body`,
+   so screen-specific layout values are easy to discover.
 5. Keep extensions deterministic and narrowly scoped, without hidden I/O,
    business rules, mutable global state or dependency ownership.
 
