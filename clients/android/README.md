@@ -15,6 +15,7 @@ separately from future work.
 - [Extensions and design system](#extensions-and-design-system)
 - [Design tokens](#design-tokens)
 - [Reusable UI components](#reusable-ui-components)
+- [Network and wire protocol](#network-and-wire-protocol)
 - [Android persistence files](#android-persistence-files)
 - [Android error organization](#android-error-organization)
 - [State, lifecycle and model equivalence](#state-lifecycle-and-model-equivalence)
@@ -41,15 +42,17 @@ test and an example instrumentation test. Its namespace/application ID is
 `com.example.awarechat_android`; preserve it and the project name unless a requested
 task requires a change. Recheck actual configuration before implementation.
 
-The reusable Android design-system foundation is implemented, including the
-approved palette and light-only `AwareChatAndroidTheme`. Complete messaging screens,
-ViewModels, Room persistence, WebSocket messaging and assignment-specific tests are
-not implemented. The app entry point intentionally remains the template greeting;
-components are independently available through Compose previews.
+The reusable Android design-system foundation and network layer are implemented,
+including the approved palette, light-only `AwareChatAndroidTheme`, strict protocol
+DTOs, HTTP API client and WebSocket client. Complete messaging screens, ViewModels,
+Room persistence and the app-scoped synchronization service are not implemented.
+The app entry point intentionally remains the template greeting; components are
+independently available through Compose previews.
 
 Room is required for identity, conversations and messages but is not yet declared
-as a dependency. Select either OkHttp WebSocket or Ktor when implementing transport
-and document the choice; both are not required. A DI framework is not required.
+as a dependency. Networking uses OkHttp for cancellable HTTP calls and WebSocket
+transport, kotlinx.serialization for JSON, and coroutines/Flow for asynchronous
+delivery. A DI framework is not required.
 
 ## Tools, build and test entry points
 
@@ -64,6 +67,8 @@ that dependency resolution or compatibility was verified in this documentation t
 | Android Gradle Plugin | 9.4.0 in [libs.versions.toml](AwareChat-Android/gradle/libs.versions.toml). |
 | Kotlin Compose plugin | 2.2.10 in the version catalog. |
 | Compose BOM | 2026.02.01 in the version catalog. |
+| Coroutines / kotlinx.serialization | 1.10.2 / 1.9.0 in the version catalog. |
+| OkHttp / MockWebServer | 5.1.0 in the version catalog. |
 | Gradle wrapper | 9.6.0 in [gradle-wrapper.properties](AwareChat-Android/gradle/wrapper/gradle-wrapper.properties). |
 | Gradle daemon JVM | Java 25 requested by [gradle-daemon-jvm.properties](AwareChat-Android/gradle/gradle-daemon-jvm.properties). |
 | Java source/target compatibility | Java 11 in app compile options; this is not the Gradle daemon JVM requirement. |
@@ -113,18 +118,18 @@ implementation/validation; the existing example tests are scaffolding, not proof
 of messaging, persistence or UI correctness. Run the `app` configuration from
 Android Studio to inspect the current greeting, not the intended messaging screens.
 
-On 2026-09-11, `:app:assembleDebug` and `:app:testDebugUnitTest` passed offline
-with Android Studio's bundled JBR, including a fresh run after adding the shared
-unit-test configuration. `:app:lintDebug` passed with zero errors and eight
-version-availability warnings for the existing Gradle/Kotlin/AndroidX setup. No
-connected device test or visual emulator inspection was performed for this
-component-only foundation.
+On 2026-09-12, `:app:assembleDebug`, `:app:testDebugUnitTest` and `:app:lintDebug`
+passed with Android Studio's bundled JBR. The local JVM suite ran 28 tests,
+including protocol fixtures, HTTP transport through MockWebServer, and real OkHttp
+WebSocket text exchange. Lint reported zero errors and 14 dependency/update
+availability warnings across the existing and network dependencies. No connected
+device test, visual emulator inspection or live-backend integration was performed.
 
 ## Stack and responsibility layout
 
 The Android client must follow responsibilities equivalent to those of the iOS client, using native Android ecosystem tools.
 
-Native stack (required responsibilities; transport selection remains open):
+Native stack:
 
 - Kotlin.
 - Jetpack Compose.
@@ -134,7 +139,8 @@ Native stack (required responsibilities; transport selection remains open):
 - Room.
 - Navigation Compose.
 - Coroutines.
-- OkHttp WebSocket or Ktor.
+- OkHttp HTTP and WebSocket.
+- kotlinx.serialization.
 - JUnit.
 - Constructor-based dependency injection, as described in [dependency composition](../../spec/persistence.md#dependency-injection).
 
@@ -259,6 +265,28 @@ These Composables only render supplied state and invoke callbacks. Networking,
 ACK transitions, navigation and operation ownership remain outside them, in services
 and ViewModels. Future screens must reuse them rather than create feature-local copies.
 
+## Network and wire protocol
+
+Network code is split by responsibility under `core/network/`: `ApiEndpoint`
+constructs requests, `HttpTransport` owns I/O, `NetworkManager` validates status
+and decoding, and `ApiClient` exposes typed health and user operations. WebSocket
+transport is isolated behind `WebSocketTransport`; `WebSocketClient` exposes a
+cold `Flow` of decoded server events and a read-only `StateFlow` for connection
+state. Dependencies are constructor-injectable for deterministic local tests.
+
+Strict wire DTOs and codecs live under `core/protocol/`. They implement protocol
+version 1 UUID, direct-conversation, positive sequence and UTC timestamp rules,
+while accepting additive JSON fields and unknown server error codes. HTTP and
+WebSocket failures use typed `NetworkException` categories and preserve the full
+structured `ServerErrorDto` when supplied by the server.
+
+`NetworkConfiguration.localDevelopment` uses `http://10.0.2.2:8000` and
+`ws://10.0.2.2:8000/ws`, which route an Android emulator to the development server
+on the host. Production declares the `INTERNET` permission. Cleartext traffic is
+enabled only by the debug manifest so release builds do not broaden transport
+security. Callers may inject another configuration for devices or deployed HTTPS
+and WSS endpoints.
+
 ## Android persistence files
 
 The paths below are relative to `core/persistence/`. They represent the package organization within the application's Kotlin source set.
@@ -289,9 +317,9 @@ Operations must use coroutines and support observing local changes through `Flow
 
 | Suggested File | Responsibility |
 | --- | --- |
-| `core/protocol/ServerError.kt` | Declare the serializable DTO equivalent to the [shared ServerError](../../spec/protocol.md#shared-servererror-object). |
-| `core/protocol/ProtocolErrorEvent.kt` | Represent the WebSocket envelope, including optional `messageId` and `error`. |
-| `core/network/NetworkError.kt` | Represent failure categories exposed by networking, including server errors, transport failures, and invalid responses. |
+| `core/protocol/ServerErrorDto.kt` | Serializable DTO equivalent to the [shared ServerError](../../spec/protocol.md#shared-servererror-object). |
+| `core/protocol/ProtocolCodec.kt` | Client/server WebSocket envelopes, including protocol errors with optional `messageId`. |
+| `core/network/NetworkException.kt` | Failure categories exposed by networking, including preserved server errors, transport failures and invalid responses. |
 
 The chosen serialization mechanism must accept missing optional fields and ignore unknown additional fields. The layer must preserve the complete DTO when propagating a server error, whether through a typed result or a custom exception.
 
