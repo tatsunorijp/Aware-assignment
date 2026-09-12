@@ -2,79 +2,63 @@
 
 ## What the generator is
 
-This directory is the assignment's agentic harness. Its interface is a documented
-sequence of prompts that an evaluator pastes into Codex or Claude Code while the
-tool is open at the repository root. A custom CLI, model API, shell wrapper and
-slash command are intentionally unnecessary: the original assignment explicitly
-allows prompts and evaluates reproducible behavior rather than harness shape.
+This directory is the assignment's agentic harness. An evaluator opens the
+repository root in Codex or Claude Code and pastes a prompt. A custom CLI, shell
+wrapper, model API, or slash command is intentionally unnecessary: the original
+assignment permits prompts and evaluates reproducible behavior rather than form.
 
-The maintained specifications and platform instructions are the source of truth.
-The prompts route the coding agent to those inputs, constrain ownership, request
-implementation and tests, and require native verification. They do not duplicate
-the product or protocol in a second prompt-only specification.
+The maintained specifications and platform instructions are authoritative. The
+prompts tell the coding agent what to read, define its ownership boundary, and ask
+it to implement or restore code and verify the result. They do not copy the full
+product, architecture, or protocol into another specification.
 
-The prompt interface is now defined. The three feature outputs have not yet been
-generated on both platforms, and clean regeneration has not yet been demonstrated.
-Do not describe the harness as verified until the sequence below produces both
-working clients from the declared boundary and the documented checks pass.
+The prompt interface is defined, but both complete feature sets and clean
+regeneration have not yet been demonstrated. Do not describe regeneration as
+verified until both clients can be restored and pass the documented checks.
 
 ## Required tools
 
-- Git, so the evaluator can inspect changes and restore a known revision.
-- Codex or Claude Code, authenticated according to that tool's own setup.
-- Xcode and Android tooling documented in the selected platform README.
-- The local server dependencies documented in [server/README.md](../server/README.md)
-  for interoperability verification.
+- Git, to identify deleted tracked output and inspect changes.
+- Codex or Claude Code, authenticated according to that tool's setup.
+- Xcode and Android tooling documented in the selected client README.
+- The local server setup in [server/README.md](../server/README.md) for the native
+  interoperability demonstration.
 
-There are no generator-specific dependencies and no `generate.sh`. Text pasted
-into a normal shell is not a generation command; paste each file into an active
-Codex or Claude Code coding session with the repository root as its workspace.
+There are no generator-specific dependencies. Paste a prompt into an active
+coding-agent session whose workspace is this repository root; pasting it into a
+normal shell does not invoke an agent.
 
 ## Maintained inputs
 
-Every screen prompt first directs the agent to [shared.md](prompts/shared.md), which
-routes to the complete applicable context. Important maintained inputs include:
+Every generator prompt directs the agent to [shared.md](prompts/shared.md), which
+routes it to the applicable maintained context:
 
 | Input | Responsibility |
 | --- | --- |
-| [Repository instructions](../AGENTS.md) | Repository-wide language, scope, compatibility and maintenance rules. |
-| [Product](../spec/product.md) and [design](../DESIGN.md) | MVP scope, screen flows and independent state behavior. |
-| [Visual catalog](../spec/design/README.md) | Shared prototypes, exact images, palette and per-screen behavior. |
-| [Persistence](../spec/persistence.md) | Local-first models, transaction semantics, observation and outbox state. |
-| [Protocol](../spec/protocol.md) | Existing HTTP/WebSocket contract, identity, ACK, retry and error rules. |
-| [Acceptance criteria](../spec/acceptance-tests.md) | Required behavior, tests and native interoperability scenario. |
-| [iOS README](../clients/ios/README.md) and [iOS agent](../clients/ios/AGENTS.md) | Existing iOS foundation, toolchain and implementation rules. |
-| [Android README](../clients/android/README.md) and [Android agent](../clients/android/AGENTS.md) | Existing Android foundation, toolchain and implementation rules. |
-| [Client guide](../server/docs/CLIENT_GUIDE.md) | How generated clients integrate with the unchanged local server. |
-| [Future work](../FUTURE.md) | Features the prompts must not add to the MVP. |
+| [Repository instructions](../AGENTS.md) | Repository-wide language, scope, compatibility, and maintenance rules. |
+| [Product](../spec/product.md) and [design](../DESIGN.md) | MVP scope, flows, and independent state behavior. |
+| [Visual catalog](../spec/design/README.md) | Shared prototypes, images, palette, and screen behavior. |
+| [Persistence](../spec/persistence.md) | Local-first models, transactions, observation, and outbox state. |
+| [Protocol](../spec/protocol.md) | Existing HTTP/WebSocket, identity, ACK, retry, and error contract. |
+| [Acceptance criteria](../spec/acceptance-tests.md) | Required behavior, tests, and native interoperability scenario. |
+| [iOS README](../clients/ios/README.md) and [iOS agent](../clients/ios/AGENTS.md) | iOS foundation, toolchain, architecture, and coding rules. |
+| [Android README](../clients/android/README.md) and [Android agent](../clients/android/AGENTS.md) | Android foundation, toolchain, architecture, and coding rules. |
+| [Client guide](../server/docs/CLIENT_GUIDE.md) | Integration with the unchanged local server. |
+| [Future work](../FUTURE.md) | Features excluded from the MVP. |
 
-Specifications, platform README/AGENTS files, prompts, prototype images, fixtures,
-server code and foundational client code are maintained inputs. They are not
-disposable merely because an agent helped author or update them.
-
-## Authorship convention
-
-- Maintained specifications, instructions, server, client foundations, reusable
-  components, and platform configuration are human-directed, agent-assisted work
-  that remains under normal review and maintenance.
-- Every file under the generated ownership paths is delegated output from the
-  numbered prompts, including later human-reviewed corrections that must be fed
-  back into a maintained prompt or specification to survive regeneration.
-- The boundary in this document is the durable attribution marker. Per-file
-  AI-generated comments are used only when a prompt explicitly asks for them and
-  are not required to determine deletion ownership.
-- Commit history should preserve the prompt/harness evolution, first generation,
-  review corrections, and clean-regeneration evidence rather than collapsing them
-  into one final commit.
+Specifications, AGENTS files, platform READMEs, prompts, prototypes, fixtures,
+server code, and foundational client code are protected maintained inputs. Agent
+assistance does not make a maintained file disposable.
 
 ## Generated ownership boundary
 
-The generator owns feature presentation code, feature ViewModels, feature-local
-models/helpers, their feature tests and the minimal app UI composition listed
-below. Files created inside these paths by the prompt sequence are delegated
-agent output and may be deleted for regeneration.
+The prompt generator owns the three presentation features, their ViewModels and
+feature-local helpers, their tests, and the minimal UI composition files below.
+An evaluator may delete any file or combination of files inside this boundary;
+the evaluator does not need to delete an entire feature or follow the original
+feature-authoring order.
 
-### iOS generated paths
+### iOS boundary
 
 ```text
 clients/ios/AwareChat-iOS/AwareChat-iOS/Features/Identification/**
@@ -87,7 +71,7 @@ clients/ios/AwareChat-iOS/AwareChat-iOS-UnitTests/Features/UserList/**
 clients/ios/AwareChat-iOS/AwareChat-iOS-UnitTests/Features/Chat/**
 ```
 
-### Android generated paths
+### Android boundary
 
 ```text
 clients/android/AwareChat-Android/app/src/main/java/com/example/awarechat_android/feature/identification/**
@@ -101,85 +85,89 @@ clients/android/AwareChat-Android/app/src/test/java/com/example/awarechat_androi
 clients/android/AwareChat-Android/app/src/androidTest/java/com/example/awarechat_android/feature/**
 ```
 
-Everything outside those paths is protected from generator cleanup. In particular,
-never delete or replace either client project, Core code, persistence, services,
-protocol types, reusable design-system code, resources, navigation foundation,
-build configuration, platform documentation, shared specifications or server.
-The generator may update a stale implementation-status or verification statement
-in a platform README when first generating a feature, but that README remains a
-maintained input and is never part of cleanup.
+Everything outside these paths is protected from generator cleanup. Never delete
+or replace a complete Xcode/Gradle project, Core code, persistence, services,
+protocol types, reusable design system, resources, navigation foundation, build
+configuration, documentation, shared specifications, fixtures, or server.
 
-The current iOS `MyApp.swift`/`ContentView.swift` and Android `MainActivity.kt` are
-starter UI and are included in the generated boundary so the last feature prompt
-can compose a runnable app. Android `app/AwareChatApp.kt` will be generated when
-the three Android features are connected. No other app/Core file is implicitly
-owned by the generator.
+The current iOS `MyApp.swift` and `ContentView.swift`, and Android
+`MainActivity.kt`, are starter UI included in the boundary so generated features
+can be composed into runnable apps. `app/AwareChatApp.kt` is the Android generated
+root that will be created during feature composition.
 
-## Prompt sequence
+After the first successful generation, add `generator/GENERATED_FILES.md` listing
+every actual generated file at the delivery revision. The wildcard boundary owns
+the policy; that manifest gives an evaluator an exact inventory and helps restore
+arbitrary partial deletion. It must contain real output, so no empty placeholder is
+kept before generation.
 
-Start from a reviewed commit and make sure unrelated local changes are understood.
-Do not delete any generated path for the first generation; the prompts extend the
-current starter. Use one coding-agent session per platform and paste that platform's
-files in numerical order. Allow each prompt to finish its requested checks before
-pasting the next one.
+## Two prompt workflows
 
-### iOS
+Feature-authoring prompts and evaluator-regeneration prompts have different jobs.
 
-1. [Identification](prompts/ios/01-identification.md)
-2. [Conversations and users](prompts/ios/02-conversations.md)
-3. [Messages and app composition](prompts/ios/03-messages.md)
+### Creating a feature during development
 
-### Android
+These short prompts are for the initial incremental implementation. They are
+independent entry points rather than the evaluator's deletion protocol:
 
-1. [Identification](prompts/android/01-identification.md)
-2. [Conversations and users](prompts/android/02-conversations.md)
-3. [Messages and app composition](prompts/android/03-messages.md)
+| Platform | Identification | Conversations/users | Messages/composition |
+| --- | --- | --- | --- |
+| iOS | [identification.md](prompts/ios/identification.md) | [conversations.md](prompts/ios/conversations.md) | [messages.md](prompts/ios/messages.md) |
+| Android | [identification.md](prompts/android/identification.md) | [conversations.md](prompts/android/conversations.md) | [messages.md](prompts/android/messages.md) |
 
-For both platforms, complete the iOS sequence and its checks, then start a fresh
-Android agent session and complete the Android sequence. A fresh session proves
-that Android relies on maintained repository context rather than hidden iOS chat
-history. Equivalent behavior does not require source translation or identical APIs.
+They normally follow the product flow during first implementation because the
+final composition needs all three features. Each prompt can still be run or rerun
+by itself once its maintained dependencies exist. Shared rules remain in
+[shared.md](prompts/shared.md) and platform AGENTS files, which keeps these prompts
+concise.
 
-The prompts authorize implementation and feature tests inside the declared scope.
-They do not authorize deleting protected files, changing the server/shared wire
-contract, adding future features or hiding missing foundation work. If an expected
-Core contract is absent, the agent must report the blocker. Complete that maintained
-foundation in a separately reviewed task, then rerun the same feature prompt.
+### Regenerating for evaluation
 
-## Clean regeneration procedure
+The evaluator uses one self-contained platform prompt, regardless of which
+generated files were deleted:
 
-After the first generated clients work and are committed:
+- [Regenerate iOS generated output](prompts/ios/regenerate.md)
+- [Regenerate Android generated output](prompts/android/regenerate.md)
 
-1. Record the commit, agentic tool and selected model in the regeneration report or
-   evaluation notes. Exact byte-for-byte output is not promised.
-2. Delete only the generated paths listed above. Do not delete an entire Xcode or
-   Gradle project and do not remove empty parent folders needed by the project.
-3. Confirm with `git status` that no protected path was deleted or modified by the
-   cleanup.
-4. Open Codex or Claude Code at the repository root.
-5. Paste the three iOS prompts in order and run the iOS checks.
-6. Start a fresh Android session, paste the three Android prompts in order and run
-   the Android checks.
-7. Run the native offline/interoperability scenario against the unchanged server.
-8. Compare observable behavior and tests with the specification. Correct an
-   authoritative spec, platform instruction or prompt when a generation defect is
-   systematic, then repeat from the same clean boundary.
+Each regeneration prompt inspects the current tree, Git's deleted-file evidence,
+the generated boundary, and `generator/GENERATED_FILES.md` when present. It
+restores any missing subset and reconciles affected generated dependents so the
+complete client works. It does not assume that a whole screen, View, ViewModel, or
+test directory was removed, and it does not depend on the feature-authoring
+sequence or previous conversation context.
 
-A manual fix inside generated output can help diagnose a defect, but it is not a
-reproducible fix until the responsible maintained input causes regeneration to
-produce the correct result.
+If output from both platforms is deleted, run each platform regeneration prompt
+in a fresh agent session. Equivalent behavior comes from the same maintained
+specification, not hidden cross-session context or copied source.
+
+## First generation and clean-regeneration check
+
+1. Complete each maintained client foundation, then use the feature-authoring
+   prompts to create its generated feature set.
+2. Build, test, and inspect each client after its features are composed.
+3. Create `GENERATED_FILES.md` from the actual committed generated output.
+4. Commit the working delivery revision and record the agent tool/model and prompt
+   revision as described below.
+5. In a disposable branch or worktree, delete all generated output or a deliberate
+   mixture of Views, ViewModels, tests, and composition files from the boundary.
+6. Paste the single regeneration prompt for that platform into a fresh Codex or
+   Claude Code session.
+7. Confirm protected files were not replaced; build and run the native test suite.
+8. Run the native offline/interoperability scenario against the unchanged server.
+9. Fix systematic defects in a maintained spec, instruction, or prompt and repeat
+   the clean check. A manual generated-output patch is not a reproducible fix.
+
+Regeneration promises equivalent behavior and quality, not byte-for-byte output.
+Missing maintained foundation is a reported blocker, never permission to expand
+the generated boundary silently.
 
 ## Verification
+For iOS, run the Xcode 26.5 build and `AwareChat-iOS-UnitTests` commands from
+[clients/ios/README.md](../clients/ios/README.md#tools-and-building).
 
-There is intentionally no `verify.sh`. The evaluator runs the documented native
-commands so skipped prerequisites and platform-specific failures remain visible.
-
-For iOS, use the Xcode 26.5 build/test commands in
-[clients/ios/README.md](../clients/ios/README.md#tools-and-building). At minimum,
-build the app and run the `AwareChat-iOS-UnitTests` scheme on an iOS 26.5 Simulator.
-
-For Android, use the commands in
-[clients/android/README.md](../clients/android/README.md#tools-build-and-test-entry-points):
+For Android, follow
+[clients/android/README.md](../clients/android/README.md#tools-build-and-test-entry-points),
+including at least:
 
 ```sh
 cd clients/android/AwareChat-Android
@@ -188,19 +176,39 @@ cd clients/android/AwareChat-Android
 ./gradlew :app:lintDebug
 ```
 
-Run connected UI checks when a compatible emulator/device is available. Then use
-the [native offline scenario](../spec/acceptance-tests.md#native-offline-scenario)
-to demonstrate iOS-to-Android behavior and the same-platform variants where
-available. The assignment permits any demonstration shape, so there is no empty
-`run-demo.sh`: the maintained acceptance steps and platform commands are the
-current interface. Report unavailable checks honestly rather than replacing native
-clients with the server's Python smoke test.
+Run connected UI checks when an emulator/device is available, then follow the
+[native offline scenario](../spec/acceptance-tests.md#native-offline-scenario).
+There is no empty `run-demo.sh`; the maintained acceptance procedure is the demo
+interface until a real automation benefit justifies another tool.
 
-## Evolution
+## Recording prompts and recommendations
 
-The harness is organized by feature rather than hard-coded shell branches. To add
-attachments, reactions or another screen, first evolve the authoritative product,
-design, persistence/protocol and acceptance documents. Add a numbered feature
-prompt per platform that references those sources, extends the ownership boundary
-explicitly and preserves existing public contracts. The same read, implement,
-test and regenerate sequence then applies without redesigning the harness.
+The committed prompt files and Git history preserve the exact instructions used.
+After the first real generation, create `generator/GENERATION_LOG.md` with one
+entry per run containing:
+
+- Date, delivery/input commit, platform, agentic tool, and selected model.
+- Exact prompt file and revision, plus any additional instruction typed manually.
+- Generated/deleted paths and whether this was first generation or regeneration.
+- Build, test, visual, and interoperability results, including skipped checks.
+- Corrections made afterward and which maintained input was improved.
+
+Do not create a fictional or empty log before a run exists. After assignment
+delivery, keep experimental prompt recommendations separate from the prompts that
+proved the submitted revision—for example under `generator/recommendations/`—and
+label them as unverified proposals. This preserves historical evidence without
+making post-delivery advice part of the evaluator's required workflow.
+
+## Prompt-maintenance recommendations
+
+- Keep task prompts short: reference `shared.md`, the platform AGENT, and the one
+  affected visual document instead of restating shared architecture.
+- State the exact writable generated scope and expected outcome.
+- Require inspection of existing contracts and actual prototypes before editing.
+- Ask for meaningful feature tests and native verification, not an agent's verbal
+  claim of success.
+- Make missing foundation or server mismatch a reported blocker rather than an
+  invitation to rewrite protected code.
+- Extend the authoritative specs before adding future features. Then add a focused
+  authoring prompt and update the boundary/manifest if new generated paths are
+  intentional; the regeneration prompts themselves should remain generic.

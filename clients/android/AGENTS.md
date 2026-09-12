@@ -18,7 +18,7 @@ draft and sample screens are not alternative contracts.
 | UI, components or visual tokens | [Shared design catalog](../../spec/design/README.md), affected screen/component documents and their actual PNGs, plus the README's [design system](README.md#extensions-and-design-system). |
 | Storage, models or synchronization | [Shared persistence](../../spec/persistence.md) and [Android persistence layout](README.md#android-persistence-files). |
 | Networking, DTOs, errors or backend integration | [Protocol](../../spec/protocol.md), [client guide](../../server/docs/CLIENT_GUIDE.md), relevant [error fixtures](../../fixtures/protocol/README.md). Read [server changes](../../server/CHANGELOG.md) when adopting updates and [server setup](../../server/README.md) when running it. |
-| Verification or generation | Relevant [acceptance criteria](../../spec/acceptance-tests.md), [generator requirements and sequence](../../generator/README.md#prompt-sequence), and the selected numbered Android feature prompt. |
+| Verification or generation | Relevant [acceptance criteria](../../spec/acceptance-tests.md), [generator workflows](../../generator/README.md#two-prompt-workflows), and the selected Android authoring or regeneration prompt. |
 
 Report missing images, conflicts or unsupported integration requirements rather
 than inventing references, product features or backend behavior.

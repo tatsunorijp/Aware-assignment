@@ -5,7 +5,8 @@
 The assignment's primary deliverable is a spec-driven generator that produces
 native Swift/iOS and Kotlin/Android clients with equivalent observable behavior
 and the same messaging protocol. This repository uses the original assignment's
-permitted prompt form: evaluators paste a documented sequence into Codex or Claude
+permitted prompt form: developers paste focused authoring prompts, while evaluators
+paste one order-independent regeneration prompt per platform into Codex or Claude
 Code. A custom CLI or shell wrapper is not required. The direct-messaging app
 demonstrates that the generated clients communicate through the local server.
 Sharing source code between platforms is not required.

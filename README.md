@@ -48,7 +48,7 @@ migration does not authorize runtime changes or change `protocolVersion: 1`.
 | Server | Implemented in `server/`; package release 0.2.0, nested shared ServerError. |
 | iOS | `AwareChat-iOS` under `clients/ios/`: reusable design system, typed HTTP/WebSocket layer, navigation foundation, SwiftData repositories, offline messaging service and mirrored Swift Testing suites. Feature screens/ViewModels and root integration remain pending; see the [iOS guide](clients/ios/README.md). |
 | Android | Existing `AwareChat-Android` Gradle/Compose starter under `clients/android/`, with the initial package skeleton, light design system, reusable components and example tests; complete messaging screens and assignment-specific tests are not implemented. |
-| Generator | The documented Codex/Claude Code prompt sequence and exact generated ownership boundary are defined; the three features and clean two-platform regeneration are not yet complete or verified. |
+| Generator | Codex/Claude Code feature-authoring prompts, one order-independent evaluator prompt per platform, and the exact generated ownership boundary are defined; complete clean regeneration is not yet verified. |
 | Native demo | Specified as maintained manual acceptance steps; the complete iOS/Android scenario is not yet implemented or verified. |
 
 Requirements in the documents above describe the intended deliverable. Their
@@ -87,12 +87,13 @@ remain required once the apps exist.
 
 ## Generate the client features
 
-Open this repository root in Codex or Claude Code and follow the numbered iOS or
-Android prompt sequence in [generator/README.md](generator/README.md#prompt-sequence).
-Each prompt is copied into the active coding-agent session; there is intentionally
-no shell generation command. The generator README owns the exact delegated-output
-boundary, protected maintained inputs, order, clean-regeneration procedure and
-native verification commands.
+Open this repository root in Codex or Claude Code and follow the
+[generator workflows](generator/README.md#two-prompt-workflows). Short feature
+prompts support incremental authoring; one evaluator prompt per platform restores
+any deleted subset of generated code without assuming an order. Each prompt is
+copied into the active coding-agent session; there is intentionally no shell
+generation command. The generator README owns the exact delegated-output boundary,
+protected inputs, clean-regeneration procedure, and native verification commands.
 
 The feature prompts are ready, but they have not yet produced and cleanly
 regenerated both complete clients. Preserve everything outside the declared

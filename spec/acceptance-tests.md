@@ -213,10 +213,12 @@ backend or weaken the expected result to make the client pass.
 ## Generation verification
 
 The [prompt-based generator](../generator/README.md) defines the clean regeneration
-workflow. Once both platform foundations are ready, delete only the declared
-generated boundary, paste each platform's three prompts into Codex or Claude Code
-in the documented order, build both projects, run the required suites, and repeat
-the native offline scenario.
+workflow. Once both platform foundations are ready, delete any deliberate subset
+inside the declared generated boundary, paste that platform's single evaluator
+regeneration prompt into a fresh Codex or Claude Code session, build both projects,
+run the required suites, and repeat the native offline scenario. The prompt must
+also restore a complete deleted boundary; it cannot depend on knowing whether the
+evaluator removed a View, ViewModel, test, composition file, or whole feature.
 The resulting clients' persistence organization, dependency injection, DTOs,
 generated features, and error handling must match the platform READMEs, scoped
 implementation instructions, and shared specifications. Both platform README and
