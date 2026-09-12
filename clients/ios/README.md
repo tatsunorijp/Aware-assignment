@@ -47,10 +47,12 @@ layers, and the `AwareChat-iOS-UnitTests` unit-test target with mirrored network
 and protocol tests. A typed Router/Coordinator navigation foundation is also
 implemented under `App/Navigation`. The SwiftData repositories, app-scoped
 `MessagingService` actor and `AppDependencies` composition are implemented, with
-mirrored persistence/service tests. Complete messaging screens, feature ViewModels,
-navigation destinations and root view integration are not implemented. The starter
-does not open a database or connect automatically yet. Preserve names, signing and build
-settings unless a task explicitly requires a change.
+mirrored persistence/service tests. The identification screen and ViewModel are
+implemented and composed at the app root; they open the shared database and start
+messaging only as required by the registration flow. The conversations and messages
+features remain pending, so the completed-registration flow currently reaches a
+heading-only `Chat` placeholder that their generation will replace. Preserve names,
+signing and build settings unless a task explicitly requires a change.
 
 The entry point is `MyApp.swift`. Current project settings declare iOS 26.5,
 Swift language mode 5.0, MainActor default isolation and approachable concurrency.
@@ -112,12 +114,13 @@ Simulator availability depends on the installed runtimes. Physical-device signin
 and server setup are separate concerns.
 
 On 2026-09-12, the app and test bundle built successfully with Xcode 26.5. All
-77 Swift Testing tests passed on the iPhone 17 Pro / iOS 26.5 Simulator with live
-integration enabled (85 executed cases including parameterized tests). The normal
-run has 76 enabled tests and skips the opt-in server integration test. Coverage
+86 enabled Swift Testing tests passed on the iPhone 17 Pro / iOS 26.5 Simulator
+(94 passed executed cases including parameterized tests); the normal run skips the
+single opt-in server integration test. Coverage
 includes in-memory and disk-reopen persistence, concurrent sequence allocation,
 rollback, committed observation, registration durability, FIFO, retry deadlines,
-duplicate delivery, error correlation, cancellation and session replacement.
+duplicate delivery, error correlation, cancellation, session replacement and the
+identification ViewModel's launch, validation, retry and stale-attempt behavior.
 
 The opt-in `MessagingServiceIntegrationTests` uses two independent in-memory
 SwiftData stores and real network clients. It exercised `/health`, `/users`,
@@ -321,7 +324,7 @@ The following SwiftUI components are implemented in
 | `LargeButton` | Receives a title, `.primary` or `.secondary` style, and an action. It uses body text at medium weight and `Tokens.Size.LargeButtonHeight` height; its caller determines the available width. |
 | `LoadingScreen` | Opaque white full-screen loading presentation with a centered native spinner and `Loading...` body text. |
 | `MessageContainer` | Receives `.sended` or `.received`, message text, a `Date`, and `ACKMessageState`. Outgoing cards show no icon while sending, a checkmark when sent, or an accessible red X when failed; incoming cards never show an ACK icon. |
-| `ErrorScreen` | Receives a display message and Retry closure. Its Cancel action uses the SwiftUI environment dismiss action so the underlying presentation becomes visible again. |
+| `ErrorScreen` | Receives a display message and optional Retry action. Cancel uses an explicit action when supplied and otherwise uses SwiftUI dismissal; either action can be hidden when the owning flow has no safe or valid recovery path. |
 
 `Date.messageTime` in `Core/Extensions/Date+Extensions.swift` is the single current
 message-time display convention: a locale-aware short time. Callers supply the
@@ -538,8 +541,9 @@ The service follows these lifecycle and recovery rules:
 This is app-scoped synchronization while the process can run, not iOS background
 delivery. Push notifications, background task scheduling, pagination, manual retry
 of permanently failed messages and remote history APIs remain out of scope. The
-starter `MyApp`/`ContentView` are unchanged; root lifetime/error presentation and
-feature ViewModels/screens are the next integration work.
+generated `MyApp`/`ContentView` now retain the live dependency graph and compose the
+identification flow. The conversations and messages feature Views/ViewModels remain
+the next integration work.
 
 ## iOS error organization
 

@@ -9,14 +9,20 @@ struct ErrorScreen: View {
   @Environment(\.dismiss) private var dismiss
 
   let message: String
-  let retryAction: () -> Void
+  let retryAction: (() -> Void)?
+  let cancelAction: (() -> Void)?
+  let showsCancel: Bool
 
   init(
     message: String,
-    retryAction: @escaping () -> Void
+    retryAction: (() -> Void)?,
+    cancelAction: (() -> Void)? = nil,
+    showsCancel: Bool = true
   ) {
     self.message = message
     self.retryAction = retryAction
+    self.cancelAction = cancelAction
+    self.showsCancel = showsCancel
   }
 
   var body: some View {
@@ -29,10 +35,18 @@ struct ErrorScreen: View {
           .foregroundStyle(Tokens.Colors.textPrimary)
           .multilineTextAlignment(.center)
 
-        LargeButton("Retry", style: .primary, action: retryAction)
+        if let retryAction {
+          LargeButton("Retry", style: .primary, action: retryAction)
+        }
 
-        LargeButton("Cancel", style: .secondary) {
-          dismiss()
+        if showsCancel {
+          LargeButton("Cancel", style: .secondary) {
+            if let cancelAction {
+              cancelAction()
+            } else {
+              dismiss()
+            }
+          }
         }
       }
       .padding(.horizontal, Tokens.Spacing.large.value)
@@ -55,10 +69,9 @@ private struct ErrorScreenPreview: View {
     }
     .sheet(isPresented: $isPresented) {
       ErrorScreen(
-        message: "Something went wrong...\nRetry count: \(retryCount)"
-      ) {
-        retryCount += 1
-      }
+        message: "Something went wrong...\nRetry count: \(retryCount)",
+        retryAction: { retryCount += 1 }
+      )
     }
   }
 }
