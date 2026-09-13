@@ -6,6 +6,8 @@ See the [catalog](README.md).
 
 ![Chat list prototype with conversations above other registered people](images/chat-screen.png)
 
+![Chat list connection-failure reference with a retry banner above the sections](images/chat-screen-connection-failure.png)
+
 ## Visual structure and content
 
 Use two vertically arranged sections with dark headings, rounded light containers,
@@ -50,6 +52,26 @@ first incoming or outgoing message is persisted, observation moves the peer from
   `GET /users` failure must not replace the whole screen with loading or error.
 - After completed registration, offline/connecting/synchronizing indicators remain
   secondary; users can still open their local conversations.
+
+## Connection failure banner
+
+When the shared connection fails because the server is unreachable, the device has
+no network connection or another transport-level connection attempt fails, keep the
+usable screen visible and show the shared non-blocking status banner at the top of
+the screen content, before the **Chat** section. The banner participates in the
+vertical layout rather than covering either list.
+
+The failure presentation contains an offline icon, a safe user-facing message and
+a **Retry** action. The reference shows the generic fallback "Something went
+wrong. Please try again."; use a valid server-provided user message when the shared
+error contract permits it. Retry starts a new shared connection attempt without
+clearing local content, and the failure banner disappears after connection is
+restored. A connecting presentation may replace it while that attempt is active.
+
+This banner represents shared connection state. It does not replace the separate
+section-local discovery error, row-level conversation-creation error, full-screen
+essential local-read error or per-message failure presentation. Make its status
+semantics and Retry action accessible without relying on the icon or color alone.
 
 See [shared list behavior](../../SYSTEM_DESIGN.md#conversations-and-registered-users),
 [sign-up entry](sign-up-screen.md), [persistence](../persistence.md) and

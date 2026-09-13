@@ -113,6 +113,14 @@ runs in an app-scoped service, so receiving/replaying messages does not require
 this screen to be open. Incoming messages carry participant IDs; use cached names
 or a neutral fallback while user information is unavailable.
 
+The chat list and conversation screen observe the same app-scoped connection
+state. A connection failure presents the shared non-blocking connection banner on
+both screens while preserving their usable local content. Retry requests a new
+connection attempt from the shared service; it does not recreate a screen-owned
+socket, clear local state or imply success. The visual catalog owns the distinct
+[chat-list placement](spec/design/chat-screen.md#connection-failure-banner) and
+[messages placement](spec/design/messages-screen.md#connection-failure-banner).
+
 ## Screen loading and state dimensions
 
 Screen readiness and network state are independent. Use mutually exclusive
@@ -135,9 +143,10 @@ empty results. Remote discovery, reconnection and replay must not replace usable
 local content with full-screen loading or error.
 
 After completed registration, connecting or synchronizing uses a small indicator.
-A connection failure keeps the UI available, shows an offline indication and
-offers retry. New outgoing
-messages remain pending locally. `sync_completed` marks the end of initial server
+A connection failure keeps the UI available, shows the shared connection banner
+and offers retry. This connection state remains distinct from discovery, local
+storage and individual-message failures. New outgoing messages remain pending
+locally. `sync_completed` marks the end of initial server
 replay, not a local commit or proof of an empty pending queue. Transport readiness
 must not bypass the separate identification gate.
 

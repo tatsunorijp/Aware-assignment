@@ -10,8 +10,8 @@ Read them alongside [system design](../../SYSTEM_DESIGN.md), [product scope](../
 | Prototype and behavior | Role | iOS feature / Android feature |
 | --- | --- | --- |
 | [sign-up-screen](sign-up-screen.md) | First screen: display-name registration. | `Identification` / `identification` |
-| [chat-screen](chat-screen.md) | Second screen: conversations and registered users. | `UserList` / `userlist` |
-| [messages-screen](messages-screen.md) | Third screen: messages with one participant. | `Chat` / `chat` |
+| [chat-screen](chat-screen.md) | Second screen: conversations and registered users, including its connection-failure presentation. | `UserList` / `userlist` |
+| [messages-screen](messages-screen.md) | Third screen: messages with one participant, including its connection-failure presentation. | `Chat` / `chat` |
 | [loading-screen-component](loading-screen-component.md) | Shared full-screen blocking loading presentation. | `DesignSystem/Components` / `designsystem/components` |
 | [error-screen](error-screen.md) | Shared full-screen essential-operation failure presentation. | `DesignSystem/Components` / `designsystem/components` |
 
@@ -88,10 +88,10 @@ the native mapping. See the
 
 ## Asset ownership and maintenance
 
-Original PNGs were copied without modification from the developer's
-`Aware-app-design` folder into `images/`; the source copies were preserved. Each
-behavior document embeds its corresponding repository-local PNG. No external
-workspace path is required by either client or generator.
+Developer-provided PNGs are copied without modification into `images/`; the source
+copies are preserved. Each behavior document embeds its corresponding
+repository-local PNG. No external workspace path is required by either client or
+generator.
 
 Keep this catalog, each image and its behavior document together under version
 control. Update affected cross-links, [system design](../../SYSTEM_DESIGN.md), platform

@@ -73,6 +73,10 @@ Required behavioral coverage:
 - JSON objects are encoded and decoded correctly.
 - ViewModels expose the expected states.
 - After completed registration, server failure does not prevent access to local data.
+- The chat list and messages ViewModels expose shared connection failure and
+  reconnection states independently from usable local screen state. Retry requests
+  a new connection attempt; a successful reconnection removes the failure state
+  without clearing lists, history or draft text.
 
 Networking tests must use fake implementations or transport mocks so they do not depend on a real server.
 
@@ -108,6 +112,14 @@ state/orchestration logic using fakes as allowed by the platform test workflow.
 - Essential local loading hides unavailable content, but successful empty data is
   ready. Discovery failure affects only its section; reconnect and message sending
   do not replace usable history with full-screen loading/error.
+- With the server unreachable or device networking unavailable, both screens show
+  the shared connection-failure banner with an accessible status and Retry action.
+  On the chat list it appears in normal layout before the **Chat** section. On the
+  messages screen it is top-aligned below the header and layered above message
+  history, while history and the composer remain available. Verify Retry through a
+  connecting attempt to restored connection and banner removal. Also verify that
+  discovery, essential local-read and individual outgoing-message failures retain
+  their distinct presentations.
 - The messages header shows Back and the peer name. Incoming gray cards align left;
   outgoing blue cards align right. Times appear below each card. The composer
   remains usable with the keyboard and larger accessibility text.

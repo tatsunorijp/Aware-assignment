@@ -7,8 +7,10 @@ owned by `Chat` / `chat`. See the [catalog](README.md).
 
 ![Messages failure prototype with a red X beside failed outgoing-message times](images/message-screen-sent-failed.png)
 
-The failure prototype is an additional state of this same screen, not a separate
-screen or navigation destination.
+![Messages connection-failure reference with a retry banner layered above message history](images/messages-screen-connection-failure.png)
+
+The failure prototypes are additional states of this same screen, not separate
+screens or navigation destinations.
 
 ## Visual structure
 
@@ -88,3 +90,26 @@ closed. Observe ACK/state updates without reopening the conversation. Preserve
 the [shared send/recovery rules](../../SYSTEM_DESIGN.md#sending-messages),
 [wire ACK contract](../protocol.md#sending-and-sender-ack) and
 [client acceptance checks](../acceptance-tests.md#shared-visual-and-flow-acceptance).
+
+## Connection failure banner
+
+When the shared connection fails because the server is unreachable, the device has
+no network connection or another transport-level connection attempt fails, keep
+the header, persisted history and composer available. Present the same shared
+non-blocking banner used by the chat list inside the messages content layer: align
+it to the top below the header and place it at a higher stacking level than the
+message history. It must not replace the screen or become part of a message row.
+
+The failure presentation contains an offline icon, a safe user-facing message and
+a **Retry** action. The reference shows the generic fallback "Something went
+wrong. Please try again."; use a valid server-provided user message when the shared
+error contract permits it. Retry starts a new shared connection attempt without
+discarding history or draft text, and the failure banner disappears after
+connection is restored. A connecting presentation may replace it while that
+attempt is active. Messages composed while offline continue to follow the durable
+queue behavior.
+
+This connection banner is distinct from full-screen essential-history errors and
+from the pending, sending or failed state of an individual outgoing message. Make
+its status semantics and Retry action accessible without relying on the icon or
+color alone.
