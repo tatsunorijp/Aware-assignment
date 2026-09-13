@@ -36,7 +36,8 @@ require copying Swift source, Xcode assets or iOS folder names.
 ## Status and tooling decisions
 
 An existing [AwareChat-Android](AwareChat-Android) Gradle project contains an `app`
-module, the generated identification flow composed from `MainActivity.kt`, the
+module, the generated identification and conversations flows composed from
+`MainActivity.kt`, the
 package structure documented below, shared tokens/components, a time-formatting
 extension, a local example unit test and an example instrumentation test. Its namespace/application ID is
 `com.example.awarechat_android`; preserve it and the project name unless a requested
@@ -47,9 +48,9 @@ layer and app-scoped messaging service are implemented. This includes the approv
 palette, light-only `AwareChatAndroidTheme`, strict protocol DTOs, HTTP and
 WebSocket clients, one shared Room database, entity-specific DAOs,
 constructor-injected repositories and serialized identification/reconnection and
-outbox processing. The generated identification screen and ViewModel are composed
-at the app root. Conversations and messages remain pending; successful registration
-currently reaches a heading-only conversations destination until that feature is generated.
+outbox processing. The generated identification and conversations screens and
+ViewModels are composed at the app root. Messages remain pending; selecting a row
+currently reaches a heading-only messages destination until that feature is generated.
 
 Room stores identity, conversations and messages and exposes committed changes
 through coroutines and Flow. Networking uses OkHttp for cancellable HTTP calls and
@@ -120,19 +121,23 @@ The connected test task needs an available compatible emulator or device. On
 Windows use `gradlew.bat`. Verify actual Gradle tasks and dependencies when doing
 implementation/validation; the existing example tests are scaffolding, not proof
 of messaging, persistence or UI correctness. Run the `app` configuration from
-Android Studio to inspect the current identification flow.
+Android Studio to inspect the current generated flows.
 
 On 2026-09-13, `:app:assembleDebug`, `:app:testDebugUnitTest` and `:app:lintDebug`
-passed with Android Studio's bundled JBR. The local JVM suite ran 50 tests,
-including 11 identification ViewModel tests, 11 Room persistence and composition
-tests, protocol fixtures, HTTP transport through MockWebServer, and real OkHttp
+passed with Android Studio's bundled JBR. The local JVM suite ran 64 tests,
+including 11 identification and 14 conversations ViewModel tests, 11 Room
+persistence and composition tests, protocol fixtures, HTTP transport through MockWebServer, and real OkHttp
 WebSocket text exchange. Lint reported zero errors and 16 dependency/update
 availability warnings. The sign-up form was installed and visually inspected on
 an API 37 emulator. The runtime local-network prompt was granted, live registration
 against `10.0.2.2:8000` completed through `identity_accepted`, and the persisted
 identity appeared through the server's `/users` endpoint. Relaunching the app with
 that completed identity skipped the form and reached the conversations destination.
-No connected instrumentation test was run.
+The conversations screen was then inspected with both sections on the same API 37
+emulator. Selecting and returning from an empty conversation kept its peer under
+`People on server`; a live incoming message moved only its sender to `Chat`, and
+pull-to-refresh resolved the cached peer name through `GET /users`. No connected
+instrumentation test was run.
 
 ## Stack and responsibility layout
 
@@ -249,12 +254,12 @@ The Compose-native tokens are implemented as focused Kotlin objects:
 | `SpacingTokens` | `xSmall` 4 dp, `small` 8 dp, `medium` 16 dp, `large` 32 dp, `xLarge` 64 dp, and `xxLarge` 128 dp. |
 | `SizeTokens` | General sizes from 4 through 512 dp and `largeButtonHeight` at 44 dp. |
 | `CornerRadiusTokens` | `medium` at 32 dp. |
-| `IconTokens` | Drawable-resource identifiers for the server-acceptance checkmark and failed-message X. |
+| `IconTokens` | Drawable-resource identifiers for server acceptance, failed/pending messages, row disclosure and offline connection state. |
 
 `ui/theme/Theme.kt` consumes `ColorTokens` as the single Material 3 light color
 scheme. Dynamic and dark schemes are intentionally disabled for the current MVP.
-The two message-status vector drawables live in `res/drawable`; their runtime tint
-comes from the semantic color tokens. Static component and accessibility copy is
+Vector drawables live in `res/drawable`; their runtime tint comes from the semantic
+color tokens. Static component and accessibility copy is
 stored in `res/values/strings.xml` for native resource handling.
 
 ### Reusable UI components
@@ -267,6 +272,7 @@ independent Compose `@Preview`:
 | `LargeButton` | Receives text, `LargeButtonStyle`, click callback and caller-owned `Modifier`. It uses medium-weight body text and `SizeTokens.largeButtonHeight`; width remains external. |
 | `LoadingScreen` | Opaque full-screen background with centered indeterminate progress and typographic `Loading…` body text. |
 | `ErrorScreen` | Receives a message and optional `onRetry`/`onCancel` actions. Compose has no SwiftUI environment dismiss equivalent, so the presentation owner supplies only the actions that are safe for that operation. |
+| `ConnectionStatusView` | Receives connected, connecting or offline presentation state plus a retry callback. It hides connected state and renders the shared secondary connection banner without owning messaging lifecycle. |
 | `MessageContainer` | Receives `MessageOrigin`, text, `Instant` and `AckMessageState`. Sent messages align right with no icon while sending, a checkmark when accepted, or an accessible red X after failure. Received messages align left and never show an ACK icon. |
 | Text components | `LargeTitleText`, `TitleText`, `HeadlineText`, `SubheadlineText`, `BodyText`, `FootnoteText`, and `Caption2Text` map the iOS semantic roles onto Material typography. |
 

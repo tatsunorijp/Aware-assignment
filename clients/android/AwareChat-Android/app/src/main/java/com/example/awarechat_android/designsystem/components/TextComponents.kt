@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.awarechat_android.designsystem.tokens.SpacingTokens
 import com.example.awarechat_android.ui.theme.AwareChatAndroidTheme
@@ -88,6 +89,8 @@ fun BodyText(
     fontWeight: FontWeight = FontWeight.Normal,
     color: Color = Color.Unspecified,
     textAlign: TextAlign? = null,
+    maxLines: Int = Int.MAX_VALUE,
+    overflow: TextOverflow = TextOverflow.Clip,
 ) {
     Text(
         text = text,
@@ -95,6 +98,8 @@ fun BodyText(
         color = color,
         style = MaterialTheme.typography.bodyLarge.copy(fontWeight = fontWeight),
         textAlign = textAlign,
+        maxLines = maxLines,
+        overflow = overflow,
     )
 }
 

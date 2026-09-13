@@ -11,4 +11,16 @@ object IconTokens {
     /** Permanent failure of an outgoing message. */
     @DrawableRes
     val failed = R.drawable.ic_message_failed
+
+    /** Conversation-list disclosure indicator. */
+    @DrawableRes
+    val chevron = R.drawable.ic_chevron_right
+
+    /** Pending outgoing message indicator. */
+    @DrawableRes
+    val pending = R.drawable.ic_message_pending
+
+    /** Offline connection indicator. */
+    @DrawableRes
+    val offline = R.drawable.ic_connection_offline
 }

@@ -1,7 +1,7 @@
 # Generated files
 
 This inventory records generated output present after the three iOS feature runs
-and the first Android feature run.
+and the first two Android feature runs.
 The wildcard ownership policy remains canonical in
 [the generator boundary](README.md#generated-ownership-boundary).
 
@@ -26,4 +26,8 @@ The wildcard ownership policy remains canonical in
 - `clients/android/AwareChat-Android/app/src/main/java/com/example/awarechat_android/feature/identification/IdentificationScreen.kt`
 - `clients/android/AwareChat-Android/app/src/main/java/com/example/awarechat_android/feature/identification/IdentificationViewModel.kt`
 - `clients/android/AwareChat-Android/app/src/main/java/com/example/awarechat_android/feature/identification/IdentificationViewModelFactory.kt`
+- `clients/android/AwareChat-Android/app/src/main/java/com/example/awarechat_android/feature/userlist/UserListScreen.kt`
+- `clients/android/AwareChat-Android/app/src/main/java/com/example/awarechat_android/feature/userlist/UserListViewModel.kt`
+- `clients/android/AwareChat-Android/app/src/main/java/com/example/awarechat_android/feature/userlist/UserListViewModelFactory.kt`
 - `clients/android/AwareChat-Android/app/src/test/java/com/example/awarechat_android/feature/identification/IdentificationViewModelTest.kt`
+- `clients/android/AwareChat-Android/app/src/test/java/com/example/awarechat_android/feature/userlist/UserListViewModelTest.kt`

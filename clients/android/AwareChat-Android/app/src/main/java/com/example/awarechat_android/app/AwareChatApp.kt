@@ -1,3 +1,4 @@
+// MARK: - AI Generated - Start
 package com.example.awarechat_android.app
 
 import androidx.compose.foundation.background
@@ -7,6 +8,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -18,11 +22,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.awarechat_android.R
 import com.example.awarechat_android.app.navigation.AppDestination
 import com.example.awarechat_android.designsystem.components.LargeTitleText
+import com.example.awarechat_android.designsystem.components.LargeButton
+import com.example.awarechat_android.designsystem.components.LargeButtonStyle
 import com.example.awarechat_android.designsystem.tokens.ColorTokens
 import com.example.awarechat_android.designsystem.tokens.SpacingTokens
 import com.example.awarechat_android.feature.identification.IdentificationRoute
 import com.example.awarechat_android.feature.identification.IdentificationViewModel
 import com.example.awarechat_android.feature.identification.IdentificationViewModelFactory
+import com.example.awarechat_android.feature.userlist.UserListRoute
+import com.example.awarechat_android.feature.userlist.UserListViewModel
+import com.example.awarechat_android.feature.userlist.UserListViewModelFactory
 
 @Composable
 fun AwareChatApp(
@@ -40,18 +49,42 @@ fun AwareChatApp(
     val identificationViewModel: IdentificationViewModel = viewModel(
         factory = identificationFactory,
     )
+    val userListFactory = remember(dependencies) {
+        UserListViewModelFactory(
+            users = dependencies.users,
+            conversations = dependencies.conversations,
+            apiClient = dependencies.apiClient,
+            messaging = dependencies.messaging,
+            onUserSelected = dependencies.coordinator::showMessages,
+        )
+    }
+    val userListViewModel: UserListViewModel = viewModel(factory = userListFactory)
+
+    BackHandler(enabled = destination is AppDestination.Messages) {
+        dependencies.coordinator.goBack()
+    }
 
     when (destination) {
-        AppDestination.IDENTIFICATION -> IdentificationRoute(
+        AppDestination.Identification -> IdentificationRoute(
             viewModel = identificationViewModel,
             modifier = modifier,
         )
-        AppDestination.CONVERSATIONS -> ConversationsDestination(modifier)
+        AppDestination.Conversations -> UserListRoute(
+            viewModel = userListViewModel,
+            modifier = modifier,
+        )
+        is AppDestination.Messages -> MessagesDestination(
+            onBack = dependencies.coordinator::goBack,
+            modifier = modifier,
+        )
     }
 }
 
 @Composable
-private fun ConversationsDestination(modifier: Modifier = Modifier) {
+private fun MessagesDestination(
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -60,9 +93,20 @@ private fun ConversationsDestination(modifier: Modifier = Modifier) {
             .padding(SpacingTokens.large),
         contentAlignment = Alignment.Center,
     ) {
-        LargeTitleText(
-            text = stringResource(R.string.conversations_destination_pending),
-            color = ColorTokens.textPrimary,
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(SpacingTokens.medium),
+        ) {
+            LargeTitleText(
+                text = stringResource(R.string.messages_destination_pending),
+                color = ColorTokens.textPrimary,
+            )
+            LargeButton(
+                text = stringResource(R.string.action_back),
+                style = LargeButtonStyle.SECONDARY,
+                onClick = onBack,
+            )
+        }
     }
 }
+// MARK: - AI Generated - End

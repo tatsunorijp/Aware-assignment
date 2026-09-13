@@ -54,7 +54,7 @@ migration does not authorize runtime changes or change `protocolVersion: 1`.
 | --- | --- |
 | Server | Implemented in `server/`; package release 0.2.0, nested shared ServerError. |
 | iOS | `AwareChat-iOS` under `clients/ios/`: reusable design system, typed HTTP/WebSocket layer, navigation foundation, SwiftData repositories, offline messaging service and mirrored Swift Testing suites. The generated identification, conversations and messages screens/ViewModels are implemented and composed at the app root. See the [iOS guide](clients/ios/README.md). |
-| Android | `AwareChat-Android` under `clients/android/` now includes its design system, typed network and Room foundations, app-scoped messaging service, and generated identification screen/ViewModel composed at the app root. Conversations and messages are not generated yet. |
+| Android | `AwareChat-Android` under `clients/android/` now includes its design system, typed network and Room foundations, app-scoped messaging service, and generated identification and conversations screens/ViewModels composed at the app root. Messages are not generated yet. |
 | Generator | Codex/Claude Code feature-authoring prompts, one order-independent evaluator prompt per platform, and the exact generated ownership boundary are defined; complete clean regeneration is not yet verified. |
 | Native demo | Specified as maintained manual acceptance steps; the complete iOS/Android scenario is not yet implemented or verified. |
 

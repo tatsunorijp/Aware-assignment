@@ -1,5 +1,29 @@
 # Generation log
 
+## 2026-09-13 — Android conversations first generation
+
+- Input commit: `75d1e38c6c2f8f758374381052235375d2c0f130`
+- Platform and tool: Android, Codex (GPT-5).
+- Prompt: `generator/prompts/android/conversations.md`.
+- Generated output: the three `feature/userlist` source files and mirrored
+  ViewModel test file listed in `GENERATED_FILES.md`; the generated app root now
+  presents the feature and routes row selection by peer ID.
+- Maintained foundations: the typed coordinator gained a messages destination and
+  Back handling; the reusable `ConnectionStatusView` and semantic vector assets
+  were added for this and the future messages screen.
+- Build and tests: `:app:assembleDebug`, `:app:testDebugUnitTest` and
+  `:app:lintDebug` passed with Android Studio's bundled JBR. The JVM suite passed
+  64 tests, including 14 generated conversations ViewModel tests; lint reported
+  zero errors and 16 dependency/update availability warnings.
+- Live and visual check: the two-section screen matched the maintained hierarchy
+  on an API 37 emulator. Selecting and returning without sending kept the peer in
+  `People on server`; a protocol-v1 message from the in-memory server moved only
+  its sender to `Chat`, and pull-to-refresh resolved the cached sender name through
+  `GET /users`. The generated test identity `Android Visual Test` remains in that
+  server instance. No connected instrumentation test was run.
+- Remaining scope: messages are not generated; row selection reaches a temporary
+  heading-only `Messages` destination until the messages prompt replaces it.
+
 ## 2026-09-13 — Android identification first generation
 
 - Input commit: `6e55af2728d54c398992ad202ecd452e0d0aaadd`
@@ -20,9 +44,8 @@
   permission, live registration against the unchanged server at `10.0.2.2:8000`
   completed, `/users` returned the persisted UUID/name, and an app relaunch skipped
   the form for the completed identity. No connected instrumentation test was run.
-- Remaining scope: conversations and messages are not generated; the root shows a
-  heading-only `Conversations` destination after registration until the next
-  feature replaces that branch.
+- Remaining scope at this generation: conversations and messages were not yet
+  generated; the root showed a heading-only `Conversations` destination.
 
 ## 2026-09-12 — iOS identification first generation
 

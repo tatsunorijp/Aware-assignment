@@ -12,5 +12,14 @@
     <string name="user_name_label">User name</string>
     <string name="user_name_validation">Enter a user name.</string>
     <string name="action_confirm">Confirm</string>
-    <string name="conversations_destination_pending">Conversations</string>
+    <string name="action_back">Back</string>
+    <string name="chat_section_title">Chat</string>
+    <string name="people_on_server_section_title">People on server</string>
+    <string name="people_on_server_empty">No other users available right now</string>
+    <string name="people_on_server_loading_content_description">Loading people on server</string>
+    <string name="unknown_user">Unknown user</string>
+    <string name="connection_connecting">Connecting&#8230;</string>
+    <string name="connection_offline">You are offline.</string>
+    <string name="message_pending_content_description">Pending message</string>
+    <string name="messages_destination_pending">Messages</string>
 </resources>
