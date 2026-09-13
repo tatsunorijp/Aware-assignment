@@ -1,4 +1,4 @@
-# Recommended iOS generated-output recovery
+## Prompt example for iOS generated-output recovery
 
 Use this recommended prompt when iOS code inside the ownership boundary declared
 in `generator/README.md` was lost or deleted accidentally. Recover any missing or

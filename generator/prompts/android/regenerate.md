@@ -1,4 +1,4 @@
-# Recommended Android generated-output recovery
+## Prompt example for Android generated-output recovery
 
 Use this recommended prompt when Android code inside the ownership boundary
 declared in `generator/README.md` was lost or deleted accidentally. Recover any
