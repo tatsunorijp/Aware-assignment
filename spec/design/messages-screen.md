@@ -71,6 +71,13 @@ Load and observe local history by `conversationId`. Use
 history is unavailable, and [full-screen error](error-screen.md) if that read fails.
 An empty conversation is ready and allows composing its first message.
 
+When a non-empty existing conversation first becomes ready, position the initial
+messages viewport at the newest message so it is visible above the composer without
+manual scrolling. This must also hold when the persisted history is long enough to
+extend across many screens. The requirement applies to the initial position when
+opening the conversation; it does not define whether later incoming or outgoing
+updates should move a user who has already scrolled elsewhere.
+
 Validate non-blank input. Commit an outgoing message and its sequence before
 displaying it as queued or sending it. Keep typed text if that save fails. Sending
 uses the app-scoped service; it does not replace the whole conversation with loading.

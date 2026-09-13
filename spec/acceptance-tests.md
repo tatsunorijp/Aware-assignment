@@ -108,6 +108,9 @@ state/orchestration logic using fakes as allowed by the platform test workflow.
 - The messages header shows Back and the peer name. Incoming gray cards align left;
   outgoing blue cards align right. Times appear below each card. The composer
   remains usable with the keyboard and larger accessibility text.
+- Opening an existing non-empty conversation initially shows its newest persisted
+  message above the composer without manual scrolling. Verify this with enough
+  history to exceed the viewport by multiple screens.
 - Only `sent` displays the server-acceptance checkmark. `sending` displays no ACK
   icon; `failed` displays the accessible red X from the failure prototype. Incoming
   messages never display an ACK icon. These states cannot imply delivery/read receipts.
