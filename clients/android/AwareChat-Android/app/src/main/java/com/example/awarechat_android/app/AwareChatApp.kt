@@ -1,31 +1,20 @@
 // MARK: - AI Generated - Start
 package com.example.awarechat_android.app
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.awarechat_android.R
 import com.example.awarechat_android.app.navigation.AppDestination
-import com.example.awarechat_android.designsystem.components.LargeTitleText
-import com.example.awarechat_android.designsystem.components.LargeButton
-import com.example.awarechat_android.designsystem.components.LargeButtonStyle
-import com.example.awarechat_android.designsystem.tokens.ColorTokens
-import com.example.awarechat_android.designsystem.tokens.SpacingTokens
+import com.example.awarechat_android.feature.chat.ChatRoute
+import com.example.awarechat_android.feature.chat.ChatViewModel
+import com.example.awarechat_android.feature.chat.ChatViewModelFactory
 import com.example.awarechat_android.feature.identification.IdentificationRoute
 import com.example.awarechat_android.feature.identification.IdentificationViewModel
 import com.example.awarechat_android.feature.identification.IdentificationViewModelFactory
@@ -64,7 +53,7 @@ fun AwareChatApp(
         dependencies.coordinator.goBack()
     }
 
-    when (destination) {
+    when (val currentDestination = destination) {
         AppDestination.Identification -> IdentificationRoute(
             viewModel = identificationViewModel,
             modifier = modifier,
@@ -74,6 +63,8 @@ fun AwareChatApp(
             modifier = modifier,
         )
         is AppDestination.Messages -> MessagesDestination(
+            destination = currentDestination,
+            dependencies = dependencies,
             onBack = dependencies.coordinator::goBack,
             modifier = modifier,
         )
@@ -82,31 +73,36 @@ fun AwareChatApp(
 
 @Composable
 private fun MessagesDestination(
+    destination: AppDestination.Messages,
+    dependencies: AppDependencies,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(ColorTokens.background)
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-            .padding(SpacingTokens.large),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(SpacingTokens.medium),
-        ) {
-            LargeTitleText(
-                text = stringResource(R.string.messages_destination_pending),
-                color = ColorTokens.textPrimary,
-            )
-            LargeButton(
-                text = stringResource(R.string.action_back),
-                style = LargeButtonStyle.SECONDARY,
-                onClick = onBack,
-            )
-        }
+    val storeOwner = remember(destination.userId) { DestinationViewModelStoreOwner() }
+    DisposableEffect(storeOwner) {
+        onDispose { storeOwner.viewModelStore.clear() }
     }
+    val factory = remember(destination.userId, dependencies) {
+        ChatViewModelFactory(
+            peerId = destination.userId,
+            conversations = dependencies.conversations,
+            messages = dependencies.messages,
+            messaging = dependencies.messaging,
+        )
+    }
+    val chatViewModel: ChatViewModel = viewModel(
+        viewModelStoreOwner = storeOwner,
+        factory = factory,
+    )
+
+    ChatRoute(
+        viewModel = chatViewModel,
+        onBack = onBack,
+        modifier = modifier,
+    )
+}
+
+private class DestinationViewModelStoreOwner : ViewModelStoreOwner {
+    override val viewModelStore = ViewModelStore()
 }
 // MARK: - AI Generated - End

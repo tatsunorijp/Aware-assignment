@@ -23,4 +23,12 @@ object IconTokens {
     /** Offline connection indicator. */
     @DrawableRes
     val offline = R.drawable.ic_connection_offline
+
+    /** Back navigation in the messages header. */
+    @DrawableRes
+    val back = R.drawable.ic_arrow_back
+
+    /** Submit the current message draft. */
+    @DrawableRes
+    val send = R.drawable.ic_send
 }

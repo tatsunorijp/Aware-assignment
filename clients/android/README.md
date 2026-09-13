@@ -48,9 +48,8 @@ layer and app-scoped messaging service are implemented. This includes the approv
 palette, light-only `AwareChatAndroidTheme`, strict protocol DTOs, HTTP and
 WebSocket clients, one shared Room database, entity-specific DAOs,
 constructor-injected repositories and serialized identification/reconnection and
-outbox processing. The generated identification and conversations screens and
-ViewModels are composed at the app root. Messages remain pending; selecting a row
-currently reaches a heading-only messages destination until that feature is generated.
+outbox processing. The generated identification, conversations and messages
+screens and ViewModels are composed at the app root.
 
 Room stores identity, conversations and messages and exposes committed changes
 through coroutines and Flow. Networking uses OkHttp for cancellable HTTP calls and
@@ -74,6 +73,7 @@ that dependency resolution or compatibility was verified in this documentation t
 | OkHttp / MockWebServer | 5.1.0 in the version catalog. |
 | Room / KSP | 2.8.5 / 2.3.12 in the version catalog. |
 | Robolectric | 4.17 for isolated local JVM Room tests. |
+| AndroidX Test JUnit / Espresso | 1.3.0 / 3.7.0 in the version catalog. |
 | Gradle wrapper | 9.6.0 in [gradle-wrapper.properties](AwareChat-Android/gradle/wrapper/gradle-wrapper.properties). |
 | Gradle daemon JVM | Java 25 requested by [gradle-daemon-jvm.properties](AwareChat-Android/gradle/gradle-daemon-jvm.properties). |
 | Java source/target compatibility | Java 11 in app compile options; this is not the Gradle daemon JVM requirement. |
@@ -273,7 +273,7 @@ independent Compose `@Preview`:
 | `LoadingScreen` | Opaque full-screen background with centered indeterminate progress and typographic `Loading…` body text. |
 | `ErrorScreen` | Receives a message and optional `onRetry`/`onCancel` actions. Compose has no SwiftUI environment dismiss equivalent, so the presentation owner supplies only the actions that are safe for that operation. |
 | `ConnectionStatusView` | Receives connected, connecting or offline presentation state plus a retry callback. It hides connected state and renders the shared secondary connection banner without owning messaging lifecycle. |
-| `MessageContainer` | Receives `MessageOrigin`, text, `Instant` and `AckMessageState`. Sent messages align right with no icon while sending, a checkmark when accepted, or an accessible red X after failure. Received messages align left and never show an ACK icon. |
+| `MessageContainer` | Receives `MessageOrigin`, text, `Instant` and `AckMessageState`. Sent messages align right with a pending indicator while queued, no icon while sending, a checkmark when accepted, or an accessible red X after failure. Received messages align left and never show an ACK icon. |
 | Text components | `LargeTitleText`, `TitleText`, `HeadlineText`, `SubheadlineText`, `BodyText`, `FootnoteText`, and `Caption2Text` map the iOS semantic roles onto Material typography. |
 
 These Composables only render supplied state and invoke callbacks. Networking,

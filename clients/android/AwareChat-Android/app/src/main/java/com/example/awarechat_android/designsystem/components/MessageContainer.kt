@@ -28,6 +28,7 @@ import com.example.awarechat_android.ui.theme.AwareChatAndroidTheme
 import java.time.Instant
 
 enum class AckMessageState {
+    PENDING,
     SENDING,
     SENT,
     FAILED,
@@ -93,6 +94,12 @@ fun MessageContainer(
 @Composable
 private fun MessageStatusIcon(ackState: AckMessageState) {
     when (ackState) {
+        AckMessageState.PENDING -> Icon(
+            painter = painterResource(IconTokens.pending),
+            contentDescription = stringResource(R.string.message_pending_content_description),
+            modifier = Modifier.size(SizeTokens.medium),
+            tint = ColorTokens.textSecondary,
+        )
         AckMessageState.SENDING -> Unit
         AckMessageState.SENT -> Icon(
             painter = painterResource(IconTokens.checkmark),
@@ -126,6 +133,12 @@ private fun MessageContainerPreview() {
                 text = "Hi! Thanks for reaching out.",
                 date = previewDate,
                 ackState = AckMessageState.SENT,
+            )
+            MessageContainer(
+                origin = MessageOrigin.SENT,
+                text = "This message is queued on this device.",
+                date = previewDate,
+                ackState = AckMessageState.PENDING,
             )
             MessageContainer(
                 origin = MessageOrigin.SENT,

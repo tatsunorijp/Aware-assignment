@@ -21,5 +21,7 @@
     <string name="connection_connecting">Connecting&#8230;</string>
     <string name="connection_offline">You are offline.</string>
     <string name="message_pending_content_description">Pending message</string>
-    <string name="messages_destination_pending">Messages</string>
+    <string name="message_input_placeholder">Type a message&#8230;</string>
+    <string name="message_input_content_description">Message</string>
+    <string name="action_send_message">Send message</string>
 </resources>

@@ -91,12 +91,6 @@ The current iOS `MyApp.swift` and `ContentView.swift`, and Android
 can be composed into runnable apps. `app/AwareChatApp.kt` is the Android generated
 root that will be created during feature composition.
 
-After the first successful generation, add `generator/GENERATED_FILES.md` listing
-every actual generated file at the delivery revision. The wildcard boundary owns
-the policy; that manifest gives an evaluator an exact inventory and helps restore
-arbitrary partial deletion. It must contain real output, so no empty placeholder is
-kept before generation.
-
 ## Two prompt workflows
 
 Feature-authoring prompts and evaluator-regeneration prompts have different jobs.
@@ -125,12 +119,11 @@ generated files were deleted:
 - [Regenerate iOS generated output](prompts/ios/regenerate.md)
 - [Regenerate Android generated output](prompts/android/regenerate.md)
 
-Each regeneration prompt inspects the current tree, Git's deleted-file evidence,
-the generated boundary, and `generator/GENERATED_FILES.md` when present. It
-restores any missing subset and reconciles affected generated dependents so the
-complete client works. It does not assume that a whole screen, View, ViewModel, or
-test directory was removed, and it does not depend on the feature-authoring
-sequence or previous conversation context.
+Each regeneration prompt inspects the current tree, Git's deleted-file evidence
+and the generated boundary. It restores any missing subset and reconciles affected
+generated dependents so the complete client works. It does not assume that a whole
+screen, View, ViewModel, or test directory was removed, and it does not depend on
+the feature-authoring sequence or previous conversation context.
 
 If output from both platforms is deleted, run each platform regeneration prompt
 in a fresh agent session. Equivalent behavior comes from the same maintained
@@ -141,16 +134,14 @@ specification, not hidden cross-session context or copied source.
 1. Complete each maintained client foundation, then use the feature-authoring
    prompts to create its generated feature set.
 2. Build, test, and inspect each client after its features are composed.
-3. Create `GENERATED_FILES.md` from the actual committed generated output.
-4. Commit the working delivery revision and record the agent tool/model and prompt
-   revision as described below.
-5. In a disposable branch or worktree, delete all generated output or a deliberate
+3. Commit the working delivery revision.
+4. In a disposable branch or worktree, delete all generated output or a deliberate
    mixture of Views, ViewModels, tests, and composition files from the boundary.
-6. Paste the single regeneration prompt for that platform into a fresh Codex or
+5. Paste the single regeneration prompt for that platform into a fresh Codex or
    Claude Code session.
-7. Confirm protected files were not replaced; build and run the native test suite.
-8. Run the native offline/interoperability scenario against the unchanged server.
-9. Fix systematic defects in a maintained spec, instruction, or prompt and repeat
+6. Confirm protected files were not replaced; build and run the native test suite.
+7. Run the native offline/interoperability scenario against the unchanged server.
+8. Fix systematic defects in a maintained spec, instruction, or prompt and repeat
    the clean check. A manual generated-output patch is not a reproducible fix.
 
 Regeneration promises equivalent behavior and quality, not byte-for-byte output.
@@ -177,24 +168,6 @@ Run connected UI checks when an emulator/device is available, then follow the
 There is no empty `run-demo.sh`; the maintained acceptance procedure is the demo
 interface until a real automation benefit justifies another tool.
 
-## Recording prompts and recommendations
-
-The committed prompt files and Git history preserve the exact instructions used.
-After the first real generation, create `generator/GENERATION_LOG.md` with one
-entry per run containing:
-
-- Date, delivery/input commit, platform, agentic tool, and selected model.
-- Exact prompt file and revision, plus any additional instruction typed manually.
-- Generated/deleted paths and whether this was first generation or regeneration.
-- Build, test, visual, and interoperability results, including skipped checks.
-- Corrections made afterward and which maintained input was improved.
-
-Do not create a fictional or empty log before a run exists. After assignment
-delivery, keep experimental prompt recommendations separate from the prompts that
-proved the submitted revision—for example under `generator/recommendations/`—and
-label them as unverified proposals. This preserves historical evidence without
-making post-delivery advice part of the evaluator's required workflow.
-
 ## Prompt-maintenance recommendations
 
 - Keep task prompts short: reference `shared.md`, the platform AGENT, and the one
@@ -206,5 +179,5 @@ making post-delivery advice part of the evaluator's required workflow.
 - Make missing foundation or server mismatch a reported blocker rather than an
   invitation to rewrite protected code.
 - Extend the authoritative specs before adding future features. Then add a focused
-  authoring prompt and update the boundary/manifest if new generated paths are
-  intentional; the regeneration prompts themselves should remain generic.
+  authoring prompt and update the boundary if new generated paths are intentional;
+  the regeneration prompts themselves should remain generic.
