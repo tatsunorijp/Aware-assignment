@@ -11,11 +11,12 @@ See the [catalog](README.md).
 Use two vertically arranged sections with dark headings, rounded light containers,
 row separators and trailing navigation chevrons:
 
-- **Chat**: one row per existing local conversation, showing the peer's name,
-  latest message preview and date when available. The image says "Chats"; use
-  "Chat" to follow the developer's explicit requested copy.
+- **Chat**: one row per local conversation containing at least one persisted
+  message, showing the peer's name, latest message preview and date. The image
+  says "Chats"; use "Chat" to follow the developer's explicit requested copy.
 - **People on server**: names of registered users with whom the current user has
-  no local conversation. Do not show the current user or duplicate IDs.
+  no persisted messages. An empty local conversation does not remove its peer
+  from this section. Do not show the current user or duplicate IDs.
 
 Example names, dates and messages are illustrative. Both sections must remain
 reachable with long lists and larger text; the image does not require two nested,
@@ -25,14 +26,17 @@ independently scrolling lists. Distinct users can share a display name.
 
 Load the upper section from the local database and observe committed changes.
 Fetch the lower section using `GET /users` after identification and on refresh or
-retry; upsert by ID and filter self and existing conversation participants.
+retry; upsert by ID and filter self and participants in conversations containing
+messages.
 Registration does not mean online presence: do not add online status indicators.
 
 Tapping a row in either section opens [messages](messages-screen.md) for that peer.
 For a new conversation, get or create the local conversation idempotently before
 navigating; do not send a greeting or create a message automatically. Returning
-from messages shows this list with updated summaries and membership. An existing
-empty local conversation still belongs in the upper section.
+from messages shows this list with updated summaries and membership. Creating or
+opening an empty local conversation does not move its peer to **Chat**. After the
+first incoming or outgoing message is persisted, observation moves the peer from
+**People on server** to **Chat** without showing the peer in both sections.
 
 ## Loading, empty and error states
 

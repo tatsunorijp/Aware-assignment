@@ -139,8 +139,9 @@ final class UserListViewModel {
         for try await snapshot in conversations.observeConversations() {
           try Task.checkCancellation()
           guard let self else { return }
-          localConversations = snapshot
-          screenState = .ready(snapshot)
+          let conversationsWithMessages = snapshot.filter { $0.latestMessage != nil }
+          localConversations = conversationsWithMessages
+          screenState = .ready(conversationsWithMessages)
           updateDiscoveryState()
         }
       } catch is CancellationError {

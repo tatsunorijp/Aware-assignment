@@ -8,7 +8,12 @@ import Testing
 struct UserListViewModelTests {
   @Test
   func localConversationsRenderWhileDiscoveryIsStillLoading() async throws {
-    let conversation = try makeConversation(peerId: UserListIDs.bob, peerName: "Bob")
+    let conversation = try makeConversation(
+      peerId: UserListIDs.bob,
+      peerName: "Bob",
+      text: "Hello",
+      state: .sent
+    )
     let harness = UserListHarness(
       conversations: [conversation],
       apiResponse: .suspended
@@ -25,7 +30,12 @@ struct UserListViewModelTests {
 
   @Test
   func discoveryFiltersByIdentityAndConversationPeerIds() async throws {
-    let conversation = try makeConversation(peerId: UserListIDs.bob, peerName: "Bob")
+    let conversation = try makeConversation(
+      peerId: UserListIDs.bob,
+      peerName: "Bob",
+      text: "Hello",
+      state: .sent
+    )
     let sameNameOne = try UserDTO(userId: UserListIDs.carol, name: "Alex")
     let sameNameTwo = try UserDTO(userId: UserListIDs.dave, name: "Alex")
     let harness = UserListHarness(
@@ -51,7 +61,12 @@ struct UserListViewModelTests {
 
   @Test
   func anExhaustedDiscoveryListUsesTheSpecifiedEmptyState() async throws {
-    let conversation = try makeConversation(peerId: UserListIDs.bob, peerName: "Bob")
+    let conversation = try makeConversation(
+      peerId: UserListIDs.bob,
+      peerName: "Bob",
+      text: "Hello",
+      state: .sent
+    )
     let harness = UserListHarness(
       conversations: [conversation],
       apiResponse: .success([
@@ -98,7 +113,7 @@ struct UserListViewModelTests {
   }
 
   @Test
-  func selectingADiscoveredUserCreatesOneConversationAndNavigatesById() async throws {
+  func selectingADiscoveredUserKeepsThemDiscoverableUntilTheFirstMessage() async throws {
     let discovered = try UserDTO(userId: UserListIDs.carol, name: "Carol")
     let harness = UserListHarness(apiResponse: .success([discovered]))
     harness.conversations.peerNames[discovered.userId] = discovered.name
@@ -110,7 +125,22 @@ struct UserListViewModelTests {
     #expect(harness.conversations.creationRequests == [discovered.userId])
     try await eventually {
       guard case .ready(let conversations) = harness.viewModel.screenState else { return false }
-      return conversations.map(\.peer.userId) == [discovered.userId]
+      return conversations.isEmpty
+        && harness.viewModel.discoveryState == .available([
+          DiscoveredUser(id: discovered.userId, name: discovered.name)
+        ])
+    }
+
+    let conversationWithMessage = try makeConversation(
+      peerId: discovered.userId,
+      peerName: discovered.name,
+      text: "Hello",
+      state: .pendingToSend
+    )
+    harness.conversations.emit([conversationWithMessage])
+
+    try await eventually {
+      harness.viewModel.screenState == .ready([conversationWithMessage])
         && harness.viewModel.discoveryState == .empty
     }
   }

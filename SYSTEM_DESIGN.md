@@ -64,7 +64,8 @@ Session replacement and its recovery rules are defined in the
 ### Existing conversations
 
 Load this section exclusively from the local database, independently of the HTTP
-user query and whether the server is reachable. Each row displays, when available:
+user query and whether the server is reachable. Include only conversations that
+contain at least one persisted message. Each row displays:
 
 - The other participant's name.
 - The latest message and its date.
@@ -77,8 +78,9 @@ user to leave and reopen the screen.
 ### Other registered users
 
 Fetch `GET /users` after identification and on refresh/retry. Upsert known users by
-ID, then exclude the current user and IDs already represented by local
-conversations. Matching names must not merge or remove distinct users.
+ID, then exclude the current user and IDs represented by conversations containing
+messages. A peer whose local conversation is empty remains in this section.
+Matching names must not merge or remove distinct users.
 
 This remote section has its own presentation states:
 
@@ -94,7 +96,10 @@ query is not an error. The list describes registration, not online status.
 
 Selecting another user gets or creates the direct local conversation idempotently,
 then opens the chat. Local conversation creation errors are surfaced in that
-operation; navigation must not imply the failed write succeeded.
+operation; navigation must not imply the failed write succeeded. Creating or
+opening an empty conversation does not change section membership. After the first
+incoming or outgoing message is persisted, local observation moves the peer from
+the remote section to the local conversation section without duplication.
 
 ## Conversation screen
 

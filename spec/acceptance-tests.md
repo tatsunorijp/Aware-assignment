@@ -99,8 +99,11 @@ state/orchestration logic using fakes as allowed by the platform test workflow.
 - Registration save/request/decoding failures and a controlled timeout present the
   essential error screen. Retry uses the same UUID; Cancel returns to the prefilled
   form without advancing. Ignore stale attempt results and respect retry eligibility.
-- The upper "Chat" section contains local conversations; "People on server"
-  excludes self and existing conversation peers by ID. Either section navigates
+- The upper "Chat" section contains only local conversations with at least one
+  persisted message; "People on server" excludes self and peers with message
+  history by ID. Selecting a person and returning without sending keeps that peer
+  in "People on server" and out of "Chat". After the first incoming or outgoing
+  message is persisted, the peer appears only in "Chat". Either section navigates
   to the selected peer's messages, and Back returns to the updated list.
 - Essential local loading hides unavailable content, but successful empty data is
   ready. Discovery failure affects only its section; reconnect and message sending
