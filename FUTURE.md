@@ -12,6 +12,23 @@ The MVP uses light mode only, including when the device is configured for dark
 appearance. Do not generate dark palettes or a theme-switching setting from the
 current [shared light-mode prototypes](spec/design/README.md).
 
+## Localization and Internationalization
+
+- Add localization infrastructure to both mobile apps and support multiple
+  languages throughout user-facing copy, errors, accessibility labels and
+  notifications.
+- Use locale-aware formatting for dates, times, numbers and pluralized content.
+- Validate layouts with longer translations and right-to-left languages before
+  declaring a locale supported.
+
+## Accessibility
+
+- Audit, implement, test and continuously improve accessibility on both mobile
+  platforms.
+- Cover screen-reader navigation, scalable text, contrast, touch targets, focus
+  order, keyboard interaction and reduced-motion preferences with appropriate
+  automated and manual checks.
+
 ## Error Model Evolution
 
 - `retryAfterSeconds`: a server-suggested interval before another attempt.
@@ -20,6 +37,13 @@ current [shared light-mode prototypes](spec/design/README.md).
 - Translation and localization of error messages according to the user's language.
 
 These fields must not be required in the MVP's `ServerError`. The delay between attempts will continue to be defined by the client, according to the [shared recovery policy](spec/protocol.md#ordering-and-recovery).
+
+## Code Quality Automation
+
+- Evaluate and add platform-appropriate lint tooling for Swift/iOS and
+  Kotlin/Android.
+- Encode agreed code-quality and style rules, run them locally and in CI, and keep
+  justified suppressions narrow and documented.
 
 ## Local History and Pagination
 
@@ -66,35 +90,58 @@ These fields must not be required in the MVP's `ServerError`. The delay between 
 ## Transcription
 
 - Converting audio messages to text.
-- Local transcription or transcription through a remote service.
+- Local transcription.
 - Associating audio with its transcribed text.
 
 ## Presence
 
 - A connected-users screen.
-- An online/offline indicator.
+- Online/offline indicators that let users know when another registered user is
+  currently online.
 - Real-time presence updates.
 
-## Join and Leave Events
+Presence must distinguish current connectivity from registration and define how
+stale state, privacy controls and visibility are handled.
 
-- Temporary messages indicating that someone joined or left.
-- System events separate from persisted messages.
-- Delivery only to users connected at that time.
+## Registration Endpoint
+
+- Add a dedicated, idempotent registration endpoint instead of making initial
+  registration depend exclusively on the messaging connection.
+- Define validation, retry, conflict and authentication semantics so registration
+  is simpler and consistent for product flows and every client platform.
 
 ## Group Conversations
-
 - Room creation.
 - Membership management.
 - Messages sent to multiple participants.
 - Management of members joining and leaving.
+- Temporary messages indicating that someone joined or left.
+- System events separate from persisted messages.
+
+## Message Notifications
+
+- Notify users when new messages arrive while the app is backgrounded or closed.
+- Integrate the platform notification services for iOS and Android, including
+  permission handling, device-token lifecycle, deep links to the conversation and
+  duplicate suppression.
+- Protect notification content according to the user's privacy settings and the
+  future end-to-end encryption design.
+
+## Privacy and Encryption
+
+- Encrypt locally stored messages and other sensitive user information at rest.
+- Add end-to-end encryption for message content and future sensitive fields such
+  as phone numbers or location, so intermediaries and the server cannot read the
+  protected plaintext.
+- Define the threat model, cryptographic protocol, key generation, secure storage,
+  rotation, recovery and multi-device behavior before implementation. Document
+  unavoidable metadata exposure and preserve authenticated transport encryption.
 
 ## Infrastructure and Security
 
-- Permanent server-side persistence, including conversation history.
+- Permanent server-side persistence for users backups, including conversation history.
 - Authentication.
 - Authorization.
-- Encryption.
-- Push notifications using APNs and FCM.
 - Observability and structured logging.
 - Cloud deployment.
 
