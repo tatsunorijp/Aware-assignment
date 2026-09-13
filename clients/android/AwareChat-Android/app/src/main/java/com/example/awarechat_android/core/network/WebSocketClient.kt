@@ -133,6 +133,10 @@ class WebSocketClient(
                 fail(id, NetworkException.InvalidWebSocketFrame())
             }
 
+            override fun onClosing(code: Int, reason: String) {
+                fail(id, NetworkException.WebSocketClosed(code, reason.ifEmpty { null }))
+            }
+
             override fun onClosed(code: Int, reason: String) {
                 fail(id, NetworkException.WebSocketClosed(code, reason.ifEmpty { null }))
             }

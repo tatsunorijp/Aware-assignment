@@ -83,6 +83,17 @@ class WebSocketClientTest {
 
     @Test
     fun `close and IO failure retain diagnostic categories`() = runTest {
+        val closingTransport = FakeWebSocketTransport()
+        val closingClient = client(closingTransport)
+        val closingFailure = async(start = CoroutineStart.UNDISPATCHED) {
+            runCatching { closingClient.connect().collect() }.exceptionOrNull()
+        }
+        runCurrent()
+        closingTransport.listener.onClosing(1001, "Server shutdown")
+        val closingError = closingFailure.await() as NetworkException.WebSocketClosed
+        assertEquals(1001, closingError.code)
+        assertEquals("Server shutdown", closingError.reason)
+
         val closeTransport = FakeWebSocketTransport()
         val closeClient = client(closeTransport)
         val closeFailure = async(start = CoroutineStart.UNDISPATCHED) {

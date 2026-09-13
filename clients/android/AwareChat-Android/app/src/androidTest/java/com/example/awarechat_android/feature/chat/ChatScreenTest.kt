@@ -47,6 +47,35 @@ class ChatScreenTest {
         composeRule.onNodeWithText("Message 50").assertIsDisplayed()
     }
 
+    @Test
+    fun connectionFailureDisplaysBannerWithoutReplacingHistory() {
+        composeRule.setContent {
+            AwareChatAndroidTheme {
+                ChatScreen(
+                    state = ChatUiState(
+                        screen = ChatScreenState.Ready(
+                            conversationId = CONVERSATION_ID,
+                            peerName = "Bob",
+                            messages = listOf(message(1)),
+                        ),
+                        connection = ConnectionStatusState.Offline(
+                            "Something went wrong. Please try again.",
+                        ),
+                    ),
+                    onBack = {},
+                    onDraftChanged = {},
+                    onSend = {},
+                    onRetryHistory = {},
+                    onRetryConnection = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Something went wrong. Please try again.").assertIsDisplayed()
+        composeRule.onNodeWithText("Retry").assertIsDisplayed()
+        composeRule.onNodeWithText("Message 1").assertIsDisplayed()
+    }
+
     private companion object {
         val CURRENT_ID: UUID = UUID.fromString("11111111-1111-4111-8111-111111111111")
         val PEER_ID: UUID = UUID.fromString("22222222-2222-4222-8222-222222222222")

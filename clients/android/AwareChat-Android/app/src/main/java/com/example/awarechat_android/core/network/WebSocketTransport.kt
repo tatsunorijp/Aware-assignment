@@ -1,6 +1,7 @@
 package com.example.awarechat_android.core.network
 
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 import okio.ByteString
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -13,6 +14,7 @@ interface WebSocketTransport {
         fun onOpen()
         fun onText(text: String)
         fun onBinary(bytes: ByteArray)
+        fun onClosing(code: Int, reason: String)
         fun onClosed(code: Int, reason: String)
         fun onFailure(error: Throwable)
     }
@@ -28,9 +30,15 @@ fun interface WebSocketTransportFactory {
 }
 
 class OkHttpWebSocketTransportFactory(
-    private val client: OkHttpClient = OkHttpClient(),
+    private val client: OkHttpClient = OkHttpClient.Builder()
+        .pingInterval(HEARTBEAT_INTERVAL_SECONDS, TimeUnit.SECONDS)
+        .build(),
 ) : WebSocketTransportFactory {
     override fun create(url: String): WebSocketTransport = OkHttpWebSocketTransport(client, url)
+
+    private companion object {
+        const val HEARTBEAT_INTERVAL_SECONDS = 15L
+    }
 }
 
 private class OkHttpWebSocketTransport(
@@ -54,6 +62,11 @@ private class OkHttpWebSocketTransport(
 
             override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
                 listener.onBinary(bytes.toByteArray())
+            }
+
+            override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+                webSocket.close(code, null)
+                listener.onClosing(code, reason)
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
