@@ -42,17 +42,18 @@ test and an example instrumentation test. Its namespace/application ID is
 `com.example.awarechat_android`; preserve it and the project name unless a requested
 task requires a change. Recheck actual configuration before implementation.
 
-The reusable Android design-system foundation and network layer are implemented,
-including the approved palette, light-only `AwareChatAndroidTheme`, strict protocol
-DTOs, HTTP API client and WebSocket client. Complete messaging screens, ViewModels,
-Room persistence and the app-scoped synchronization service are not implemented.
-The app entry point intentionally remains the template greeting; components are
-independently available through Compose previews.
+The reusable Android design-system foundation, network layer and Room persistence
+layer are implemented. This includes the approved palette, light-only
+`AwareChatAndroidTheme`, strict protocol DTOs, HTTP and WebSocket clients, one
+shared Room database, entity-specific DAOs and constructor-injected repositories.
+Complete messaging screens, ViewModels and the app-scoped synchronization service
+are not implemented. The app entry point intentionally remains the template
+greeting; components are independently available through Compose previews.
 
-Room is required for identity, conversations and messages but is not yet declared
-as a dependency. Networking uses OkHttp for cancellable HTTP calls and WebSocket
-transport, kotlinx.serialization for JSON, and coroutines/Flow for asynchronous
-delivery. A DI framework is not required.
+Room stores identity, conversations and messages and exposes committed changes
+through coroutines and Flow. Networking uses OkHttp for cancellable HTTP calls and
+WebSocket transport and kotlinx.serialization for JSON. A DI framework is not
+required.
 
 ## Tools, build and test entry points
 
@@ -69,6 +70,8 @@ that dependency resolution or compatibility was verified in this documentation t
 | Compose BOM | 2026.02.01 in the version catalog. |
 | Coroutines / kotlinx.serialization | 1.10.2 / 1.9.0 in the version catalog. |
 | OkHttp / MockWebServer | 5.1.0 in the version catalog. |
+| Room / KSP | 2.8.5 / 2.3.12 in the version catalog. |
+| Robolectric | 4.17 for isolated local JVM Room tests. |
 | Gradle wrapper | 9.6.0 in [gradle-wrapper.properties](AwareChat-Android/gradle/wrapper/gradle-wrapper.properties). |
 | Gradle daemon JVM | Java 25 requested by [gradle-daemon-jvm.properties](AwareChat-Android/gradle/gradle-daemon-jvm.properties). |
 | Java source/target compatibility | Java 11 in app compile options; this is not the Gradle daemon JVM requirement. |
@@ -118,11 +121,11 @@ implementation/validation; the existing example tests are scaffolding, not proof
 of messaging, persistence or UI correctness. Run the `app` configuration from
 Android Studio to inspect the current greeting, not the intended messaging screens.
 
-On 2026-09-12, `:app:assembleDebug`, `:app:testDebugUnitTest` and `:app:lintDebug`
-passed with Android Studio's bundled JBR. The local JVM suite ran 28 tests,
-including protocol fixtures, HTTP transport through MockWebServer, and real OkHttp
-WebSocket text exchange. Lint reported zero errors and 14 dependency/update
-availability warnings across the existing and network dependencies. No connected
+On 2026-09-13, `:app:assembleDebug`, `:app:testDebugUnitTest` and `:app:lintDebug`
+passed with Android Studio's bundled JBR. The local JVM suite ran 39 tests,
+including 11 Room persistence and composition tests, protocol fixtures, HTTP
+transport through MockWebServer, and real OkHttp WebSocket text exchange. Lint
+reported zero errors and 14 dependency/update availability warnings. No connected
 device test, visual emulator inspection or live-backend integration was performed.
 
 ## Stack and responsibility layout
@@ -311,7 +314,17 @@ The paths below are relative to `core/persistence/`. They represent the package 
 
 Operations must use coroutines and support observing local changes through `Flow` when needed. ViewModels may transform these results into `StateFlow` for the interface. Writes must update existing records while preserving IDs and relationships.
 
-`app/AppDependencies.kt` must compose the database and repositories, providing them to ViewModels through a factory or equivalent creation mechanism. Synchronization logic must reside in `core/service/`. A dependency injection framework is not required in the MVP.
+These files are implemented with Room schema version 1. The committed schema is
+exported under `app/schemas/`; changes require an explicit migration and a new
+schema version. Repository writes use Room transactions for identity completion,
+conversation creation, sequence allocation, message persistence and state
+transitions. Local JVM tests use isolated in-memory databases and a uniquely named
+temporary on-disk database for reopen coverage.
+
+`app/AppDependencies.kt` composes the shared database and repositories once from
+`AwareChatApplication`, ready to provide them to ViewModels through constructors
+or factories. Synchronization logic must reside in `core/service/`. A dependency
+injection framework is not required in the MVP.
 
 ## Android error organization
 

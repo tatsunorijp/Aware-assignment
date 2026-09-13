@@ -15,3 +15,5 @@ Implement the complete conversations/registered-users feature and its ViewModel
 tests using the maintained Android foundations. This prompt authorizes those tests.
 Stay inside the declared scope, run the relevant documented Android checks, and
 report missing dependencies, results and unavailable visual/native checks.
+
+Mark all generated files using the AI-generated code markers.

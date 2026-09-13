@@ -20,3 +20,5 @@ meaningful connected UI/navigation tests. Compose the app entry files only when
 their required features exist; otherwise report composition as pending. Stay
 inside scope, run the documented Android checks, and report results and unavailable
 visual/native checks.
+
+Mark all generated files using the AI-generated code markers.
