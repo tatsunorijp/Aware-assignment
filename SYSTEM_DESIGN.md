@@ -121,6 +121,13 @@ socket, clear local state or imply success. The visual catalog owns the distinct
 [chat-list placement](spec/design/chat-screen.md#connection-failure-banner) and
 [messages placement](spec/design/messages-screen.md#connection-failure-banner).
 
+The connection lifecycle must publish failure for both an unsuccessful initial
+connection and the loss of an established connection, including peer-initiated
+graceful closure and abrupt transport failure. Detection must not depend on screen
+navigation, a message send or another user action. Automatic reconnection may
+subsequently publish `connecting`, but it must not leave the shared state reported
+as `connected` after the transport has closed.
+
 ## Screen loading and state dimensions
 
 Screen readiness and network state are independent. Use mutually exclusive

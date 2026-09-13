@@ -13,7 +13,9 @@ context it and the affected code require.
 
 Implement the complete conversations/registered-users feature and its ViewModel
 tests using the maintained Android foundations. This prompt authorizes those tests.
-Stay inside the declared scope, run the relevant documented Android checks, and
-report missing dependencies, results and unavailable visual/native checks.
+Stay inside the declared scope, run the relevant documented Android checks,
+validate the feature against its applicable requirements in
+`spec/acceptance-tests.md`, and report missing dependencies, results and unavailable
+visual/native checks.
 
 Mark all generated files using the AI-generated code markers.

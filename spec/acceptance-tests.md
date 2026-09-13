@@ -77,6 +77,12 @@ Required behavioral coverage:
   reconnection states independently from usable local screen state. Retry requests
   a new connection attempt; a successful reconnection removes the failure state
   without clearing lists, history or draft text.
+- Exercise the connection lifecycle at the transport/service boundary, not only by
+  injecting a final failure state into a ViewModel fake. Cover an initial connection
+  failure, peer-initiated graceful closure after connection, abrupt transport loss
+  after connection, and successful reconnection. Each close/failure must propagate
+  through the app-scoped messaging service as `connectionFailure`; a retry attempt
+  publishes `connecting`, and confirmed recovery publishes `connected`.
 
 Networking tests must use fake implementations or transport mocks so they do not depend on a real server.
 
@@ -112,14 +118,17 @@ state/orchestration logic using fakes as allowed by the platform test workflow.
 - Essential local loading hides unavailable content, but successful empty data is
   ready. Discovery failure affects only its section; reconnect and message sending
   do not replace usable history with full-screen loading/error.
-- With the server unreachable or device networking unavailable, both screens show
-  the shared connection-failure banner with an accessible status and Retry action.
-  On the chat list it appears in normal layout before the **Chat** section. On the
-  messages screen it is top-aligned below the header and layered above message
-  history, while history and the composer remain available. Verify Retry through a
-  connecting attempt to restored connection and banner removal. Also verify that
-  discovery, essential local-read and individual outgoing-message failures retain
-  their distinct presentations.
+- Exercise offline presentation in two separate transitions: launch or reconnect
+  while the server/network is unavailable, and first reach `connected` before making
+  the active transport unavailable. In both cases, both screens show the shared
+  connection-failure banner with an accessible status and Retry action without
+  requiring navigation or a message send to detect the loss. On the chat list it
+  appears in normal layout before the **Chat** section. On the messages screen it is
+  top-aligned below the header and layered above message history, while history and
+  the composer remain available. Verify Retry through a connecting attempt to
+  restored connection and banner removal. Also verify that discovery, essential
+  local-read and individual outgoing-message failures retain their distinct
+  presentations.
 - The messages header shows Back and the peer name. Incoming gray cards align left;
   outgoing blue cards align right. Times appear below each card. The composer
   remains usable with the keyboard and larger accessibility text.

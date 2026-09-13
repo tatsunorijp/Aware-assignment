@@ -58,8 +58,10 @@ first incoming or outgoing message is persisted, observation moves the peer from
 When the shared connection fails because the server is unreachable, the device has
 no network connection or another transport-level connection attempt fails, keep the
 usable screen visible and show the shared non-blocking status banner at the top of
-the screen content, before the **Chat** section. The banner participates in the
-vertical layout rather than covering either list.
+the screen content, before the **Chat** section. This applies both when the initial
+connection cannot be established and when an already established connection is
+lost. The banner participates in the vertical layout rather than covering either
+list.
 
 The failure presentation contains an offline icon, a safe user-facing message and
 a **Retry** action. The reference shows the generic fallback "Something went

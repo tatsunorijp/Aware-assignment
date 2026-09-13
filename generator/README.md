@@ -86,11 +86,6 @@ or replace a complete Xcode/Gradle project, Core code, persistence, services,
 protocol types, reusable design system, resources, navigation foundation, build
 configuration, documentation, shared specifications, fixtures, or server.
 
-The current iOS `MyApp.swift` and `ContentView.swift`, and Android
-`MainActivity.kt`, are starter UI included in the boundary so generated features
-can be composed into runnable apps. `app/AwareChatApp.kt` is the Android generated
-root that will be created during feature composition.
-
 ## Two prompt workflows
 
 Feature-authoring prompts and evaluator-regeneration prompts have different jobs.

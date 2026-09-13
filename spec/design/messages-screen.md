@@ -95,10 +95,12 @@ the [shared send/recovery rules](../../SYSTEM_DESIGN.md#sending-messages),
 
 When the shared connection fails because the server is unreachable, the device has
 no network connection or another transport-level connection attempt fails, keep
-the header, persisted history and composer available. Present the same shared
-non-blocking banner used by the chat list inside the messages content layer: align
-it to the top below the header and place it at a higher stacking level than the
-message history. It must not replace the screen or become part of a message row.
+the header, persisted history and composer available. This applies both when the
+initial connection cannot be established and when an already established
+connection is lost. Present the same shared non-blocking banner used by the chat
+list inside the messages content layer: align it to the top below the header and
+place it at a higher stacking level than the message history. It must not replace
+the screen or become part of a message row.
 
 The failure presentation contains an offline icon, a safe user-facing message and
 a **Retry** action. The reference shows the generic fallback "Something went

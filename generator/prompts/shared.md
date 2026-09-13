@@ -14,5 +14,7 @@ change the server/shared contract to bypass missing context or foundation.
 
 Stay inside the generator boundary and reuse maintained platform foundations.
 Generate only authorized feature code/tests, run relevant native checks, and
-report actual results and unavailable checks. Keep repository artifacts and UI
-copy in English.
+report actual results and unavailable checks. When an acceptance scenario crosses
+transport, service, ViewModel and UI boundaries, do not treat direct injection of
+its final presentation state as proof that the boundary transition works. Keep
+repository artifacts and UI copy in English.
