@@ -26,8 +26,8 @@ import com.example.awarechat_android.ui.theme.AwareChatAndroidTheme
 @Composable
 fun ErrorScreen(
     message: String,
-    onRetry: () -> Unit,
-    onCancel: () -> Unit,
+    onRetry: (() -> Unit)?,
+    onCancel: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -49,19 +49,23 @@ fun ErrorScreen(
                 textAlign = TextAlign.Center,
             )
 
-            LargeButton(
-                text = stringResource(R.string.action_retry),
-                style = LargeButtonStyle.PRIMARY,
-                onClick = onRetry,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            onRetry?.let {
+                LargeButton(
+                    text = stringResource(R.string.action_retry),
+                    style = LargeButtonStyle.PRIMARY,
+                    onClick = it,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
 
-            LargeButton(
-                text = stringResource(R.string.action_cancel),
-                style = LargeButtonStyle.SECONDARY,
-                onClick = onCancel,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            onCancel?.let {
+                LargeButton(
+                    text = stringResource(R.string.action_cancel),
+                    style = LargeButtonStyle.SECONDARY,
+                    onClick = it,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         }
     }
 }

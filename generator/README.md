@@ -64,8 +64,6 @@ feature-authoring order.
 clients/ios/AwareChat-iOS/AwareChat-iOS/Features/Identification/**
 clients/ios/AwareChat-iOS/AwareChat-iOS/Features/UserList/**
 clients/ios/AwareChat-iOS/AwareChat-iOS/Features/Chat/**
-clients/ios/AwareChat-iOS/AwareChat-iOS/ContentView.swift
-clients/ios/AwareChat-iOS/AwareChat-iOS/MyApp.swift
 clients/ios/AwareChat-iOS/AwareChat-iOS-UnitTests/Features/Identification/**
 clients/ios/AwareChat-iOS/AwareChat-iOS-UnitTests/Features/UserList/**
 clients/ios/AwareChat-iOS/AwareChat-iOS-UnitTests/Features/Chat/**
@@ -77,8 +75,6 @@ clients/ios/AwareChat-iOS/AwareChat-iOS-UnitTests/Features/Chat/**
 clients/android/AwareChat-Android/app/src/main/java/com/example/awarechat_android/feature/identification/**
 clients/android/AwareChat-Android/app/src/main/java/com/example/awarechat_android/feature/userlist/**
 clients/android/AwareChat-Android/app/src/main/java/com/example/awarechat_android/feature/chat/**
-clients/android/AwareChat-Android/app/src/main/java/com/example/awarechat_android/app/AwareChatApp.kt
-clients/android/AwareChat-Android/app/src/main/java/com/example/awarechat_android/MainActivity.kt
 clients/android/AwareChat-Android/app/src/test/java/com/example/awarechat_android/feature/identification/**
 clients/android/AwareChat-Android/app/src/test/java/com/example/awarechat_android/feature/userlist/**
 clients/android/AwareChat-Android/app/src/test/java/com/example/awarechat_android/feature/chat/**

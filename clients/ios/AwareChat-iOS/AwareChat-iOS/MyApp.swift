@@ -1,4 +1,3 @@
-// MARK: - AI Generated - Start
 import SwiftUI
 
 @main
@@ -10,4 +9,3 @@ struct MyApp: App {
     }
   }
 }
-// MARK: - AI Generated - End

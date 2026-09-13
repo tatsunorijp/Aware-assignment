@@ -40,12 +40,17 @@ For physical devices, start the server with `--host 0.0.0.0`. Keep the address
 configurable in client dependencies rather than embedding a LAN IP in generated
 networking code. `localhost` on a physical phone points to that phone.
 
-The MVP uses HTTP/WS. The Android development application needs INTERNET permission
-and a development network security policy allowing its local cleartext destination.
+The MVP uses HTTP/WS. The Android development application needs `INTERNET` and a
+development network security policy allowing its local cleartext destination.
+An app targeting Android 17 / API 37 or later must also declare and request the
+runtime `ACCESS_LOCAL_NETWORK` permission before connecting directly to a LAN
+address such as `10.0.2.2`; lower target SDKs retain implicit LAN access through
+`INTERNET`. Handle denial and later revocation without attempting the connection.
 The iOS development application needs local-network access configuration and any
 ATS exception required for the chosen local address. Limit these settings to the
 development configuration. Check platform documentation when implementing clients:
-[Android network security configuration](https://developer.android.com/privacy-and-security/security-config)
+[Android network security configuration](https://developer.android.com/privacy-and-security/security-config),
+[Android local network permission](https://developer.android.com/privacy-and-security/local-network-permission),
 and [Apple local network privacy](https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy).
 
 ## Startup and reconnection

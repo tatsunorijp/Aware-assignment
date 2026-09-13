@@ -1,4 +1,3 @@
-// MARK: - AI Generated - Start
 import Observation
 import SwiftUI
 
@@ -132,4 +131,3 @@ struct ContentView: View {
   ContentView()
     .preferredColorScheme(.light)
 }
-// MARK: - AI Generated - End

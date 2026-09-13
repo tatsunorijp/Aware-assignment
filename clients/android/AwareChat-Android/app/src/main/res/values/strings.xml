@@ -4,6 +4,13 @@
     <string name="action_retry">Retry</string>
     <string name="loading">Loading&#8230;</string>
     <string name="loading_content_description">Loading</string>
+    <string name="local_network_permission_required">Local network access is required to connect to the development server.</string>
     <string name="message_failed_content_description">Failed to send</string>
     <string name="message_sent_content_description">Sent to server</string>
+    <string name="sign_up_title">Sign up</string>
+    <string name="sign_up_subtitle">Create your chat account</string>
+    <string name="user_name_label">User name</string>
+    <string name="user_name_validation">Enter a user name.</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="conversations_destination_pending">Conversations</string>
 </resources>

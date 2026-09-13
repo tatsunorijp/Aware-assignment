@@ -36,19 +36,20 @@ require copying Swift source, Xcode assets or iOS folder names.
 ## Status and tooling decisions
 
 An existing [AwareChat-Android](AwareChat-Android) Gradle project contains an `app`
-module, a Compose greeting in `MainActivity.kt`, the package structure documented
-below, shared tokens/components, a time-formatting extension, a local example unit
-test and an example instrumentation test. Its namespace/application ID is
+module, the generated identification flow composed from `MainActivity.kt`, the
+package structure documented below, shared tokens/components, a time-formatting
+extension, a local example unit test and an example instrumentation test. Its namespace/application ID is
 `com.example.awarechat_android`; preserve it and the project name unless a requested
 task requires a change. Recheck actual configuration before implementation.
 
-The reusable Android design-system foundation, network layer and Room persistence
-layer are implemented. This includes the approved palette, light-only
-`AwareChatAndroidTheme`, strict protocol DTOs, HTTP and WebSocket clients, one
-shared Room database, entity-specific DAOs and constructor-injected repositories.
-Complete messaging screens, ViewModels and the app-scoped synchronization service
-are not implemented. The app entry point intentionally remains the template
-greeting; components are independently available through Compose previews.
+The reusable Android design-system foundation, network layer, Room persistence
+layer and app-scoped messaging service are implemented. This includes the approved
+palette, light-only `AwareChatAndroidTheme`, strict protocol DTOs, HTTP and
+WebSocket clients, one shared Room database, entity-specific DAOs,
+constructor-injected repositories and serialized identification/reconnection and
+outbox processing. The generated identification screen and ViewModel are composed
+at the app root. Conversations and messages remain pending; successful registration
+currently reaches a heading-only conversations destination until that feature is generated.
 
 Room stores identity, conversations and messages and exposes committed changes
 through coroutines and Flow. Networking uses OkHttp for cancellable HTTP calls and
@@ -119,14 +120,19 @@ The connected test task needs an available compatible emulator or device. On
 Windows use `gradlew.bat`. Verify actual Gradle tasks and dependencies when doing
 implementation/validation; the existing example tests are scaffolding, not proof
 of messaging, persistence or UI correctness. Run the `app` configuration from
-Android Studio to inspect the current greeting, not the intended messaging screens.
+Android Studio to inspect the current identification flow.
 
 On 2026-09-13, `:app:assembleDebug`, `:app:testDebugUnitTest` and `:app:lintDebug`
-passed with Android Studio's bundled JBR. The local JVM suite ran 39 tests,
-including 11 Room persistence and composition tests, protocol fixtures, HTTP
-transport through MockWebServer, and real OkHttp WebSocket text exchange. Lint
-reported zero errors and 14 dependency/update availability warnings. No connected
-device test, visual emulator inspection or live-backend integration was performed.
+passed with Android Studio's bundled JBR. The local JVM suite ran 50 tests,
+including 11 identification ViewModel tests, 11 Room persistence and composition
+tests, protocol fixtures, HTTP transport through MockWebServer, and real OkHttp
+WebSocket text exchange. Lint reported zero errors and 16 dependency/update
+availability warnings. The sign-up form was installed and visually inspected on
+an API 37 emulator. The runtime local-network prompt was granted, live registration
+against `10.0.2.2:8000` completed through `identity_accepted`, and the persisted
+identity appeared through the server's `/users` endpoint. Relaunching the app with
+that completed identity skipped the form and reached the conversations destination.
+No connected instrumentation test was run.
 
 ## Stack and responsibility layout
 
@@ -260,7 +266,7 @@ independent Compose `@Preview`:
 | --- | --- |
 | `LargeButton` | Receives text, `LargeButtonStyle`, click callback and caller-owned `Modifier`. It uses medium-weight body text and `SizeTokens.largeButtonHeight`; width remains external. |
 | `LoadingScreen` | Opaque full-screen background with centered indeterminate progress and typographic `Loading…` body text. |
-| `ErrorScreen` | Receives message, `onRetry` and `onCancel`. Compose has no SwiftUI environment dismiss equivalent, so the presentation owner supplies the explicit Cancel callback. |
+| `ErrorScreen` | Receives a message and optional `onRetry`/`onCancel` actions. Compose has no SwiftUI environment dismiss equivalent, so the presentation owner supplies only the actions that are safe for that operation. |
 | `MessageContainer` | Receives `MessageOrigin`, text, `Instant` and `AckMessageState`. Sent messages align right with no icon while sending, a checkmark when accepted, or an accessible red X after failure. Received messages align left and never show an ACK icon. |
 | Text components | `LargeTitleText`, `TitleText`, `HeadlineText`, `SubheadlineText`, `BodyText`, `FootnoteText`, and `Caption2Text` map the iOS semantic roles onto Material typography. |
 
@@ -285,10 +291,15 @@ structured `ServerErrorDto` when supplied by the server.
 
 `NetworkConfiguration.localDevelopment` uses `http://10.0.2.2:8000` and
 `ws://10.0.2.2:8000/ws`, which route an Android emulator to the development server
-on the host. Production declares the `INTERNET` permission. Cleartext traffic is
-enabled only by the debug manifest so release builds do not broaden transport
-security. Callers may inject another configuration for devices or deployed HTTPS
-and WSS endpoints.
+on the host. The application declares `INTERNET`. Because it targets Android 17 /
+API 37 and connects directly to a LAN address, it also declares and requests the
+runtime `ACCESS_LOCAL_NETWORK` permission before composing any code that may open
+the socket. A denial is shown as a recoverable full-screen error. Android 16 and
+earlier continue with the implicit access granted by `INTERNET`; see
+[Android local network permission](https://developer.android.com/privacy-and-security/local-network-permission).
+Cleartext traffic is enabled only by the debug manifest so release builds do not
+broaden transport security. Callers may inject another configuration for devices
+or deployed HTTPS and WSS endpoints.
 
 ## Android persistence files
 
@@ -321,10 +332,13 @@ conversation creation, sequence allocation, message persistence and state
 transitions. Local JVM tests use isolated in-memory databases and a uniquely named
 temporary on-disk database for reopen coverage.
 
-`app/AppDependencies.kt` composes the shared database and repositories once from
-`AwareChatApplication`, ready to provide them to ViewModels through constructors
-or factories. Synchronization logic must reside in `core/service/`. A dependency
-injection framework is not required in the MVP.
+`app/AppDependencies.kt` composes the shared database, repositories, HTTP client,
+WebSocket client, coordinator and `MessagingService` once from
+`AwareChatApplication`. Feature ViewModels receive narrow contracts through
+constructors or factories. The app-scoped service under `core/service/` owns the
+connection, identification timeout, incoming persistence, acknowledgements,
+reconnection and FIFO outbox processing. A dependency injection framework is not
+required in the MVP.
 
 ## Android error organization
 

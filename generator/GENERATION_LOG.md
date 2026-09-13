@@ -1,5 +1,29 @@
 # Generation log
 
+## 2026-09-13 — Android identification first generation
+
+- Input commit: `6e55af2728d54c398992ad202ecd452e0d0aaadd`
+- Platform and tool: Android, Codex (GPT-5).
+- Prompt: `generator/prompts/android/identification.md`.
+- Generated output: the six Android paths listed in `GENERATED_FILES.md`.
+- Maintained foundations: app-scoped messaging synchronization, typed root
+  coordinator and dependency composition were added; `ErrorScreen` gained
+  optional Retry/Cancel actions for operation-safe recovery. Android 17 local
+  network access is declared and gated at runtime before composing socket-owning
+  application state.
+- Build and tests: `:app:assembleDebug`, `:app:testDebugUnitTest` and
+  `:app:lintDebug` passed with Android Studio's bundled JBR. The JVM suite passed
+  50 tests, including 11 generated identification ViewModel tests; lint reported
+  zero errors and 16 dependency/update availability warnings.
+- Visual check: the form was installed and inspected on an API 37 emulator and
+  matched the maintained hierarchy. After granting the system local-network
+  permission, live registration against the unchanged server at `10.0.2.2:8000`
+  completed, `/users` returned the persisted UUID/name, and an app relaunch skipped
+  the form for the completed identity. No connected instrumentation test was run.
+- Remaining scope: conversations and messages are not generated; the root shows a
+  heading-only `Conversations` destination after registration until the next
+  feature replaces that branch.
+
 ## 2026-09-12 — iOS identification first generation
 
 - Input commit: `45a8b063d4fc0ad4a5cf6108f05e72095f3d65b0`
