@@ -139,6 +139,41 @@ emulator. Selecting and returning from an empty conversation kept its peer under
 pull-to-refresh resolved the cached peer name through `GET /users`. No connected
 instrumentation test was run.
 
+The generated `ChatLiveIntegrationTest` is an opt-in native server check. It uses
+two independent in-memory Room databases, real HTTP/WebSocket clients and the chat
+ViewModels/Compose route. It covers bidirectional sending, two offline messages per
+sender, FIFO flushing, recipient replay, stable timestamps and duplicate-free
+histories. It creates unique QA identities on the selected server and does not
+open the app's persistent database. Without the `liveServerUrl` instrumentation
+argument, this test is skipped.
+
+To run it with the existing local server, build and install both debug APKs from
+the Android Gradle root. Use the documented JBR setup when needed and put the
+Android SDK's `platform-tools` on `PATH`:
+
+```sh
+./gradlew :app:assembleDebug :app:assembleDebugAndroidTest
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+```
+
+Grant the installed debug app local-network access before running the live check
+(API 37 requires `android.permission.ACCESS_LOCAL_NETWORK`; the normal app launch
+requests it). Then run:
+
+```sh
+adb shell am instrument -w -r \
+  -e class com.example.awarechat_android.feature.chat.ChatLiveIntegrationTest \
+  -e liveServerUrl http://10.0.2.2:8000 \
+  com.example.awarechat_android.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+The test writes message IDs, directions, sequences and persisted states to the
+target app's cache as `chat-live-report.txt`. Retrieve it with
+`adb exec-out run-as com.example.awarechat_android cat cache/chat-live-report.txt`.
+This two-client test runs inside one Android instrumentation process; the manual
+iOS/Android device scenario remains a separate acceptance check.
+
 ## Stack and responsibility layout
 
 The Android client must follow responsibilities equivalent to those of the iOS client, using native Android ecosystem tools.

@@ -10,14 +10,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b613a95d-d769-4b81-ba1c-fc749790cc2e" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../../../README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../../../README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/awarechat_android/app/AwareChatApp.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/awarechat_android/app/AwareChatApp.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/awarechat_android/app/navigation/AppCoordinator.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/awarechat_android/app/navigation/AppCoordinator.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/awarechat_android/designsystem/components/TextComponents.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/awarechat_android/designsystem/components/TextComponents.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/awarechat_android/designsystem/tokens/IconTokens.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/awarechat_android/designsystem/tokens/IconTokens.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/awarechat_android/feature/userlist/.gitkeep" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/awarechat_android/feature/chat/ChatScreen.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/awarechat_android/feature/chat/ChatViewModel.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/awarechat_android/feature/chat/ChatViewModelFactory.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../ios/AwareChat-iOS/AwareChat-iOS.xcodeproj/project.xcworkspace/xcuserdata/wellingtontatsunoriasahide.xcuserdatad/UserInterfaceState.xcuserstate" beforeDir="false" afterPath="$PROJECT_DIR$/../../ios/AwareChat-iOS/AwareChat-iOS.xcodeproj/project.xcworkspace/xcuserdata/wellingtontatsunoriasahide.xcuserdatad/UserInterfaceState.xcuserstate" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

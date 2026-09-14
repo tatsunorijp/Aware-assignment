@@ -17,12 +17,7 @@ class ChatViewModelFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         require(modelClass.isAssignableFrom(ChatViewModel::class.java))
         @Suppress("UNCHECKED_CAST")
-        return ChatViewModel(
-            peerId = peerId,
-            conversations = conversations,
-            messages = messages,
-            messaging = messaging,
-        ) as T
+        return ChatViewModel(peerId, conversations, messages, messaging) as T
     }
 }
 // MARK: - AI Generated - End

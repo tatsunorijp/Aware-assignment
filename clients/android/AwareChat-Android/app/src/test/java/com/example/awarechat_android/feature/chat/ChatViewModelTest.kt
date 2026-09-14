@@ -207,6 +207,82 @@ class ChatViewModelTest {
     private fun harness(history: List<LocalMessage> = emptyList()): Harness =
         Harness(history).also { stores += it.store }
 
+    @Test
+    fun `repeated load does not duplicate history observation`() = runTest {
+        val harness = harness()
+        harness.viewModel.load()
+        harness.viewModel.load()
+        assertEquals(listOf(PEER_ID), harness.conversations.requests)
+        assertEquals(listOf(CONVERSATION_ID), harness.messages.observedConversationIds)
+    }
+
+    @Test
+    fun `send waits for local commit and suppresses duplicate taps`() = runTest {
+        val harness = harness()
+        harness.messaging.sendGate = CompletableDeferred()
+        harness.viewModel.load()
+        harness.viewModel.updateDraft("Commit first")
+
+        harness.viewModel.send()
+        harness.viewModel.send()
+
+        assertEquals(listOf("Commit first" to PEER_ID), harness.messaging.sendRequests)
+        assertEquals("Commit first", harness.viewModel.state.value.draft)
+        assertTrue(harness.viewModel.state.value.isSubmitting)
+        assertTrue((harness.viewModel.state.value.screen as ChatScreenState.Ready).messages.isEmpty())
+        harness.messaging.sendGate?.complete(Unit)
+        assertEquals("", harness.viewModel.state.value.draft)
+    }
+
+    @Test
+    fun `editing back to submitted text does not erase the new draft`() = runTest {
+        val harness = harness()
+        harness.messaging.sendGate = CompletableDeferred()
+        harness.viewModel.load()
+        harness.viewModel.updateDraft("Same text")
+        harness.viewModel.send()
+        harness.viewModel.updateDraft("")
+        harness.viewModel.updateDraft("Same text")
+        harness.messaging.sendGate?.complete(Unit)
+        assertEquals("Same text", harness.viewModel.state.value.draft)
+    }
+
+    @Test
+    fun `offline history allows enqueue and recovery preserves draft`() = runTest {
+        val harness = harness()
+        harness.messaging.emit(MessagingConnectionState.Disconnected)
+        harness.viewModel.load()
+        harness.viewModel.updateDraft("Offline message")
+        harness.viewModel.send()
+        assertEquals(listOf("Offline message" to PEER_ID), harness.messaging.sendRequests)
+
+        harness.viewModel.updateDraft("Next message")
+        harness.viewModel.retryConnection()
+        harness.messaging.emit(MessagingConnectionState.Connected)
+        assertEquals(ConnectionStatusState.Connected, harness.viewModel.state.value.connection)
+        assertEquals("Next message", harness.viewModel.state.value.draft)
+        assertTrue(harness.viewModel.state.value.screen is ChatScreenState.Ready)
+    }
+
+    @Test
+    fun `conversation failure does not load history or permit sending`() = runTest {
+        val harness = harness()
+        harness.conversations.error = IllegalStateException("Private database diagnostic")
+        harness.viewModel.load()
+        harness.viewModel.updateDraft("Keep me")
+        harness.viewModel.send()
+        assertEquals(
+            ChatScreenState.Error("Something went wrong. Please try again."),
+            harness.viewModel.state.value.screen,
+        )
+        assertTrue(harness.messages.observedConversationIds.isEmpty())
+        assertTrue(harness.messaging.sendRequests.isEmpty())
+        harness.conversations.error = null
+        harness.viewModel.retryHistory()
+        assertTrue(harness.viewModel.state.value.screen is ChatScreenState.Ready)
+        assertEquals("Keep me", harness.viewModel.state.value.draft)
+    }
+
     private class Harness(history: List<LocalMessage>) {
         val conversations = FakeConversationRepository()
         val messages = FakeMessageRepository(history)

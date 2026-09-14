@@ -19,26 +19,23 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 sealed interface ChatScreenState {
     data object Loading : ChatScreenState
-
     data class Ready(
         val conversationId: String,
-        val peerName: String?,
+        val peerName: String,
         val messages: List<LocalMessage>,
     ) : ChatScreenState
-
     data class Error(val message: String) : ChatScreenState
 }
 
 data class ChatUiState(
     val screen: ChatScreenState = ChatScreenState.Loading,
-    val draft: String = "",
     val connection: ConnectionStatusState = ConnectionStatusState.Connecting,
+    val draft: String = "",
     val isSubmitting: Boolean = false,
     val sendError: String? = null,
 )
@@ -53,32 +50,44 @@ class ChatViewModel(
     val state: StateFlow<ChatUiState> = mutableState.asStateFlow()
 
     private var didLoad = false
-    private var historyObservation: Job? = null
-    private var connectionObservation: Job? = null
+    private var historyJob: Job? = null
     private var connectionRetryJob: Job? = null
+    private var draftRevision = 0L
 
     fun load() {
         if (didLoad) return
         didLoad = true
-        observeConnection()
+        observeHistory()
+        viewModelScope.launch {
+            messaging.connectionState.collect { connection ->
+                mutableState.update { it.copy(connection = connection.presentationState()) }
+            }
+        }
+    }
+
+    fun retryHistory() {
         observeHistory()
     }
 
     fun updateDraft(text: String) {
+        draftRevision += 1
         mutableState.update { it.copy(draft = text, sendError = null) }
     }
 
     fun send() {
-        val text = mutableState.value.draft
-        if (text.isBlank() || mutableState.value.isSubmitting) return
-
+        val current = mutableState.value
+        if (current.screen !is ChatScreenState.Ready || current.isSubmitting ||
+            current.draft.isBlank()
+        ) return
+        val submittedRevision = draftRevision
         mutableState.update { it.copy(isSubmitting = true, sendError = null) }
         viewModelScope.launch {
             try {
-                messaging.sendMessage(text = text, receiverId = peerId)
+                messaging.sendMessage(current.draft, peerId)
+                currentCoroutineContext().ensureActive()
                 mutableState.update {
                     it.copy(
-                        draft = if (it.draft == text) "" else it.draft,
+                        draft = if (draftRevision == submittedRevision) "" else it.draft,
                         isSubmitting = false,
                     )
                 }
@@ -86,22 +95,14 @@ class ChatViewModel(
                 throw error
             } catch (error: Throwable) {
                 mutableState.update {
-                    it.copy(
-                        isSubmitting = false,
-                        sendError = error.safeMessage(),
-                    )
+                    it.copy(isSubmitting = false, sendError = error.safeMessage())
                 }
             }
         }
     }
 
-    fun retryHistory() {
-        mutableState.update { it.copy(screen = ChatScreenState.Loading) }
-        observeHistory()
-    }
-
     fun retryConnection() {
-        connectionRetryJob?.cancel()
+        if (connectionRetryJob?.isActive == true) return
         mutableState.update { it.copy(connection = ConnectionStatusState.Connecting) }
         connectionRetryJob = viewModelScope.launch {
             try {
@@ -119,17 +120,20 @@ class ChatViewModel(
     }
 
     private fun observeHistory() {
-        historyObservation?.cancel()
-        historyObservation = viewModelScope.launch {
+        historyJob?.cancel()
+        mutableState.update { it.copy(screen = ChatScreenState.Loading) }
+        historyJob = viewModelScope.launch {
             try {
-                val conversation = conversations.getOrCreate(peerId)
+                val conversation = conversations.getOrCreate(withUserId = peerId)
+                currentCoroutineContext().ensureActive()
                 messages.observeMessages(conversation.conversationId).collect { snapshot ->
+                    currentCoroutineContext().ensureActive()
                     mutableState.update {
                         it.copy(
                             screen = ChatScreenState.Ready(
-                                conversationId = conversation.conversationId,
-                                peerName = conversation.peer.name,
-                                messages = snapshot,
+                                conversation.conversationId,
+                                conversation.peer.name.orEmpty(),
+                                snapshot,
                             ),
                         )
                     }
@@ -137,18 +141,10 @@ class ChatViewModel(
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Throwable) {
+                currentCoroutineContext().ensureActive()
                 mutableState.update {
                     it.copy(screen = ChatScreenState.Error(error.safeMessage()))
                 }
-            }
-        }
-    }
-
-    private fun observeConnection() {
-        connectionObservation?.cancel()
-        connectionObservation = viewModelScope.launch {
-            messaging.connectionState.collect { connection ->
-                mutableState.update { it.copy(connection = connection.presentationState()) }
             }
         }
     }
@@ -158,9 +154,7 @@ private fun MessagingConnectionState.presentationState(): ConnectionStatusState 
     MessagingConnectionState.Connected -> ConnectionStatusState.Connected
     MessagingConnectionState.Connecting -> ConnectionStatusState.Connecting
     MessagingConnectionState.Disconnected -> ConnectionStatusState.Offline()
-    is MessagingConnectionState.ConnectionFailure -> ConnectionStatusState.Offline(
-        failure.userMessage,
-    )
+    is MessagingConnectionState.ConnectionFailure -> ConnectionStatusState.Offline(failure.userMessage)
 }
 
 private fun Throwable.safeMessage(): String = when (this) {
