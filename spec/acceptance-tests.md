@@ -2,10 +2,12 @@
 
 These criteria cover the [product](product.md), [system design](../SYSTEM_DESIGN.md),
 [persistence](persistence.md), [protocol](protocol.md), native clients and generator.
-The server is implemented; both clients have starter projects, while native
-messaging and generation are not implemented yet. Android's template tests do not
-cover assignment behavior. Criteria are requirements, not a record of
-tests passing. Record the commands, environment and results of each actual run.
+The server and both native clients are implemented. Manual validation of the
+complete cross-client flow is recorded under the
+[native offline scenario](#native-offline-scenario); clean-regeneration status is
+maintained in the [generator guide](../generator/README.md#verification).
+These criteria remain the regression checklist. The platform guides record
+automated verification; record commands, environment and results for subsequent runs.
 
 ## Server and protocol regressions
 
@@ -95,8 +97,7 @@ connecting, replaying or offline.
 ## Shared visual and flow acceptance
 
 Validate both native clients against the [shared catalog](design/README.md), each
-behavior document and its PNG. These are future checks, not results of this
-documentation change. Check presentation through native UI inspection; test
+behavior document and its PNG. Check presentation through native UI inspection; test
 state/orchestration logic using fakes as allowed by the platform test workflow.
 
 - Light mode remains active under both light and dark device settings. Restore
@@ -167,7 +168,7 @@ Include concurrent sequence allocation and recovery of interrupted sending recor
 on relaunch. Incoming messages must not inherit outgoing queue states. A failed
 transaction must not appear as a successful local send or recipient ACK.
 
-## Equivalent future client error behavior
+## Equivalent client error behavior
 
 - Decode every fixture in [fixtures/protocol](../fixtures/protocol/README.md),
   accepting missing/null optional fields, unknown string codes and extra fields.
@@ -191,12 +192,16 @@ transaction must not appear as a successful local send or recipient ACK.
 
 Run the real-network server smoke test for two-way messaging, offline outboxes,
 lost recipient ACKs, reconnect replay, deduplication and structured HTTP/WS errors.
-Then run the native scenario below once clients exist. Server emulation does not
+Then run the native scenario below. Server emulation does not
 establish native persistence or mobile UI correctness. Use a dedicated local test
 server; its smoke test creates transient users/messages, so do not run it against
 someone else's active session without authorization.
 
 ### Native offline scenario
+
+The developer has manually verified this complete iOS/Android offline and
+interoperability scenario for submission and confirmed the expected behavior.
+The steps below remain the repeatable acceptance procedure after changes.
 
 Use two distinct persisted identities with completed registration (Alice on iOS
 and Bob on Android), the same
@@ -240,12 +245,13 @@ backend or weaken the expected result to make the client pass.
 ## Generation verification
 
 The [prompt-based generator](../generator/README.md) defines the clean regeneration
-workflow. Once both platform foundations are ready, delete any deliberate subset
-inside the declared generated boundary, paste that platform's single evaluator
+workflow. In a disposable branch or worktree, delete any deliberate subset inside
+the declared generated boundary, paste that platform's single evaluator
 regeneration prompt into a fresh Codex or Claude Code session, build both projects,
 run the required suites, and repeat the native offline scenario. The prompt must
 also restore a complete deleted boundary; it cannot depend on knowing whether the
-evaluator removed a View, ViewModel, test, composition file, or whole feature.
+evaluator removed a View, ViewModel, helper, test, or whole feature. Maintained app
+composition roots remain protected and are not part of the deletion exercise.
 The resulting clients' persistence organization, dependency injection, DTOs,
 generated features, and error handling must match the platform READMEs, scoped
 implementation instructions, and shared specifications. Both platform README and

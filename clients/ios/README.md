@@ -40,7 +40,7 @@ does not duplicate or override their contracts. Generation loads this README and
 The existing project is
 [AwareChat-iOS.xcodeproj](AwareChat-iOS/AwareChat-iOS.xcodeproj),
 with application target `AwareChat-iOS` and source root
-`clients/ios/AwareChat-iOS/AwareChat-iOS/`. It currently contains a SwiftUI starter,
+`clients/ios/AwareChat-iOS/AwareChat-iOS/`. It contains the complete SwiftUI client,
 reusable text, button, loading, error and message-container components, extensions,
 seven named color assets/tokens, the HTTP/WebSocket networking and wire-protocol
 layers, and the `AwareChat-iOS-UnitTests` unit-test target with mirrored networking
@@ -127,6 +127,10 @@ states, ID-based filtering, conversation creation and reactive summaries, plus t
 messages ViewModel's local-history observation, draft validation, send behavior,
 ACK-state refresh, connection recovery and error handling.
 
+The developer also manually verified the complete
+[iOS/Android offline scenario](../../spec/acceptance-tests.md#native-offline-scenario)
+and [clean regeneration](../../generator/README.md#verification) for submission.
+
 The opt-in `MessagingServiceIntegrationTests` uses two independent in-memory
 SwiftData stores and real network clients. It exercised `/health`, `/users`,
 offline creation, server acceptance while the recipient was disconnected, replay
@@ -170,7 +174,7 @@ The iOS client must use:
 - Protocols to abstract networking and persistence.
 - Unit tests for ViewModels, repositories, persistence, and the protocol.
 
-Logical organization (future responsibilities, not an existing directory snapshot).
+Logical organization of production and test responsibilities.
 Production folders below belong under `AwareChat-iOS/AwareChat-iOS/`;
 `AwareChat-iOS-UnitTests/` belongs beside that source root and is owned by the
 separate `AwareChat-iOS-UnitTests` target:
@@ -235,8 +239,7 @@ and its embedded PNG before implementing UI. Both clients use the same prototype
 `sign-up-screen` maps to `Features/Identification`, `chat-screen` to
 `Features/UserList`, and `messages-screen` to `Features/Chat`. Reusable full-screen
 loading/error views belong in `DesignSystem/Components`, with operation state in
-the owning ViewModel. These are future implementation requirements, not new Swift
-files created by the documentation update.
+the owning ViewModel. The generated screens reuse these shared components.
 
 Implement light mode only, even under a dark device appearance. Preserve native
 safe areas, keyboard behavior and accessibility without drawing the prototype's
@@ -393,10 +396,10 @@ machine-specific LAN address.
 
 ## Navigation foundation
 
-The initial navigation foundation follows the state-driven ownership from the
+The navigation foundation follows the state-driven ownership from the
 [SwiftUI Coordinator pattern reference](https://levelup.gitconnected.com/coordinator-pattern-in-swiftui-keeping-navigation-logic-out-of-your-views-48c2fd8e35ab).
-It is intentionally independent from the starter UI until the actual feature
-screens and root dependency integration exist.
+The maintained `ContentView.swift` root integrates it with the feature screens and
+the app dependency graph.
 
 | File | Responsibility |
 | --- | --- |
@@ -406,7 +409,7 @@ screens and root dependency integration exist.
 | `App/Navigation/AppCoordinator.swift` | Select the root flow from registration outcomes and reset stale routes during root-flow changes. |
 
 `AppRouter` and `AppCoordinator` are `@MainActor`, `@Observable` state owners.
-Views will report navigation actions and render the selected flow/destination;
+Views report navigation actions and render the selected flow/destination;
 ViewModels and networking code must not mutate routes. The coordinator does not
 perform registration, persistence or network work: it only consumes completed,
 typed outcomes. Mirrored Swift Testing suites exercise all four navigation files
@@ -470,9 +473,9 @@ is released. ViewModels do not use `@Query` or access `ModelContext`.
 | `Core/Services/MessagingService.swift` | Actor-owned identification, one FIFO outbox, reception, ACK-after-save, reconnection and cancellation. |
 | `Core/Services/MessagingClock.swift` | Injectable time and the capped retry policy. |
 
-Create and retain `AppDependencies.live()` once at the future app root. Handle a
-thrown database-open failure as an essential local error: do not silently switch
-to an in-memory database or erase the store. Tests inject `PersistenceContainer(
+The maintained `ContentView.swift` root creates and retains `AppDependencies.live()`
+once. Handle a thrown database-open failure as an essential local error: do not
+silently switch to an in-memory database or erase the store. Tests inject `PersistenceContainer(
 inMemory: true)` or a unique temporary `storeURL`. Production uses the SDK-managed
 application store with CloudKit disabled.
 
@@ -498,7 +501,7 @@ registration, observe `observeConnectionState()` before requesting work and use
 identity and its completion must save successfully. `sync_completed` is not a
 second gate and does not prove that messages were persisted.
 
-Future `@MainActor @Observable` ViewModels can consume local snapshots directly:
+`@MainActor @Observable` ViewModels consume local snapshots directly, for example:
 
 ```swift
 for try await messages in messageRepository.observeMessages(conversationId: conversationId) {
@@ -547,7 +550,7 @@ The service follows these lifecycle and recovery rules:
 This is app-scoped synchronization while the process can run, not iOS background
 delivery. Push notifications, background task scheduling, pagination, manual retry
 of permanently failed messages and remote history APIs remain out of scope. The
-generated `MyApp`/`ContentView` retain the live dependency graph and compose the
+maintained `MyApp`/`ContentView` roots retain the live dependency graph and compose the
 identification, conversations and messages flows. The messages screen observes
 committed local history, preserves offline composition and delegates sends to the
 app-scoped service.

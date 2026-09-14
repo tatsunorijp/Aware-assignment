@@ -21,8 +21,9 @@ following the same prompts must restore equivalent working clients.
 
 The maintained client foundations may be authored iteratively outside generator
 cleanup. The prompt harness completes them with the three feature slices, their
-tests, and minimal app UI composition. This mixed authorship is intentional and
-is declared precisely in the generator instructions.
+tests, and feature-local helpers, integrated through maintained app composition
+roots. This mixed authorship is intentional and is declared precisely in the
+generator instructions.
 
 ## MVP scope
 

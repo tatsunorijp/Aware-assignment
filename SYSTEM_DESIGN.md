@@ -4,7 +4,7 @@ This document specifies shared client flows and state ownership for the
 [product](spec/product.md). The [protocol](spec/protocol.md) owns exact wire
 behavior, [persistence](spec/persistence.md) owns local durability, and the
 [iOS](clients/ios/README.md) and [Android](clients/android/README.md) READMEs own platform details.
-These are implementation requirements, not claims that the client screens exist.
+The platform guides also record implementation and verification status.
 
 ## Shared prototypes and appearance
 

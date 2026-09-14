@@ -12,9 +12,8 @@ prompts tell the coding agent how to locate relevant context, define its ownersh
 boundary, and ask it to implement or restore code and verify the result. They do
 not copy the full product, architecture, or protocol into another specification.
 
-The prompt interface is defined, but both complete feature sets and clean
-regeneration have not yet been demonstrated. Do not describe regeneration as
-verified until both clients can be restored and pass the documented checks.
+Both complete generated feature sets are implemented. Clean regeneration of both
+clients has been manually verified, as recorded under [Verification](#verification).
 
 ## Required tools
 
@@ -53,7 +52,7 @@ assistance does not make a maintained file disposable.
 ## Generated ownership boundary
 
 The prompt generator owns the three presentation features, their ViewModels and
-feature-local helpers, their tests, and the minimal UI composition files below.
+feature-local helpers, and their tests in the paths below.
 An evaluator may delete any file or combination of files inside this boundary;
 the evaluator does not need to delete an entire feature or follow the original
 feature-authoring order.
@@ -85,6 +84,9 @@ Everything outside these paths is protected from generator cleanup. Never delete
 or replace a complete Xcode/Gradle project, Core code, persistence, services,
 protocol types, reusable design system, resources, navigation foundation, build
 configuration, documentation, shared specifications, fixtures, or server.
+The iOS `MyApp.swift` and `ContentView.swift`, and Android `MainActivity.kt` and
+`app/AwareChatApp.kt`, are protected maintained composition roots, not disposable
+generated output.
 
 ## Two prompt workflows
 
@@ -126,12 +128,13 @@ specification, not hidden cross-session context or copied source.
 
 ## First generation and clean-regeneration check
 
-1. Complete each maintained client foundation, then use the feature-authoring
-   prompts to create its generated feature set.
+1. For first-time authoring, complete the maintained client foundation and use the
+   feature-authoring prompts. For repeat evaluation, use the existing foundations
+   and generated feature sets.
 2. Build, test, and inspect each client after its features are composed.
 3. Commit the working delivery revision.
 4. In a disposable branch or worktree, delete all generated output or a deliberate
-   mixture of Views, ViewModels, tests, and composition files from the boundary.
+   mixture of Views, ViewModels, feature-local helpers, and tests from the boundary.
 5. Paste the single regeneration prompt for that platform into a fresh Codex or
    Claude Code session.
 6. Confirm protected files were not replaced; build and run the native test suite.
@@ -144,6 +147,14 @@ Missing maintained foundation is a reported blocker, never permission to expand
 the generated boundary silently.
 
 ## Verification
+
+The developer has manually verified complete clean regeneration of both native
+clients for submission, with the regenerated apps working as expected. The
+[complete native offline scenario](../spec/acceptance-tests.md#native-offline-scenario)
+has also been manually verified. These are manual validation results; automated
+run records are maintained in the platform guides. Repeat the checks below when
+the generation inputs or generated output change.
+
 For iOS, run the Xcode 26.5 build and `AwareChat-iOS-UnitTests` commands from
 [clients/ios/README.md](../clients/ios/README.md#tools-and-building).
 

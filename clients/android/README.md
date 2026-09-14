@@ -35,11 +35,11 @@ require copying Swift source, Xcode assets or iOS folder names.
 
 ## Status and tooling decisions
 
-An existing [AwareChat-Android](AwareChat-Android) Gradle project contains an `app`
-module, the generated identification and conversations flows composed from
-`MainActivity.kt`, the
-package structure documented below, shared tokens/components, a time-formatting
-extension, a local example unit test and an example instrumentation test. Its namespace/application ID is
+The [AwareChat-Android](AwareChat-Android) Gradle project contains the complete
+native client in its `app` module, with the generated identification, conversations
+and messages flows composed through the maintained `MainActivity.kt` and
+`app/AwareChatApp.kt` roots. It includes shared tokens/components, local JVM suites
+and connected UI tests. Its namespace/application ID is
 `com.example.awarechat_android`; preserve it and the project name unless a requested
 task requires a change. Recheck actual configuration before implementation.
 
@@ -58,9 +58,8 @@ required.
 
 ## Tools, build and test entry points
 
-Use Android Studio, the Android SDK and the checked-in Gradle wrapper. Configuration
-currently declares the following; these are inspected project values, not a claim
-that dependency resolution or compatibility was verified in this documentation task:
+Use Android Studio, the Android SDK and the checked-in Gradle wrapper. The project
+declares the following toolchain and dependency versions:
 
 | Setting | Declared value / source |
 | --- | --- |
@@ -85,7 +84,7 @@ the preferred entry point. The tracked IDE configuration also supports opening
 of using the existing one. Configure SDK access and the compatible Gradle JVM,
 then sync the project. Wrapper/toolchain and dependency downloads may need network
 access and tool-required approval. Do not commit machine-specific SDK paths or
-change the selected versions merely to complete a documentation task.
+change the selected versions merely to bypass toolchain setup.
 
 The shared Android Studio run configuration `AwareChat-Android-UnitTests` executes
 only the local JVM unit-test task `:app:testDebugUnitTest`. It does not assemble,
@@ -119,25 +118,21 @@ JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
 
 The connected test task needs an available compatible emulator or device. On
 Windows use `gradlew.bat`. Verify actual Gradle tasks and dependencies when doing
-implementation/validation; the existing example tests are scaffolding, not proof
-of messaging, persistence or UI correctness. Run the `app` configuration from
-Android Studio to inspect the current generated flows.
+implementation/validation. Local suites cover feature ViewModels, persistence,
+protocol and networking; connected tests cover native UI behavior. Run the `app`
+configuration from Android Studio to inspect the generated flows.
 
-On 2026-09-13, `:app:assembleDebug`, `:app:testDebugUnitTest` and `:app:lintDebug`
-passed with Android Studio's bundled JBR. The local JVM suite ran 64 tests,
-including 11 identification and 14 conversations ViewModel tests, 11 Room
-persistence and composition tests, protocol fixtures, HTTP transport through MockWebServer, and real OkHttp
-WebSocket text exchange. Lint reported zero errors and 16 dependency/update
-availability warnings. The sign-up form was installed and visually inspected on
-an API 37 emulator. The runtime local-network prompt was granted, live registration
-against `10.0.2.2:8000` completed through `identity_accepted`, and the persisted
-identity appeared through the server's `/users` endpoint. Relaunching the app with
-that completed identity skipped the form and reached the conversations destination.
-The conversations screen was then inspected with both sections on the same API 37
-emulator. Selecting and returning from an empty conversation kept its peer under
-`People on server`; a live incoming message moved only its sender to `Chat`, and
-pull-to-refresh resolved the cached peer name through `GET /users`. No connected
-instrumentation test was run.
+On 2026-09-14 (UTC), `:app:assembleDebug`, `:app:testDebugUnitTest`, `:app:lintDebug`
+and `:app:connectedDebugAndroidTest` passed with Android Studio's bundled JBR and
+an API 37 emulator for connected tests. The local JVM suite passed 82 tests,
+including 11 identification, 14 conversations and 14 chat ViewModel tests,
+persistence/composition, protocol, network and messaging-service tests. The
+connected suite passed six tests, including chat and conversations UI coverage.
+Lint reported zero errors and 14 dependency/update availability warnings.
+
+The developer also manually verified the complete
+[iOS/Android offline scenario](../../spec/acceptance-tests.md#native-offline-scenario)
+and [clean regeneration](../../generator/README.md#verification) for submission.
 
 The generated `ChatLiveIntegrationTest` is an opt-in native server check. It uses
 two independent in-memory Room databases, real HTTP/WebSocket clients and the chat
@@ -193,9 +188,8 @@ Native stack:
 - JUnit.
 - Constructor-based dependency injection, as described in [dependency composition](../../spec/persistence.md#dependency-injection).
 
-The package skeleton now exists beneath
-`app/src/main/java/com/example/awarechat_android/`. Empty future packages contain
-`.gitkeep` so the structure survives version control. Tests use `app/src/test/` or
+Production packages live beneath
+`app/src/main/java/com/example/awarechat_android/`. Tests use `app/src/test/` or
 `app/src/androidTest/`, never a production package:
 
 ```text
@@ -248,7 +242,7 @@ Implement light mode only, even under a dark device appearance. Preserve native
 insets, keyboard handling, navigation and accessibility without drawing the device
 frame from the PNG. [Dark mode](../../FUTURE.md#dark-mode) is deferred. Validate against
 the same [visual and flow criteria](../../spec/acceptance-tests.md#shared-visual-and-flow-acceptance)
-as iOS when the messaging screens are implemented.
+as iOS.
 
 ## Extensions and design system
 
@@ -437,7 +431,7 @@ no-sent-downgrade and backoff rules as iOS.
 Use JUnit and appropriate platform test source sets for the
 [client criteria](../../spec/acceptance-tests.md#client-behavior),
 [persistence tests](../../spec/acceptance-tests.md#client-persistence) and
-[error behavior](../../spec/acceptance-tests.md#equivalent-future-client-error-behavior).
+[error behavior](../../spec/acceptance-tests.md#equivalent-client-error-behavior).
 Group tests by feature and persistence entity. ViewModel/network tests use fakes
 and controlled time, not a real backend or production database. Test Room with
 isolated in-memory databases and temporary on-disk stores for reopen scenarios.
@@ -445,7 +439,7 @@ isolated in-memory databases and temporary on-disk stores for reopen scenarios.
 Use the [integration guide](../../server/docs/CLIENT_GUIDE.md) for emulator/device
 addresses and development network configuration. Keep addresses injectable.
 Keep selected tools, actual build/test commands and limitations in this README
-as implementation progresses. Validate the real
+current. Validate the real
 [iOS/Android offline scenario](../../spec/acceptance-tests.md#native-offline-scenario).
 Generation must preserve these contracts and tests.
 
@@ -460,5 +454,5 @@ adapt the client and report suspected defects for a separate developer decision.
 
 The [generator](../../generator/README.md) must load this README and the Android
 agent, preserve the existing project and correct generated defects in maintained
-inputs. Example template tests do not establish assignment acceptance or native
-interoperability, and documentation changes do not claim fresh build/test results.
+inputs. Repeat the relevant automated checks and native acceptance scenarios after
+changes; the verification record above distinguishes automated and manual results.

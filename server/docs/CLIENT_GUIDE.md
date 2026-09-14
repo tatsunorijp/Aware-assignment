@@ -21,8 +21,8 @@ same server change set. The entry must address both iOS and Android. Purely inte
 changes explicitly state when clients need no changes, avoiding an implied migration.
 
 For a consumer-visible update, validate decoding with the shared fixtures, review
-affected persistence/outbox/error handling, and run the relevant native tests when
-the clients exist. The Python smoke test verifies the server protocol but does not
+affected persistence/outbox/error handling, and run the relevant native tests.
+The Python smoke test verifies the server protocol but does not
 replace native interoperability tests. Backend maintainers follow
 [server/AGENTS.md](../AGENTS.md) for the complete update and verification workflow.
 

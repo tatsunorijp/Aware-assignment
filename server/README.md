@@ -1,7 +1,7 @@
 # Aware messaging server
 
 A local Python/FastAPI server implementing the messaging MVP from
-[spec/product.md](../spec/product.md). It connects the future iOS and Android
+[spec/product.md](../spec/product.md). It connects the native iOS and Android
 clients through the same HTTP and WebSocket protocol. All state lives in memory.
 
 Release 0.2.0 uses the shared `ServerError` response defined in the maintained protocol.
@@ -200,7 +200,7 @@ and retry only their still-unacknowledged sends through the normal reconnect flo
 
 Example error requests and responses are in [fixtures/protocol](../fixtures/protocol/README.md).
 See [acceptance criteria](../spec/acceptance-tests.md) for backend coverage and
-future client error-handling requirements. Retry policy remains client-owned.
+client error-handling requirements. Retry policy remains client-owned.
 
 ## Limits and troubleshooting
 

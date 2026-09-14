@@ -3,9 +3,10 @@
 Scope: the existing in-memory messaging implementation and structured error
 requirements now maintained in [spec/protocol.md](../../spec/protocol.md#errors).
 The review covers source, regression tests, shared fixtures, HTTP documentation
-and a real-network smoke test. It does not certify unimplemented native clients.
-Documentation redistribution updates this reference, not the original runtime
-verification evidence; it does not imply the server tests were rerun.
+and a real-network smoke test. Its verification evidence is server-scoped;
+native-client implementation and verification are recorded in the
+[iOS](../../clients/ios/README.md), [Android](../../clients/android/README.md) and
+[acceptance](../../spec/acceptance-tests.md#native-offline-scenario) guides.
 
 ## Findings and corrections
 
@@ -62,4 +63,5 @@ connection per identity, and pending delivery is replayed on reconnect rather th
 retried periodically on the same socket. There is no authentication or persistent
 server history. These are documented MVP constraints, not guarantees of production
 durability or security. Native error presentation, retry timing, persistence and
-iOS/Android interoperability remain to be implemented and tested in the clients.
+iOS/Android interoperability are implemented in the clients and covered by their
+separate automated and manual verification records linked above.

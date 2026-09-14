@@ -45,8 +45,8 @@ feature document when code and tests are sufficient.
 
 The wire contract describes the current server; platform details cannot silently
 redefine it. During either client's implementation, adapt to the server and report
-suspected backend defects for a separate developer decision. Documentation
-migration does not authorize runtime changes or change `protocolVersion: 1`.
+suspected backend defects for a separate developer decision. The wire contract
+remains `protocolVersion: 1`.
 
 ## Current implementation status
 
@@ -55,11 +55,12 @@ migration does not authorize runtime changes or change `protocolVersion: 1`.
 | Server | Implemented in `server/`; package release 0.2.0, nested shared ServerError. |
 | iOS | `AwareChat-iOS` under `clients/ios/`: reusable design system, typed HTTP/WebSocket layer, navigation foundation, SwiftData repositories, offline messaging service and mirrored Swift Testing suites. The generated identification, conversations and messages screens/ViewModels are implemented and composed at the app root. See the [iOS guide](clients/ios/README.md). |
 | Android | `AwareChat-Android` under `clients/android/` includes its design system, typed network and Room foundations, app-scoped messaging service, and all three generated screens/ViewModels composed at the app root. |
-| Generator | Codex/Claude Code feature-authoring prompts, one order-independent evaluator prompt per platform, and the exact generated ownership boundary are defined; complete clean regeneration is not yet verified. |
-| Native demo | Specified as maintained manual acceptance steps; the complete iOS/Android scenario is not yet implemented or verified. |
+| Generator | Both clients' generated feature sets are implemented, and complete clean regeneration has been manually verified. See the [generator verification status](generator/README.md#verification). |
+| Native demo | The complete iOS/Android offline and interoperability scenario has been manually verified. See the [acceptance scenario](spec/acceptance-tests.md#native-offline-scenario). |
 
-Requirements in the documents above describe the intended deliverable. Their
-presence is not proof of implementation, passing tests or reproducible generation.
+Manual validation was confirmed by the developer for submission. The platform
+guides record automated verification separately; the acceptance criteria remain
+the regression checklist for subsequent changes.
 
 ## Run and verify the existing server
 
@@ -87,10 +88,9 @@ python scripts/smoke_test.py --base-url http://127.0.0.1:8000
 ```
 
 The smoke test requires the dedicated running server and creates transient test
-users/messages. These commands are documented checks, not a claim they were run
-during documentation migration. Native checks and the full
+users/messages. Use the platform guides to reproduce native checks and the
 [iOS/Android offline scenario](spec/acceptance-tests.md#native-offline-scenario)
-remain required once the apps exist.
+to verify cross-client behavior after changes.
 
 ## Generate the client features
 
@@ -102,10 +102,10 @@ copied into the active coding-agent session; there is intentionally no shell
 generation command. The generator README owns the exact delegated-output boundary,
 protected inputs, clean-regeneration procedure, and native verification commands.
 
-The feature prompts are ready, but they have not yet produced and cleanly
-regenerated both complete clients. Preserve everything outside the declared
-feature, feature-test and minimal app-composition paths. In particular, never
-delete `clients/ios/` or `clients/android/` as a regeneration step.
+The prompts have produced and cleanly regenerated both clients' complete generated
+feature sets. Preserve everything outside the declared feature and feature-test
+paths, including the maintained app composition roots. In particular, never delete
+`clients/ios/` or `clients/android/` as a regeneration step.
 
 ## Maintenance and ownership
 
